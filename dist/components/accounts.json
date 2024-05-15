@@ -1,0 +1,61 @@
+{
+  "post": {
+    "tags": [
+      "Account"
+    ],
+    "summary": "Create new account",
+    "consumes": [
+      "application/json",
+      "application/xml"
+    ],
+    "produces": [
+      "application/json",
+      "application/xml"
+    ],
+    "parameters": [
+      {
+        "in": "body",
+        "name": "data",
+        "description": "New account",
+        "schema": {
+          "type": "object",
+          "properties": {
+            "username": {
+              "type": "string",
+              "example": "User1"
+            },
+            "password": {
+              "type": "string",
+              "example": "12345678"
+            },
+            "repassword": {
+              "type": "string",
+              "example": "12345678"
+            },
+            "role": {
+              "type": "number",
+              "example": 0
+            }
+          }
+        }
+      }
+    ],
+    "responses": {
+      "200": {
+        "description": "Create account success",
+        "schema": {
+          "type": "object",
+          "properties": {
+            "username": {
+              "type": "string",
+              "example": "User1"
+            }
+          }
+        }
+      },
+      "405": {
+        "description": "Invalid input"
+      }
+    }
+  }
+}
