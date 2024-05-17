@@ -1,9 +1,13 @@
 package com.datn.ticket.controller;
 
 
+import com.datn.ticket.exception.AppException;
+import com.datn.ticket.exception.ErrorCode;
 import com.datn.ticket.model.Accounts;
 import com.datn.ticket.model.Roles;
 import com.datn.ticket.model.dto.request.IntrospectRequest;
+import com.datn.ticket.model.dto.request.LoginRequest;
+import com.datn.ticket.model.dto.request.SignUpRequest;
 import com.datn.ticket.model.dto.response.ApiResponse;
 import com.datn.ticket.model.dto.response.AuthenticationResponse;
 import com.datn.ticket.model.dto.response.IntrospectResponse;
@@ -54,38 +58,27 @@ public class AccountController {
 
     @Operation(summary = "Đăng ký tài khoản mới")
     @PostMapping("/sign-up")
-    public String newAccount(@RequestBody String jsonMap) throws ParseException {
-        Gson gson = new Gson();
-        ArrayList<Integer> rolesID = new ArrayList<>();
-        JsonElement root = gson.fromJson(jsonMap, JsonElement.class);
-
-        if(root.isJsonObject()){
-            JsonObject jsonObject = root.getAsJsonObject();
-            if(accountService.getUsername(jsonObject.get("username").getAsString()) != null){
-                return "Tài khoản đã tồn tại";
-            }
-            Accounts a = new Accounts();
-            a.setUsername(jsonObject.get("username").getAsString());
-            a.setPassword(passwordEncoder.encode(jsonObject.get("password").getAsString()));
-            a.setStatus(1);
-
-            JsonArray roleArray = jsonObject.getAsJsonArray("role");
-            for(JsonElement r : roleArray){
-                rolesID.add(r.getAsInt());
-            }
-            try{
-                accountService.newAccount(a, rolesID);
-            }catch(Exception e){
-                return e.getMessage();
-            }
+    public ApiResponse<?> newAccount(@RequestBody SignUpRequest request) throws ParseException {
+        if(accountService.getUsername(request.getUsername()) != null){
+            throw new AppException(ErrorCode.USER_EXISTED);
         }
-        return "Sign up successfully!";
+
+        Accounts a = new Accounts();
+        a.setUsername(request.getUsername());
+        a.setPassword(passwordEncoder.encode(request.getPassword()));
+        a.setStatus(1);
+        try{
+            accountService.newAccount(a, request.getRole());
+        }catch(Exception e){
+            throw new AppException(ErrorCode.UNCATEGORIZED_EXCEPTION);
+        }
+        return ApiResponse.builder().message("Đăng ký thành công").build();
     }
 
     @Operation(summary = "Đăng nhập")
     @PostMapping("/sign-in")
-    public ResponseEntity<AuthenticationResponse> signIn(@RequestBody Map<String, Object> jsonMap){
-        return accountService.signIn(jsonMap.get("username").toString(), jsonMap.get("password").toString(), (Integer) jsonMap.get("role"));
+    public ResponseEntity<AuthenticationResponse> signIn(@RequestBody LoginRequest request){
+        return accountService.signIn(request.getUsername(), request.getPassword(), request.getRole());
     }
 
     @PostMapping("/introspect")

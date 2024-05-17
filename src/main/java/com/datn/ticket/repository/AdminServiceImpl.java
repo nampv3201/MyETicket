@@ -1,6 +1,7 @@
 package com.datn.ticket.repository;
 
 import com.datn.ticket.model.Categories;
+import com.datn.ticket.model.Merchants;
 import com.datn.ticket.service.AdminService;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.TypedQuery;
@@ -16,6 +17,18 @@ public class AdminServiceImpl implements AdminService {
     @Autowired
     public AdminServiceImpl(EntityManager manager) {
         this.manager = manager;
+    }
+    @Override
+    public Merchants getMerchantInfor(Integer id) {
+        TypedQuery<Merchants> getMerchant = manager.createQuery("Select m from Merchants m where m.id = :id", Merchants.class);
+        getMerchant.setParameter("id", id);
+        return getMerchant.getSingleResult();
+    }
+
+    @Override
+    public List<Merchants> getListMerchants() {
+        TypedQuery<Merchants> getMerchant = manager.createQuery("Select m from Merchants m", Merchants.class);
+        return getMerchant.getResultList();
     }
 
     @Override

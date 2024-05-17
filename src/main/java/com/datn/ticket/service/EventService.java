@@ -3,12 +3,14 @@ package com.datn.ticket.service;
 import com.datn.ticket.model.Categories;
 import com.datn.ticket.model.CreateTickets;
 import com.datn.ticket.model.Events;
+import com.datn.ticket.model.dto.EventDTO;
+import com.datn.ticket.model.dto.response.ApiResponse;
 import org.springframework.http.ResponseEntity;
 
 import java.util.List;
 
 public interface EventService {
-    ResponseEntity<Object> getEvent(int id);
+    ApiResponse<EventDTO> getEvent(int id);
     ResponseEntity<Object> findEventByName(String name);
     ResponseEntity<Object> getEventByFilter(Integer MerchantId, List<Integer> CategoryId, Integer allTime);
     List<Categories> getAllCategories();

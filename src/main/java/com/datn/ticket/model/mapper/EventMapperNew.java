@@ -1,6 +1,9 @@
 package com.datn.ticket.model.mapper;
 
 import com.datn.ticket.model.CreateTickets;
+import com.datn.ticket.model.Events;
+import com.datn.ticket.model.dto.CreateTicketsDTO;
+import com.datn.ticket.model.dto.EventDTO;
 import com.datn.ticket.model.dto.response.TicketTypeResponse;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;

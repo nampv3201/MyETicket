@@ -5,8 +5,11 @@ import com.datn.ticket.model.CreateTickets;
 import com.datn.ticket.model.Events;
 import com.datn.ticket.model.Merchants;
 import com.datn.ticket.model.dto.CreateTicketsDTO;
+import com.datn.ticket.model.dto.EventDTO;
 import com.datn.ticket.model.dto.EventSecondUpdate;
-import com.datn.ticket.model.dto.request.EUSRequest;
+import com.datn.ticket.model.dto.request.EAFRequest;
+import com.datn.ticket.model.dto.request.EAUSRequest;
+import com.datn.ticket.model.dto.request.EUFRequest;
 import com.datn.ticket.model.dto.request.TicketTypeRequest;
 import com.datn.ticket.model.dto.response.ApiResponse;
 import com.datn.ticket.model.dto.response.TicketTypeResponse;
@@ -59,7 +62,7 @@ public class EventController {
 
     @Operation(summary = "Lấy thông tin chi tiết của event")
     @GetMapping("/get/{id}")
-    public ResponseEntity<Object> getEvent(@PathVariable("id") int id){
+    public ApiResponse<EventDTO> getEvent(@PathVariable("id") int id){
         return eventService.getEvent(id);
     }
 
@@ -79,80 +82,53 @@ public class EventController {
 
     @Operation(summary = "Tạo mới event - Bước 1")
     @PostMapping("/add-event")
-    public void addEvent(@RequestBody String jsonMap) throws ParseException{
+    public void addEvent(@RequestBody EAFRequest eafRequest) throws ParseException{
         if(session == null){
             session = request.getSession();
         }
         Events newEvent = new Events();
-        List<Integer> cList = new ArrayList<>();
 
-        Gson gson = new Gson();
-        JsonElement root = gson.fromJson(jsonMap, JsonElement.class);
-        if(root.isJsonObject()){
-            JsonObject jsonObject = root.getAsJsonObject();
+        newEvent.setName(eafRequest.getEventName());
+        newEvent.setDescription(eafRequest.getEventDescription());
+        newEvent.setLocation(eafRequest.getEventLocation());
+        newEvent.setBanner(eafRequest.getEventBanner());
+        newEvent.setMax_limit(eafRequest.getEventLimit());
 
-            // Event information
-            newEvent.setName(jsonObject.get("eventName").getAsString());
-            newEvent.setDescription(jsonObject.get("eventDescription").getAsString());
-            newEvent.setLocation(jsonObject.get("eventLocation").getAsString());
-            newEvent.setBanner(jsonObject.get("eventBanner").getAsString());
-            newEvent.setMax_limit(Integer.parseInt(jsonObject.get("eventMaxLimit").getAsString()));
-
-            // Categories list
-            JsonArray categoriesArray = jsonObject.getAsJsonArray("categories");
-
-            // Xử lý mảng "categories" nếu cần
-            for (JsonElement element : categoriesArray) {
-                cList.add(element.getAsInt());
-            }
-        }
 
         session.setAttribute("tempEvent", newEvent);
-        session.setAttribute("tempCategories", cList);
+        session.setAttribute("tempCategories", eafRequest.getCategories());
     }
 
     @Operation(summary = "Tạo mới event - Bước 2")
     @PostMapping("/add-event-ticket")
-    public void addEventTicket(@RequestBody String jsonMap) throws ParseException{
+    public void addEventTicket(@RequestBody EAUSRequest eausRequest) throws ParseException{
         Merchants m = new Merchants();
         Events tEvent = (Events) session.getAttribute("tempEvent");
         List<Integer> tempC = (List<Integer>) session.getAttribute("tempCategories");
 
 
         List<CreateTickets> createTickets = new ArrayList<>();
-        Gson gson = new Gson();
         SimpleDateFormat format = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
-        JsonElement root = gson.fromJson(jsonMap, JsonElement.class);
-        if(root.isJsonObject()){
-            JsonObject jsonObject = root.getAsJsonObject();
 
-            // Event information
-            m = merchantService.getMerchantInfor(jsonObject.get("merchantId").getAsInt());
-            tEvent.setStart_time(format.parse(jsonObject.get("start_time").getAsString()));
-            tEvent.setEnd_time(format.parse(jsonObject.get("end_time").getAsString()));
-            tEvent.setStart_booking(format.parse(jsonObject.get("start_booking").getAsString()));
-            tEvent.setEnd_booking(format.parse(jsonObject.get("end_booking").getAsString()));
-            tEvent.setMerchants(m);
+        // Event information
+        m = merchantService.myInfor();
+        tEvent.setStart_time(format.parse(eausRequest.getStart_time()));
+        tEvent.setEnd_time(format.parse(eausRequest.getEnd_time()));
+        tEvent.setStart_booking(format.parse(eausRequest.getStart_booking()));
+        tEvent.setEnd_booking(format.parse(eausRequest.getEnd_booking()));
+        tEvent.setMerchants(m);
 
-            // Create ticket information
-            JsonArray ticketTypeArray = jsonObject.getAsJsonArray("createTickets");
+        // Xử lý mảng "attributes" nếu cần
+        for (TicketTypeRequest tRequest : eausRequest.getTicketTypeRequests()) {
+            CreateTickets tickets = new CreateTickets();
 
-            // Xử lý mảng "attributes" nếu cần
-            for (JsonElement element : ticketTypeArray) {
-                CreateTickets tickets = new CreateTickets();
-                JsonObject ticketObject = element.getAsJsonObject();
-                String typeName = ticketObject.get("type_name").getAsString();
-                double price = Double.parseDouble(ticketObject.get("cost").getAsString());
-                int quantity = ticketObject.get("quantity").getAsInt();
+            tickets.setType_name(tRequest.getTypeName());
+            tickets.setPrice(tRequest.getPrice());
+            tickets.setCount(tRequest.getQuantity());
+            tickets.setAvailable(tRequest.getQuantity());
+            tickets.setMerchants(m);
 
-                tickets.setType_name(typeName);
-                tickets.setPrice(price);
-                tickets.setCount(quantity);
-                tickets.setAvailable(quantity);
-                tickets.setMerchants(m);
-
-                createTickets.add(tickets);
-            }
+            createTickets.add(tickets);
         }
 
         eventService.addEvent(tEvent, createTickets, eventService.getCategories(tempC));
@@ -165,13 +141,16 @@ public class EventController {
     @Operation(summary = "Lấy thông tin tổng quan của event - Cập nhật")
     @GetMapping("/update/first-step/{id}")
     public ResponseEntity<Object> getEventUpdate(@PathVariable("id") int eventId){
-        if(session == null){
+        if(session != null){
+            session.invalidate();
             session = request.getSession();
-            session.setAttribute("tempTicketAdd", new ArrayList<CreateTickets>());
-            session.setAttribute("tempTicketUpdate", new ArrayList<CreateTickets>());
-            session.setAttribute("tempCategoriesAdd", new ArrayList<Categories>());
-            session.setAttribute("tempCategoriesRemove", new ArrayList<Categories>());
+        }else{
+            session = request.getSession();
         }
+        session.setAttribute("tempTicketAdd", new ArrayList<CreateTickets>());
+        session.setAttribute("tempTicketUpdate", new ArrayList<CreateTickets>());
+        session.setAttribute("tempCategoriesAdd", new ArrayList<Categories>());
+        session.setAttribute("tempCategoriesRemove", new ArrayList<Categories>());
 
         Events event = eventService.getEventUpdate(eventId);
         List<Categories> categories = eventService.getCatByEvent(eventId);
@@ -208,19 +187,14 @@ public class EventController {
 
     @Operation(summary = "Cập nhật event - Bước 1")
     @PostMapping("/update/first-step/{id}")
-    public void update(@PathVariable("id") int eventId, @RequestBody String jsonMap){
+    public void update(@PathVariable("id") int eventId, @RequestBody EUFRequest eufRequest){
         Events event = eventService.getEventUpdate(eventId);
-        Gson gson = new Gson();
-        JsonElement root = gson.fromJson(jsonMap, JsonElement.class);
-        if(root.isJsonObject()){
-            JsonObject jsonObject = root.getAsJsonObject();
-            // Event information
-            event.setName(jsonObject.get("eventName").getAsString());
-            event.setDescription(jsonObject.get("eventDescription").getAsString());
-            event.setLocation(jsonObject.get("eventLocation").getAsString());
-            event.setBanner(jsonObject.get("eventBanner").getAsString());
-            event.setMax_limit(Integer.parseInt(jsonObject.get("eventLimit").getAsString()));
-        }
+
+        event.setName(eufRequest.getEventName());
+        event.setDescription(eufRequest.getEventDescription());
+        event.setLocation(eufRequest.getEventLocation());
+        event.setBanner(eufRequest.getEventBanner());
+        event.setMax_limit(eufRequest.getEventLimit());
 
         session.setAttribute("tempEvent", event);
     }
@@ -238,12 +212,14 @@ public class EventController {
 
     @Operation(summary = "Cập nhật thông tin loại vé")
     @PostMapping("/update/ticket/{id}")
-    public void updateTicketTemp(@PathVariable("id") int id, @RequestBody Map<String, Object> jsonMap){
+    public void updateTicketTemp(@PathVariable("id") int id, @RequestBody TicketTypeRequest tRequest){
         ArrayList<CreateTickets> createTickets = (ArrayList<CreateTickets>) session.getAttribute("tempTicketUpdate");
         CreateTickets c = eventService.getTicketTypeUpdate(id);
-        c.setCount((Integer) jsonMap.get("quantity"));
-        c.setType_name(jsonMap.get("typeName").toString());
-        c.setPrice((Double) jsonMap.get("price"));
+        int oldQuantity = c.getCount();
+        c.setCount(tRequest.getQuantity());
+        c.setAvailable(c.getAvailable() + oldQuantity - tRequest.getQuantity());
+        c.setType_name(tRequest.getTypeName());
+        c.setPrice(c.getPrice());
 
         for(CreateTickets tickets : createTickets){
             if(tickets.getId() == c.getId()){
@@ -257,36 +233,12 @@ public class EventController {
 
     @Operation(summary = "Cập nhật event - Bước 2")
     @PostMapping("/update/second-step/{id}")
-    public String updateTicket(@PathVariable("id") int eventId, @RequestBody EUSRequest request) throws ParseException {
+    public String updateTicket(@PathVariable("id") int eventId, @RequestBody EAUSRequest request) throws ParseException {
         Events e = (Events) session.getAttribute("tempEvent");
         List<CreateTickets> addTickets = new ArrayList<>();
 
-//        Gson gson = new Gson();
-//        JsonElement root = gson.fromJson(jsonMap, JsonElement.class);
         SimpleDateFormat format = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
 
-//        if(root.isJsonObject()){
-//            JsonObject jsonObject = root.getAsJsonObject();
-//            e.setStart_time(format.parse(jsonObject.get("start_time").getAsString()));
-//            e.setEnd_time(format.parse(jsonObject.get("end_time").getAsString()));
-//            e.setStart_booking(format.parse(jsonObject.get("start_booking").getAsString()));
-//            e.setEnd_booking(format.parse(jsonObject.get("end_booking").getAsString()));
-//
-//            JsonArray ticketTypeArray = jsonObject.getAsJsonArray("addTicketType");
-//
-//            // Xử lý mảng "attributes" nếu cần
-//            for (JsonElement element : ticketTypeArray) {
-//                CreateTickets tickets = new CreateTickets();
-//                JsonObject ticketObject = element.getAsJsonObject();
-//
-//                tickets.setType_name(ticketObject.get("typeName").getAsString());
-//                tickets.setPrice(Double.parseDouble(ticketObject.get("price").getAsString()));
-//                tickets.setCount(ticketObject.get("quantity").getAsInt());
-//                tickets.setAvailable(ticketObject.get("quantity").getAsInt());
-//
-//                addTickets.add(tickets);
-//            }
-//        }
         e.setStart_time(format.parse(request.getStart_time()));
         e.setEnd_time(format.parse(request.getEnd_time()));
         e.setStart_booking(format.parse(request.getStart_booking()));

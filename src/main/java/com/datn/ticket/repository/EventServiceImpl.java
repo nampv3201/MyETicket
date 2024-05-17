@@ -7,6 +7,7 @@ import com.datn.ticket.model.Events;
 import com.datn.ticket.model.dto.CreateTicketsDTO;
 import com.datn.ticket.model.dto.EventDTO;
 import com.datn.ticket.model.dto.EventHome;
+import com.datn.ticket.model.dto.response.ApiResponse;
 import com.datn.ticket.model.mapper.CreateTicketMapper;
 import com.datn.ticket.model.mapper.EventHomeMapper;
 import com.datn.ticket.model.mapper.EventMapper;
@@ -71,7 +72,7 @@ public class EventServiceImpl implements EventService {
     }
 
     @Override
-    public ResponseEntity<Object> getEvent(int id) {
+    public ApiResponse<EventDTO> getEvent(int id) {
         Events e;
         List<String> categoryList;
         List<CreateTicketsDTO> ticketsDTOS = new ArrayList<>();
@@ -90,7 +91,8 @@ public class EventServiceImpl implements EventService {
         for(CreateTickets c : typedQuery.getResultList()){
             ticketsDTOS.add(CreateTicketMapper.createTicketsDTO(c));
         }
-        return ResponseEntity.ok().body(EventMapper.eventDTO(e, categoryList, ticketsDTOS));
+        return ApiResponse.<EventDTO>builder()
+                        .result(EventMapper.eventDTO(e, categoryList, ticketsDTOS)).build();
     }
 
     @Override

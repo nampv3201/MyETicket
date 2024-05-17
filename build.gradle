@@ -41,6 +41,8 @@ dependencies {
 
 	annotationProcessor 'org.mapstruct:mapstruct-processor:1.5.5.Final'
 
+	implementation 'io.swagger:swagger-codegen-maven-plugin:3.0.56'
+
 }
 
 tasks.named('test') {

@@ -6,14 +6,11 @@ import com.datn.ticket.model.dto.StatisticsDetail;
 
 import java.text.ParseException;
 import java.util.List;
-import java.util.Map;
 
 public interface MerchantService {
-    void updateMerchant(int id, Map<String, Object> input);
-    Merchants getMerchantInfor(Integer id);
-    List<Merchants> getListMerchants();
-
-    List<EventStatisticDTO> getStatistics(int merchantID) throws ParseException;
+    void updateMerchant(Merchants merchants);
+    List<EventStatisticDTO> getStatistics() throws ParseException;
     List<StatisticsDetail> getStatisticsByEvent(int eventId) throws ParseException;
 
+    Merchants myInfor();
 }

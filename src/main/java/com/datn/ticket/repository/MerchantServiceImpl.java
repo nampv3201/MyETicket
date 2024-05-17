@@ -6,19 +6,15 @@ import com.datn.ticket.model.dto.StatisticsDetail;
 import com.datn.ticket.service.MerchantService;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.NoResultException;
-import jakarta.persistence.Query;
-import jakarta.persistence.TypedQuery;
 import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Repository;
 
 import java.math.BigDecimal;
 import java.text.ParseException;
-import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 
 @Repository
 public class MerchantServiceImpl implements MerchantService {
@@ -31,34 +27,13 @@ public class MerchantServiceImpl implements MerchantService {
 
     @Override
     @Transactional
-    public void updateMerchant(int id, Map<String, Object> input) {
-        Query query = entityManager.createQuery("Update Merchants m set m.name = :name, m.address = :address," +
-                "m.phone = :phone, m.description = :description where m.id = :id");
-        query.setParameter("id", id);
-        query.setParameter("name", input.get("mname"));
-        query.setParameter("address", input.get("maddress"));
-        query.setParameter("phone", input.get("mphone"));
-        query.setParameter("description", input.get("mdescription"));
-
-        query.executeUpdate();
-
+    public void updateMerchant(Merchants merchants) {
+        entityManager.merge(merchants);
     }
 
     @Override
-    public Merchants getMerchantInfor(Integer id) {
-        TypedQuery<Merchants> getMerchant = entityManager.createQuery("Select m from Merchants m where m.id = :id", Merchants.class);
-        getMerchant.setParameter("id", id);
-        return getMerchant.getSingleResult();
-    }
-
-    @Override
-    public List<Merchants> getListMerchants() {
-        TypedQuery<Merchants> getMerchant = entityManager.createQuery("Select m from Merchants m", Merchants.class);
-        return getMerchant.getResultList();
-    }
-
-    @Override
-    public List<EventStatisticDTO> getStatistics(int merchantID) throws ParseException {
+    public List<EventStatisticDTO> getStatistics() throws ParseException {
+        Merchants m = myInfor();
         String query = "select sum(c.quantity) as soldTicket, sum(c.cost) as totalRevenue from invoice i " +
                 "join cart c on i.Cart_id = c.id " +
                 "join createticket ct on c.CreateTicket_id = ct.id " +
@@ -77,7 +52,7 @@ public class MerchantServiceImpl implements MerchantService {
                 "group by e.id";
 
         List<Object[]> resultListNav = entityManager.createNativeQuery(nativeQuery, Object[].class)
-                .setParameter("merchantID", merchantID)
+                .setParameter("merchantID", m.getId())
                 .getResultList();
 
         List<EventStatisticDTO> dtos = new ArrayList<>();
@@ -138,5 +113,14 @@ public class MerchantServiceImpl implements MerchantService {
         }
 
         return dtos;
+    }
+
+    @Override
+    public Merchants myInfor() {
+        return (Merchants) entityManager.createNativeQuery("select m.* from merchants m " +
+                "join account a on m.Account_id = a.id " +
+                "where a.id = :id", Merchants.class)
+                .setParameter("id", SecurityContextHolder.getContext().getAuthentication().getName())
+                .getSingleResult();
     }
 }

@@ -10,11 +10,8 @@ import java.util.List;
 @AllArgsConstructor
 @Builder
 @FieldDefaults(level = AccessLevel.PRIVATE)
-public class EAFRequest {
-    String eventName;
-    String eventDescription;
-    String eventLocation;
-    String eventBanner;
-    List<Integer> categories;
-    int eventLimit;
+public class SignUpRequest {
+    String username;
+    String password;
+    List<Integer> role;
 }
