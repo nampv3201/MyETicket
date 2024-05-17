@@ -33,12 +33,15 @@ public class Events {
     private int max_limit;
     @Column(name = "banner")
     private String banner;
+    @Getter
+    @Column(name="status")
+    private int status;
 
     @OneToOne(cascade = CascadeType.ALL)
     @JoinColumn(name = "Merchants_id", referencedColumnName = "id")
     private Merchants merchants;
 
-    public Events(String name, String description, String location, Date start_time, Date end_time, Date start_booking, Date endBooking, int max_limit, String banner, Merchants merchants) {
+    public Events(String name, String description, String location, Date start_time, Date end_time, Date start_booking, Date endBooking, int max_limit, String banner, int status, Merchants merchants) {
         this.name = name;
         this.description = description;
         this.location = location;
@@ -48,6 +51,7 @@ public class Events {
         this.end_booking = endBooking;
         this.max_limit = max_limit;
         this.banner = banner;
+        this.status = status;
         this.merchants = merchants;
     }
 
@@ -97,5 +101,9 @@ public class Events {
 
     public void setMerchants(Merchants merchants) {
         this.merchants = merchants;
+    }
+
+    public void setStatus(int status) {
+        this.status = status;
     }
 }

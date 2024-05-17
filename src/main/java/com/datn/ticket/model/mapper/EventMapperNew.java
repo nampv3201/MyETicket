@@ -1,9 +1,7 @@
 package com.datn.ticket.model.mapper;
 
 import com.datn.ticket.model.CreateTickets;
-import com.datn.ticket.model.Events;
-import com.datn.ticket.model.dto.CreateTicketsDTO;
-import com.datn.ticket.model.dto.EventDTO;
+import com.datn.ticket.model.dto.response.CreateTicketsResponse;
 import com.datn.ticket.model.dto.response.TicketTypeResponse;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
@@ -21,4 +19,10 @@ public interface EventMapperNew {
     @Mapping(source = "available", target = "available")
     TicketTypeResponse toTicketTypeResponse(CreateTickets createTicket);
     List<TicketTypeResponse> toTicketTypeResponseList(List<CreateTickets> createTickets);
+
+    @Mapping(source = "id", target = "id")
+    @Mapping(source = "type_name", target = "type_name")
+    @Mapping(source = "price", target = "price")
+    @Mapping(source = "available", target = "available")
+    CreateTicketsResponse createTicketDTO(CreateTickets createTickets);
 }

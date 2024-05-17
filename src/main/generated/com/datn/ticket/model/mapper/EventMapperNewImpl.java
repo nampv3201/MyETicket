@@ -1,6 +1,7 @@
 package com.datn.ticket.model.mapper;
 
 import com.datn.ticket.model.CreateTickets;
+import com.datn.ticket.model.dto.response.CreateTicketsResponse;
 import com.datn.ticket.model.dto.response.TicketTypeResponse;
 import java.util.ArrayList;
 import java.util.List;
@@ -8,7 +9,7 @@ import javax.annotation.processing.Generated;
 
 @Generated(
     value = "org.mapstruct.ap.MappingProcessor",
-    date = "2024-05-16T14:57:40+0700",
+    date = "2024-05-17T09:58:45+0700",
     comments = "version: 1.5.5.Final, compiler: javac, environment: Java 19.0.1 (Oracle Corporation)"
 )
 public class EventMapperNewImpl implements EventMapperNew {
@@ -41,5 +42,21 @@ public class EventMapperNewImpl implements EventMapperNew {
         }
 
         return list;
+    }
+
+    @Override
+    public CreateTicketsResponse createTicketDTO(CreateTickets createTickets) {
+        if ( createTickets == null ) {
+            return null;
+        }
+
+        CreateTicketsResponse createTicketsResponse = new CreateTicketsResponse();
+
+        createTicketsResponse.setId( createTickets.getId() );
+        createTicketsResponse.setType_name( createTickets.getType_name() );
+        createTicketsResponse.setPrice( createTickets.getPrice() );
+        createTicketsResponse.setAvailable( createTickets.getAvailable() );
+
+        return createTicketsResponse;
     }
 }

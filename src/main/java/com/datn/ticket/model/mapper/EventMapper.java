@@ -1,14 +1,13 @@
 package com.datn.ticket.model.mapper;
 
 import com.datn.ticket.model.Events;
-import com.datn.ticket.model.dto.CreateTicketsDTO;
+import com.datn.ticket.model.dto.response.CreateTicketsResponse;
 import com.datn.ticket.model.dto.EventDTO;
 
-import java.util.ArrayList;
 import java.util.List;
 
 public class EventMapper {
-    public static EventDTO eventDTO(Events events, List<String> categories, List<CreateTicketsDTO> createTicketsDTOList){
+    public static EventDTO eventDTO(Events events, List<String> categories, List<CreateTicketsResponse> createTicketsResponseList){
         EventDTO eventDTO = new EventDTO();
         eventDTO.setId(events.getId());
         eventDTO.setName(events.getName());
@@ -22,7 +21,7 @@ public class EventMapper {
         eventDTO.setBanner(events.getBanner());
         eventDTO.setMerchantId(events.getMerchants().getId());
         eventDTO.setMerchantName(events.getMerchants().getName());
-        eventDTO.setCreateTicketsDTOList(createTicketsDTOList);
+        eventDTO.setCreateTicketsResponseList(createTicketsResponseList);
         eventDTO.setCategories(categories);
 
         return eventDTO;

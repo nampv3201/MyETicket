@@ -1,16 +1,16 @@
-package com.datn.ticket.model.dto;
+package com.datn.ticket.model.dto.response;
 
 import lombok.Getter;
 
 @Getter
-public class CreateTicketsDTO {
+public class CreateTicketsResponse {
 
     private int id;
     private String type_name;
-    private double cost;
+    private double price;
     private int available;
 
-    public CreateTicketsDTO() {
+    public CreateTicketsResponse() {
     }
 
     public void setId(int id) {
@@ -21,8 +21,8 @@ public class CreateTicketsDTO {
         this.type_name = type_name;
     }
 
-    public void setCost(double cost) {
-        this.cost = cost;
+    public void setPrice(double price) {
+        this.price = price;
     }
 
     public void setAvailable(int available) {

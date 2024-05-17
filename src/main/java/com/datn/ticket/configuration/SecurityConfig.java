@@ -9,6 +9,7 @@ import org.springframework.security.config.annotation.authentication.builders.Au
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
+import org.springframework.security.config.annotation.web.configuration.WebSecurityCustomizer;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.core.userdetails.User;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -40,6 +41,8 @@ public class SecurityConfig{
     public SecurityFilterChain filterChain(HttpSecurity httpSecurity) throws Exception {
         httpSecurity
                 .authorizeHttpRequests(request -> request
+                        .requestMatchers("/swagger-ui/**", "/v3/api-docs/**", "/proxy/**")
+                        .permitAll()
                         .requestMatchers(HttpMethod.POST, PUBLIC_ENDPOINTS)
                         .permitAll()
                         .requestMatchers(HttpMethod.GET, PUBLIC_ENDPOINTS)

@@ -11,6 +11,7 @@ import com.datn.ticket.model.dto.request.UpdateCartRequest;
 import com.datn.ticket.model.dto.request.UserUpdateRequest;
 import com.datn.ticket.model.dto.response.ApiResponse;
 import com.datn.ticket.model.dto.response.CartResponse;
+import com.datn.ticket.model.dto.response.UserInforResponse;
 import com.datn.ticket.model.mapper.UsersMapper;
 import com.datn.ticket.service.EventService;
 import com.datn.ticket.service.UserService;
@@ -40,11 +41,11 @@ public class UserController {
 
     @Operation(summary = "Lấy thông tin chi tiết của 1 người dùng")
     @GetMapping("/myInfor")
-    public ApiResponse<UsersDTO> getUserInfor(){
+    public ApiResponse<UserInforResponse> getUserInfor(){
         try{
             Users user = userService.myInfor();
-            return ApiResponse.<UsersDTO>builder()
-                    .result(UsersMapper.toUsersDTO(user))
+            return ApiResponse.<UserInforResponse>builder()
+                    .result(UsersMapper.INSTANCE.toUserDto(user))
                     .build();
         }catch (Exception e){
             throw new AppException(ErrorCode.USER_NOT_EXISTED);
@@ -54,7 +55,7 @@ public class UserController {
 
     @Operation(summary = "Cập nhật thông tin chi tiết của 1 người dùng")
     @PostMapping("/infor/update")
-    public ApiResponse<UsersDTO> updateUserInfor(@RequestBody UserUpdateRequest request){
+    public ApiResponse<UserInforResponse> updateUserInfor(@RequestBody UserUpdateRequest request){
         try{
             Users u = userService.myInfor();
             u.setName(request.getName());
@@ -62,8 +63,8 @@ public class UserController {
             u.setPhone(request.getPhone());
             u.setAge(request.getAge());
             userService.updateUser(u);
-            return ApiResponse.<UsersDTO>builder()
-                    .result(UsersMapper.toUsersDTO(u))
+            return ApiResponse.<UserInforResponse>builder()
+                    .result(UsersMapper.INSTANCE.toUserDto(u))
                     .build();
         }catch (Exception e){
             throw new AppException(ErrorCode.USER_NOT_EXISTED);

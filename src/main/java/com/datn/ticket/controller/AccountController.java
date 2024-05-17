@@ -8,6 +8,7 @@ import com.datn.ticket.model.Roles;
 import com.datn.ticket.model.dto.request.IntrospectRequest;
 import com.datn.ticket.model.dto.request.LoginRequest;
 import com.datn.ticket.model.dto.request.SignUpRequest;
+import com.datn.ticket.model.dto.response.AccountResponse;
 import com.datn.ticket.model.dto.response.ApiResponse;
 import com.datn.ticket.model.dto.response.AuthenticationResponse;
 import com.datn.ticket.model.dto.response.IntrospectResponse;
@@ -18,6 +19,8 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.nimbusds.jose.JOSEException;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
+import io.swagger.v3.oas.annotations.security.SecurityScheme;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -44,17 +47,22 @@ public class AccountController {
         this.accountService = accountService;
     }
 
+    @SecurityRequirement(name = "bearerAuth")
     @Operation(summary = "Lấy danh sách tất cả các tài khoản")
     @GetMapping("/getAccount")
-    public List<Accounts> getAccount(){
-        return accountService.getAccount();
+    public ApiResponse<List<AccountResponse>> getAccount(){
+        return ApiResponse.<List<AccountResponse>>builder().result(accountService.getAccount()).build();
     }
 
+    @SecurityRequirement(name = "bearerAuth")
     @Operation(summary = "Lấy 1 tài khoản cụ thể")
     @GetMapping("/{id}")
-    public ResponseEntity<Object> getById(@PathVariable("id") Integer id){
-        return accountService.getByID(id);
+    public ApiResponse<AccountResponse> getById(@PathVariable("id") Integer id){
+        return ApiResponse.<AccountResponse>builder()
+                .result(accountService.getByID(id))
+                .build();
     }
+
 
     @Operation(summary = "Đăng ký tài khoản mới")
     @PostMapping("/sign-up")
@@ -75,6 +83,7 @@ public class AccountController {
         return ApiResponse.builder().message("Đăng ký thành công").build();
     }
 
+
     @Operation(summary = "Đăng nhập")
     @PostMapping("/sign-in")
     public ResponseEntity<AuthenticationResponse> signIn(@RequestBody LoginRequest request){
@@ -88,12 +97,14 @@ public class AccountController {
         return ApiResponse.<IntrospectResponse>builder().result(result).build();
     }
 
+    @SecurityRequirement(name = "bearerAuth")
     @Operation(summary = "Disable tài khoản")
     @PutMapping("/disable/{id}")
     public void disableAccount(@PathVariable("id") int id){
         accountService.disableAccount(id);
     }
 
+    @SecurityRequirement(name = "bearerAuth")
     @Operation(summary = "Enable tài khoản")
     @PutMapping("/enable/{id}")
     public void enableAccount(@PathVariable("id") int id){

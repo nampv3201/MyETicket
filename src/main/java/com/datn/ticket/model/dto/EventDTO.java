@@ -1,11 +1,8 @@
 package com.datn.ticket.model.dto;
 
-import com.datn.ticket.model.Events;
-import com.datn.ticket.model.Merchants;
-import jakarta.persistence.*;
+import com.datn.ticket.model.dto.response.CreateTicketsResponse;
 import lombok.Getter;
 
-import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
@@ -26,7 +23,7 @@ public class EventDTO {
     private String merchantName;
     private List<String> categories;
 
-    private List<CreateTicketsDTO> createTicketsDTOList;
+    private List<CreateTicketsResponse> createTicketsResponseList;
 
     public EventDTO(){
 
@@ -84,7 +81,7 @@ public class EventDTO {
         this.categories = categories;
     }
 
-    public void setCreateTicketsDTOList(List<CreateTicketsDTO> createTicketsDTOList) {
-        this.createTicketsDTOList = createTicketsDTOList;
+    public void setCreateTicketsResponseList(List<CreateTicketsResponse> createTicketsResponseList) {
+        this.createTicketsResponseList = createTicketsResponseList;
     }
 }

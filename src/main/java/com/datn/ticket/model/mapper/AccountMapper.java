@@ -2,15 +2,12 @@ package com.datn.ticket.model.mapper;
 
 import com.datn.ticket.model.Accounts;
 import com.datn.ticket.model.dto.AccountsDTO;
+import com.datn.ticket.model.dto.response.AccountResponse;
+import org.mapstruct.Mapper;
+import org.mapstruct.Mapping;
+import org.mapstruct.factory.Mappers;
 
-public class AccountMapper {
-    public static AccountsDTO accountsDTO(Accounts accounts){
-        AccountsDTO acc = new AccountsDTO();
-        acc.setUsername(accounts.getUsername());
-        acc.setPassword(accounts.getPassword());
-//        acc.setRole(accounts.getRole());
-
-        return acc;
-    }
-
+@Mapper
+public interface AccountMapper {
+    AccountMapper INSTANCE = Mappers.getMapper(AccountMapper.class);
 }

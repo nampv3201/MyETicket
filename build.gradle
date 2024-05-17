@@ -28,12 +28,13 @@ dependencies {
 //	testImplementation 'org.springframework.security:spring-security-test'
 
 	implementation 'org.springdoc:springdoc-openapi-starter-webmvc-ui:2.5.0'
+//	implementation 'org.springdoc:springdoc-openapi-ui:1.6.15'
+	implementation 'org.springdoc:springdoc-openapi-security:2.5.0'
 
 	// Gson
 	implementation 'com.google.code.gson:gson:2.10.1'
 
 	// JWT
-	// https://mvnrepository.com/artifact/com.nimbusds/nimbus-jose-jwt
 	implementation 'com.nimbusds:nimbus-jose-jwt:9.39'
 
 	// Mapstruct

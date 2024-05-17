@@ -1,5 +1,6 @@
 package com.datn.ticket.model.dto;
 
+import com.datn.ticket.model.dto.response.CreateTicketsResponse;
 import lombok.Getter;
 
 import java.util.Date;
@@ -12,7 +13,7 @@ public class EventSecondUpdate {
     private Date start_booking;
     private Date end_booking;
 
-    private List<CreateTicketsDTO> createTickets;
+    private List<CreateTicketsResponse> createTickets;
 
     public EventSecondUpdate() {
     }
@@ -33,7 +34,7 @@ public class EventSecondUpdate {
         this.end_booking = end_booking;
     }
 
-    public void setCreateTickets(List<CreateTicketsDTO> createTickets) {
+    public void setCreateTickets(List<CreateTicketsResponse> createTickets) {
         this.createTickets = createTickets;
     }
 }

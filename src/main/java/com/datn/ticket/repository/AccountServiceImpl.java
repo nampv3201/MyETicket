@@ -1,6 +1,7 @@
 package com.datn.ticket.repository;
 
 import com.datn.ticket.exception.AppException;
+import com.datn.ticket.exception.ErrorCode;
 import com.datn.ticket.model.*;
 
 import java.text.ParseException;
@@ -8,6 +9,8 @@ import java.util.StringJoiner;
 import java.util.UUID;
 import com.datn.ticket.model.dto.AccountsDTO;
 import com.datn.ticket.model.dto.request.IntrospectRequest;
+import com.datn.ticket.model.dto.response.AccountResponse;
+import com.datn.ticket.model.dto.response.ApiResponse;
 import com.datn.ticket.model.dto.response.AuthenticationResponse;
 import com.datn.ticket.model.dto.response.IntrospectResponse;
 import com.datn.ticket.model.mapper.AccountMapper;
@@ -81,20 +84,28 @@ public class AccountServiceImpl implements AccountService {
     }
 
     @Override
-    public List<Accounts> getAccount() {
-        TypedQuery<Accounts> query = manager.createQuery("select a from Accounts a", Accounts.class);
-        List<Accounts> accounts = query.getResultList();
+    public List<AccountResponse> getAccount() {
+        Query query = manager.createNativeQuery("select a.id, a.username, a.status, " +
+                "GROUP_CONCAT(DISTINCT r.role_name ORDER BY r.role_name ASC SEPARATOR ', ') " +
+                "from account a " +
+                "join account_has_role ar on a.id = ar.Account_id " +
+                "join role r on ar.role_id = r.id group by a.id", AccountResponse.class);
+        List<AccountResponse> accounts = query.getResultList();
         return accounts;
     }
 
     @Override
-    public ResponseEntity<Object> getByID(Integer id) {
-        TypedQuery<Accounts> query = manager.createQuery("select a from Accounts a where a.id = :id", Accounts.class);
+    public AccountResponse getByID(Integer id) {
+        Query query = manager.createNativeQuery("select a.id, a.username, a.status, " +
+                "GROUP_CONCAT(DISTINCT r.role_name ORDER BY r.role_name ASC SEPARATOR ', ') " +
+                "from account a " +
+                "join account_has_role ar on a.id = ar.Account_id " +
+                "join role r on ar.role_id = r.id where a.id = :id", AccountResponse.class);
         query.setParameter("id", id);
         try{
-            return ResponseEntity.ok(query.getSingleResult());
+            return (AccountResponse) query.getSingleResult();
         }catch (NoResultException e) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Không tìm thấy thông tin");
+            throw new AppException(ErrorCode.USER_NOT_EXISTED);
         }
     }
 
