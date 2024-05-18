@@ -26,6 +26,7 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpSession;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -38,6 +39,7 @@ import java.util.List;
 @RestController
 @RequestMapping("/event")
 @Tag(name = "Event Controller")
+@Slf4j
 public class EventController {
 
     private final EventService eventService;
@@ -68,8 +70,10 @@ public class EventController {
     @GetMapping("/get")
     public ResponseEntity<Object> getByFilter(@RequestParam(value = "MerchantId", required = false) Integer MerchantId,
                                               @RequestParam(value = "CategoryId",required = false) List<Integer> CategoryId,
-                                              @RequestParam(value = "allTime",required = false) Integer allTime){
-        return eventService.getEventByFilter(MerchantId, CategoryId, allTime);
+                                              @RequestParam(value = "allTime",required = false) Integer allTime,
+                                              @RequestParam(value = "city", required = false) String city){
+        log.info("{}", city);
+        return eventService.getEventByFilter(MerchantId, CategoryId, allTime, city);
     }
 
     @Operation(summary = "Lấy danh sách categories")
@@ -87,6 +91,7 @@ public class EventController {
         try{
             newEvent.setName(eafRequest.getEventName());
             newEvent.setDescription(eafRequest.getEventDescription());
+            newEvent.setCity(eafRequest.getEventCity());
             newEvent.setLocation(eafRequest.getEventLocation());
             newEvent.setBanner(eafRequest.getEventBanner());
             newEvent.setMax_limit(eafRequest.getEventLimit());
@@ -157,7 +162,6 @@ public class EventController {
     @GetMapping("/update/first-step/{id}")
     public ApiResponse<EventFirstUpdate> getEventUpdate(@PathVariable("id") int eventId){
         HttpSession session = request.getSession(true);
-        session.setAttribute("tempTicketAdd", new ArrayList<CreateTickets>());
         session.setAttribute("tempTicketUpdate", new ArrayList<CreateTickets>());
         session.setAttribute("tempCategoriesAdd", new ArrayList<Categories>());
         session.setAttribute("tempCategoriesRemove", new ArrayList<Categories>());
@@ -187,6 +191,8 @@ public class EventController {
                 }
             }
             createCategories.add(c);
+
+
             return ApiResponse.builder().message("Deleted").build();
         }catch (Exception e){
             throw new AppException(ErrorCode.UNCATEGORIZED_EXCEPTION);
@@ -230,6 +236,7 @@ public class EventController {
 
             event.setName(eufRequest.getEventName());
             event.setDescription(eufRequest.getEventDescription());
+            event.setCity(eufRequest.getEventCity());
             event.setLocation(eufRequest.getEventLocation());
             event.setBanner(eufRequest.getEventBanner());
             event.setMax_limit(eufRequest.getEventLimit());
@@ -268,7 +275,7 @@ public class EventController {
             c.setCount(tRequest.getQuantity());
             c.setAvailable(c.getAvailable() + oldQuantity - tRequest.getQuantity());
             c.setType_name(tRequest.getTypeName());
-            c.setPrice(c.getPrice());
+            c.setPrice(tRequest.getPrice());
 
             for(CreateTickets tickets : createTickets){
                 if(tickets.getId() == c.getId()){
@@ -278,6 +285,7 @@ public class EventController {
             }
 
             createTickets.add(c);
+
             return ApiResponse.builder().message("true").build();
         }catch (Exception e){
             throw new AppException(ErrorCode.UNCATEGORIZED_EXCEPTION);
@@ -311,15 +319,15 @@ public class EventController {
         }
 
         List<CreateTickets> updateTicket = (List<CreateTickets>) session.getAttribute("tempTicketUpdate");
-        List<Categories> addCat = new ArrayList<>();
-        List<Categories> removeCat = new ArrayList<>();
+        List<Categories> addCat = (List<Categories>) session.getAttribute("tempCategoriesAdd");
+        List<Categories> removeCat = (List<Categories>) session.getAttribute("tempCategoriesRemove");
 
         try{
-            String status = eventService.UpdateEvent(e, updateTicket, addTickets, addCat, removeCat).getBody().toString();
+            String status = eventService.UpdateEvent(e, updateTicket, addTickets, addCat, removeCat).getMessage();
             session.invalidate();
-            return ApiResponse.builder().message(status).build();
+            return ApiResponse.builder().message("status").build();
         }catch(Exception ex){
-            throw new AppException(ErrorCode.UNCATEGORIZED_EXCEPTION);
+            return ApiResponse.builder().message(ex.getMessage()).build();
         }
 
     }

@@ -7,7 +7,7 @@ import java.util.List;
 
 @Getter
 public class EventFirstUpdate {
-    private String eventName, eventDescription, eventLocation, eventBanner;
+    private String eventName, eventDescription, eventCity, eventLocation, eventBanner;
     private int eventMaxLimit;
     private List<Categories> categoriesList;
 
@@ -22,6 +22,9 @@ public class EventFirstUpdate {
         this.eventDescription = eventDescription;
     }
 
+    public void setEventCity(String eventCity) {
+        this.eventCity = eventCity;
+    }
     public void setEventLocation(String eventLocation) {
         this.eventLocation = eventLocation;
     }

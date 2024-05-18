@@ -13,6 +13,7 @@ import java.util.List;
 public class EAFRequest {
     String eventName;
     String eventDescription;
+    String eventCity;
     String eventLocation;
     String eventBanner;
     List<Integer> categories;

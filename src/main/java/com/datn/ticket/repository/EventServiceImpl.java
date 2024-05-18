@@ -1,5 +1,7 @@
 package com.datn.ticket.repository;
 
+import com.datn.ticket.exception.AppException;
+import com.datn.ticket.exception.ErrorCode;
 import com.datn.ticket.model.Categories;
 import com.datn.ticket.model.CreateTickets;
 import com.datn.ticket.model.EventCat;
@@ -38,7 +40,7 @@ public class EventServiceImpl implements EventService {
 
     @Override
     public ResponseEntity<Object> findEventByName(String keyWord) {
-        Query query = manager.createNativeQuery("Select e.id, e.name, e.banner, e.location, e.start_booking, min(ct.price) " +
+        Query query = manager.createNativeQuery("Select e.id, e.name, e.banner, e.city, e.location, e.start_booking, min(ct.price) " +
                 "from events e " +
                 "join createticket ct on ct.Events_id = e.id " +
                 "where e.name like :keyWord group by e.id");
@@ -99,11 +101,10 @@ public class EventServiceImpl implements EventService {
     }
 
     @Override
-    public ResponseEntity<Object> getEventByFilter(Integer MerchantId, List<Integer> CategoryId, Integer allTime) {
-        log.info("{}", MerchantId);
+    public ResponseEntity<Object> getEventByFilter(Integer MerchantId, List<Integer> CategoryId, Integer allTime, String city) {
         List<Object[]> events = new ArrayList<>();
         Query getEvent;
-        StringBuilder query = new StringBuilder("Select e.id, e.name, e.banner, e.location, e.start_booking, min(ct.price) " +
+        StringBuilder query = new StringBuilder("Select e.id, e.name, e.banner, e.city, e.location, e.start_booking, min(ct.price) " +
                 "from events e " +
                 "join createticket ct on ct.Events_id = e.id " +
                 "where 1=1 ");
@@ -121,6 +122,9 @@ public class EventServiceImpl implements EventService {
         if(allTime == null){
             query.append("and e.end_time > now() ");
         }
+        if(city != null){
+            query.append("and e.city = :city ");
+        }
 
         // Create Query
         query.append("group by e.id, e.name");
@@ -133,14 +137,17 @@ public class EventServiceImpl implements EventService {
         if(CategoryId != null && !CategoryId.isEmpty()) {
             getEvent.setParameter("CategoryId", CategoryId);
         }
+        if(city != null){
+            getEvent.setParameter("city", city);
+        }
 
         events = getEvent.getResultList();
         return ResponseEntity.ok().body(EventHomeMapper.eventHomeDTO(events));
     }
 
     @Override
-    @Transactional(dontRollbackOn = Exception.class)
-    public ResponseEntity<Object> UpdateEvent(Events events, List<CreateTickets> updateTickets,
+    @Transactional()
+    public ApiResponse<?> UpdateEvent(Events events, List<CreateTickets> updateTickets,
                                               List<CreateTickets> newTickets, List<Categories> newCategories, List<Categories> removeCategories) {
         try{
             manager.merge(events);
@@ -153,40 +160,47 @@ public class EventServiceImpl implements EventService {
                         manager.persist(c);
                     }
                 }catch(Exception e){
-                    System.out.println(e.getMessage());
+                    throw new AppException(ErrorCode.UNCATEGORIZED_EXCEPTION);
                 }
             }
 
             if(!updateTickets.isEmpty()){
-                for(CreateTickets c : updateTickets){
-//                    c.setEvents(events);
-//                    c.setMerchants(events.getMerchants());
-                    manager.merge(c);
+                try{
+                    for(CreateTickets c : updateTickets){
+                        manager.merge(c);
+                    }
+                }catch (Exception e){
+                    throw  new AppException(ErrorCode.UNCATEGORIZED_EXCEPTION);
                 }
             }
 
             if(!newCategories.isEmpty()){
-                for(Categories cat : newCategories){
-                    EventCat ec = new EventCat();
-                    ec.setEvents(uEvent);
-                    ec.setCategories(cat);
-                    manager.persist(ec);
+                try {
+                    for (Categories cat : newCategories) {
+                        manager.createNativeQuery("insert into events_has_categories (`Events_id`, `Categories_id`) " +
+                                        "values (?, ?)").setParameter(1, events.getId())
+                                .setParameter(2, cat.getId()).executeUpdate();
+                    }
+                }catch(Exception e){
+                        log.info("{Add new category}", e.getMessage());
                 }
             }
 
             if(!removeCategories.isEmpty()){
-                for(Categories cat : newCategories){
-                    EventCat ec = new EventCat();
-                    ec.setEvents(uEvent);
-                    ec.setCategories(cat);
-                    manager.remove(ec);
+                try{
+                    for(Categories cat : newCategories){
+                        manager.createNativeQuery("delete from events_has_categories e where e.Events_id = :eventId " +
+                                        "and e.Categories_id = :catId").setParameter("eventId", events.getId())
+                                .setParameter("catId", cat.getId()).executeUpdate();
+                    }
+                }catch(Exception e){
+                    log.info("{Remove category}", e.getMessage());
                 }
             }
 
-            return ResponseEntity.ok().body("Cập nhật thành công");
+            return ApiResponse.builder().message("Cập nhật thành công").build();
         }catch(Exception ex){
-//            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Có lỗi xảy ra, vui lòng thử lại sau");
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(ex.getMessage());
+            throw new AppException(ErrorCode.UNCATEGORIZED_EXCEPTION);
         }
 
     }

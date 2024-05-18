@@ -11,6 +11,7 @@ import lombok.experimental.FieldDefaults;
 public class EUFRequest {
     String eventName;
     String eventDescription;
+    String eventCity;
     String eventLocation;
     String eventBanner;
     int eventLimit;

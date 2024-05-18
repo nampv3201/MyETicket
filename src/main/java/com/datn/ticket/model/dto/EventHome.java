@@ -9,14 +9,16 @@ public class EventHome {
     private int id;
     private String name;
     private String banner;
+    private String city;
     private String location;
     private LocalDate startDate;
     private Double minPrice;
 
-    public EventHome(int id, String name, String banner, String location, LocalDate startDate, Double minPrice) {
+    public EventHome(int id, String name, String banner, String city, String location, LocalDate startDate, Double minPrice) {
         this.id = id;
         this.name = name;
         this.banner = banner;
+        this.city = city;
         this.location = location;
         this.startDate = startDate;
         this.minPrice = minPrice;
@@ -31,6 +33,10 @@ public class EventHome {
 
     public void setName(String name) {
         this.name = name;
+    }
+
+    public void setCity(String city){
+        this.city = city;
     }
 
     public void setLocation(String location) {

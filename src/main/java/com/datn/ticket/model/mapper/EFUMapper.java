@@ -11,6 +11,7 @@ public class EFUMapper {
         EventFirstUpdate efu = new EventFirstUpdate();
         efu.setEventName(events.getName());
         efu.setEventDescription(events.getDescription());
+        efu.setEventCity(events.getCity());
         efu.setEventLocation(events.getLocation());
         efu.setEventBanner(events.getBanner());
         efu.setEventMaxLimit(events.getMax_limit());

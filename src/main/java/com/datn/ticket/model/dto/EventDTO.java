@@ -12,6 +12,7 @@ public class EventDTO {
 
     private String name;
     private String description;
+    private String city;
     private String location;
     private Date start_time;
     private Date end_time;
@@ -29,6 +30,9 @@ public class EventDTO {
 
     }
 
+    public void setCity(String city){
+        this.city = city;
+    }
     public void setId(int id) {
         this.id = id;
     }

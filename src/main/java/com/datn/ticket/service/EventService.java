@@ -12,7 +12,7 @@ import java.util.List;
 public interface EventService {
     ApiResponse<EventDTO> getEvent(int id);
     ResponseEntity<Object> findEventByName(String name);
-    ResponseEntity<Object> getEventByFilter(Integer MerchantId, List<Integer> CategoryId, Integer allTime);
+    ResponseEntity<Object> getEventByFilter(Integer MerchantId, List<Integer> CategoryId, Integer allTime, String city);
     List<Categories> getAllCategories();
     void addEvent(Events events, List<CreateTickets> ticketsList, List<Categories> categories);
 
@@ -22,7 +22,7 @@ public interface EventService {
 
     // Service for update task
     List<Categories> getCategories(List<Integer> ids);
-    ResponseEntity<Object> UpdateEvent(Events events, List<CreateTickets> updateTickets,
+    ApiResponse<?> UpdateEvent(Events events, List<CreateTickets> updateTickets,
                                        List<CreateTickets> newTickets, List<Categories> newCategories, List<Categories> removeCategories);
     Events getEventUpdate(int eventId);
 

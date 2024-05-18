@@ -19,6 +19,9 @@ public class Events {
     private String name;
     @Column(name = "description")
     private String description;
+    @Getter
+    @Column(name = "city")
+    private String city;
     @Column(name = "location")
     private String location;
     @Column(name = "start_time")
@@ -41,9 +44,10 @@ public class Events {
     @JoinColumn(name = "Merchants_id", referencedColumnName = "id")
     private Merchants merchants;
 
-    public Events(String name, String description, String location, Date start_time, Date end_time, Date start_booking, Date endBooking, int max_limit, String banner, int status, Merchants merchants) {
+    public Events(String name, String description, String city, String location, Date start_time, Date end_time, Date start_booking, Date endBooking, int max_limit, String banner, int status, Merchants merchants) {
         this.name = name;
         this.description = description;
+        this.city = city;
         this.location = location;
         this.start_time = start_time;
         this.end_time = end_time;
@@ -105,5 +109,9 @@ public class Events {
 
     public void setStatus(int status) {
         this.status = status;
+    }
+
+    public void setCity(String city) {
+        this.city = city;
     }
 }

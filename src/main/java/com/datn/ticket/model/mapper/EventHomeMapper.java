@@ -17,10 +17,10 @@ public class EventHomeMapper {
             eventHome.setId((Integer) e[0]);
             eventHome.setName((String) e[1]);
             eventHome.setBanner((String) e[2]);
-            eventHome.setLocation((String) e[3]);
-            System.out.println(e[4]);
-            eventHome.setStartDate(((Timestamp) e[4]).toLocalDateTime().toLocalDate());
-            eventHome.setMinPrice(((Long) e[5]).doubleValue());
+            eventHome.setCity((String) e[3]);
+            eventHome.setLocation((String) e[4]);
+            eventHome.setStartDate(((Timestamp) e[5]).toLocalDateTime().toLocalDate());
+            eventHome.setMinPrice(((Long) e[6]).doubleValue());
             eventHomes.add(eventHome);
         }
 
