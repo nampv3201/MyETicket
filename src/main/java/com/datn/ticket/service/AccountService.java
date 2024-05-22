@@ -16,9 +16,6 @@ import java.util.List;
 public interface AccountService {
 
     void newAccount(Accounts account, List<Integer> roleID);
-    List<AccountResponse> getAccount();
-    AccountResponse getByID(Integer id);
-
     Accounts getUsername(String username);
 
     ResponseEntity<AuthenticationResponse> signIn(String username, String password, int role);

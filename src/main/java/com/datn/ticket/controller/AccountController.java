@@ -47,23 +47,6 @@ public class AccountController {
         this.accountService = accountService;
     }
 
-    @SecurityRequirement(name = "bearerAuth")
-    @Operation(summary = "Lấy danh sách tất cả các tài khoản")
-    @GetMapping("/getAccount")
-    public ApiResponse<List<AccountResponse>> getAccount(){
-        return ApiResponse.<List<AccountResponse>>builder().result(accountService.getAccount()).build();
-    }
-
-    @SecurityRequirement(name = "bearerAuth")
-    @Operation(summary = "Lấy 1 tài khoản cụ thể")
-    @GetMapping("/{id}")
-    public ApiResponse<AccountResponse> getById(@PathVariable("id") Integer id){
-        return ApiResponse.<AccountResponse>builder()
-                .result(accountService.getByID(id))
-                .build();
-    }
-
-
     @Operation(summary = "Đăng ký tài khoản mới")
     @PostMapping("/sign-up")
     public ApiResponse<?> newAccount(@RequestBody SignUpRequest request) throws ParseException {

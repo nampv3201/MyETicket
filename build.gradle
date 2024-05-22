@@ -44,6 +44,9 @@ dependencies {
 
 	implementation 'io.swagger:swagger-codegen-maven-plugin:3.0.56'
 
+	implementation 'com.google.zxing:core:3.5.3'
+	implementation 'com.google.zxing:javase:3.5.3'
+
 }
 
 tasks.named('test') {

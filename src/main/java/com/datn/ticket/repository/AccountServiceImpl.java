@@ -84,32 +84,6 @@ public class AccountServiceImpl implements AccountService {
     }
 
     @Override
-    public List<AccountResponse> getAccount() {
-        Query query = manager.createNativeQuery("select a.id, a.username, a.status, " +
-                "GROUP_CONCAT(DISTINCT r.role_name ORDER BY r.role_name ASC SEPARATOR ', ') " +
-                "from account a " +
-                "join account_has_role ar on a.id = ar.Account_id " +
-                "join role r on ar.role_id = r.id group by a.id", AccountResponse.class);
-        List<AccountResponse> accounts = query.getResultList();
-        return accounts;
-    }
-
-    @Override
-    public AccountResponse getByID(Integer id) {
-        Query query = manager.createNativeQuery("select a.id, a.username, a.status, " +
-                "GROUP_CONCAT(DISTINCT r.role_name ORDER BY r.role_name ASC SEPARATOR ', ') " +
-                "from account a " +
-                "join account_has_role ar on a.id = ar.Account_id " +
-                "join role r on ar.role_id = r.id where a.id = :id", AccountResponse.class);
-        query.setParameter("id", id);
-        try{
-            return (AccountResponse) query.getSingleResult();
-        }catch (NoResultException e) {
-            throw new AppException(ErrorCode.USER_NOT_EXISTED);
-        }
-    }
-
-    @Override
     public Accounts getUsername(String username) {
         try {
             TypedQuery<Accounts> query = manager.createQuery("Select a from Accounts a where a.username = :username", Accounts.class);
@@ -123,7 +97,7 @@ public class AccountServiceImpl implements AccountService {
     @Override
     public ResponseEntity<AuthenticationResponse> signIn(String username, String password, int role) {
         PasswordEncoder passwordEncoder = new BCryptPasswordEncoder(10);
-        Query customQuery = manager.createQuery("Select ar.accounts, ar.roles, a.username, a.status from AccountRole ar" +
+        Query customQuery = manager.createQuery("Select ar.accounts, ar.roles, a.username, ar.status from AccountRole ar" +
                 " join ar.accounts a where a.username = :username");
         customQuery.setParameter("username", username);
         ArrayList<Integer> roles = new ArrayList<>();
@@ -142,11 +116,6 @@ public class AccountServiceImpl implements AccountService {
             a.setRoles(roles);
 
             if(a.getRoles().contains(role) && (Integer) results.get(0)[3] == 1){
-                CurrentAccount currentAccount = CurrentAccount.getInstance();
-                currentAccount.setAccounts(a);
-                currentAccount.setUsername((String) results.get(0)[2]);
-                currentAccount.setStatus((Integer) results.get(0)[3]);
-
                 var token = generateToken(a);
                 return ResponseEntity.ok(AuthenticationResponse.builder().token(token).authenticated(true).build());
             }

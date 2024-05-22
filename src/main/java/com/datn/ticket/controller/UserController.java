@@ -9,9 +9,7 @@ import com.datn.ticket.model.dto.request.AddToCartRequest;
 import com.datn.ticket.model.dto.request.RemoveFromCartRequest;
 import com.datn.ticket.model.dto.request.UpdateCartRequest;
 import com.datn.ticket.model.dto.request.UserUpdateRequest;
-import com.datn.ticket.model.dto.response.ApiResponse;
-import com.datn.ticket.model.dto.response.CartResponse;
-import com.datn.ticket.model.dto.response.UserInforResponse;
+import com.datn.ticket.model.dto.response.*;
 import com.datn.ticket.model.mapper.UsersMapper;
 import com.datn.ticket.service.EventService;
 import com.datn.ticket.service.UserService;
@@ -26,7 +24,7 @@ import java.util.List;
 
 @Slf4j
 @RestController
-@RequestMapping("/user")
+//@RequestMapping("/user")
 @Tag(name = "User Controller")
 public class UserController {
 
@@ -40,7 +38,7 @@ public class UserController {
     }
 
     @Operation(summary = "Lấy thông tin chi tiết của 1 người dùng")
-    @GetMapping("/myInfor")
+    @GetMapping("/user/profile")
     public ApiResponse<UserInforResponse> getUserInfor(){
         try{
             Users user = userService.myInfor();
@@ -54,7 +52,7 @@ public class UserController {
 
 
     @Operation(summary = "Cập nhật thông tin chi tiết của 1 người dùng")
-    @PostMapping("/infor/update")
+    @PostMapping("/user/update")
     public ApiResponse<UserInforResponse> updateUserInfor(@RequestBody UserUpdateRequest request){
         try{
             Users u = userService.myInfor();
@@ -130,6 +128,29 @@ public class UserController {
             return ApiResponse.builder()
                     .message(e.getMessage())
                     .build();
+        }
+    }
+
+    @Operation(summary = "Lấy lịch sử mua hàng")
+    @GetMapping("/history")
+    public ApiResponse<List<HistoryResponse>> getHistory(){
+        try{
+            return ApiResponse.<List<HistoryResponse>>builder()
+                    .result(userService.myHistory())
+                    .build();
+        }catch (Exception e){
+            throw new AppException(ErrorCode.UNCATEGORIZED_EXCEPTION);
+        }
+    }
+
+    @Operation(summary = "Lấy chi tiết lịch sử mua hàng")
+    @GetMapping("/history/{id}")
+    public ApiResponse<?> getHistoryDetail(@PathVariable("id") String id){
+        try{
+            return ApiResponse.<HistoryResponseDetail>builder().result(userService.getHistoryResponseDetail(id)).build();
+        }catch (Exception e){
+            log.error(e.getMessage());
+            throw new AppException(ErrorCode.UNCATEGORIZED_EXCEPTION);
         }
     }
 }

@@ -33,8 +33,7 @@ public class SecurityConfig{
     @Value("${jwt.signerKey}")
     private String signerKey;
     private final String[] PUBLIC_ENDPOINTS = {
-            "/account/sign-in", "/account/sign-up", "/account/getAccount", "/account/introspect", "/event/search", "/event/get", "/event/categories",
-            "/vnpay_jsp/vnpay_return.jsp"
+            "/account/**", "/home/**", "/api/payment/infor", "/home/event",
     };
 
     @Bean
@@ -43,9 +42,7 @@ public class SecurityConfig{
                 .authorizeHttpRequests(request -> request
                         .requestMatchers("/swagger-ui/**", "/v3/api-docs/**", "/proxy/**")
                         .permitAll()
-                        .requestMatchers(HttpMethod.POST, PUBLIC_ENDPOINTS)
-                        .permitAll()
-                        .requestMatchers(HttpMethod.GET, PUBLIC_ENDPOINTS)
+                        .requestMatchers(PUBLIC_ENDPOINTS)
                         .permitAll()
                         .anyRequest()
                         .authenticated()

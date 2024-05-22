@@ -21,12 +21,16 @@ public class AccountRole {
     @JoinColumn(name = "role_id", referencedColumnName = "id")
     private Roles roles;
 
+    @Getter
+    private int status;
+
     public AccountRole() {
     }
 
-    public AccountRole(Accounts accounts, Roles roles) {
+    public AccountRole(Accounts accounts, Roles roles, int status) {
         this.accounts = accounts;
         this.roles = roles;
+        this.status = status;
     }
 
     public void setAccounts(Accounts accounts) {
@@ -35,5 +39,9 @@ public class AccountRole {
 
     public void setRoles(Roles roles) {
         this.roles = roles;
+    }
+
+    public void setStatus(int status) {
+        this.status = status;
     }
 }

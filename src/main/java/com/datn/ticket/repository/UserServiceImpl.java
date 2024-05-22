@@ -1,13 +1,15 @@
 package com.datn.ticket.repository;
 
+import com.datn.ticket.exception.AppException;
+import com.datn.ticket.exception.ErrorCode;
 import com.datn.ticket.model.Cart;
 import com.datn.ticket.model.Users;
 import com.datn.ticket.model.dto.request.UpdateCartRequest;
-import com.datn.ticket.model.dto.response.CartResponse;
-import com.datn.ticket.model.dto.response.PaymentResponse;
+import com.datn.ticket.model.dto.response.*;
+import com.datn.ticket.service.EventService;
 import com.datn.ticket.service.UserService;
+import com.datn.ticket.util.QRCodeService;
 import jakarta.persistence.EntityManager;
-import jakarta.persistence.NoResultException;
 import jakarta.persistence.Query;
 import jakarta.transaction.Transactional;
 import lombok.extern.slf4j.Slf4j;
@@ -15,12 +17,17 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Repository;
 
+import java.util.ArrayList;
 import java.util.List;
+import java.util.UUID;
 
 @Repository
 @Slf4j
 public class UserServiceImpl implements UserService {
     private final EntityManager manager;
+
+    @Autowired
+    EventService eventService;
 
     @Autowired
     public UserServiceImpl(EntityManager entityManager){
@@ -86,8 +93,35 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
+    @Transactional
+    public List<Integer> directOrder(List<Cart> carts) {
+        Users u = myInfor();
+        List<Integer> cartIds = new ArrayList<>();
+        for(Cart c : carts){
+            Double price = Double.parseDouble(manager.createNativeQuery("select ct.price from createticket ct where ct.id = :id")
+                    .setParameter("id", c.getCreateTickets().getId())
+                    .getSingleResult()
+                    .toString()) * c.getQuantity();
+            c.setCost(price);
+            c.setStatus(0);
+            c.setUser(u);
+
+            manager.persist(c);
+            cartIds.add(c.getId());
+        }
+        return cartIds;
+    }
+
+    @Override
+    public Cart getSingleCart(int cartId) {
+        return manager.createQuery("select c from Cart c where c.id = :cartId", Cart.class)
+                .setParameter("cartId", cartId)
+                .getSingleResult();
+    }
+
+    @Override
     public List<CartResponse> myCart() {
-        String query = "select c.id as Cart_id, ct.id as TicketType_id, ct.type_name, c.quantity, c.cost, e.id as Event_id, e.name from cart c " +
+        String query = "select c.id as Cart_id, ct.id as TicketType_id, ct.type_name, c.quantity, ct.available, c.cost, e.id as Event_id, e.name from cart c " +
                 "join createticket ct on c.CreateTicket_id = ct.id " +
                 "join events e on ct.Events_id = e.id " +
                 "where c.Users_id = :UID and c.status = 0";
@@ -124,6 +158,17 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
+    public ApiResponse checkQuantity(int cartId) {
+        Query query = manager.createNativeQuery("SELECT CASE WHEN c.quantity < ct.available THEN 'OK' " +
+                "ELSE concat(ct.type_name + ' còn lại: ',  ct.available) END AS result " +
+                "FROM cart c " +
+                "JOIN createticket ct ON c.CreateTicket_id = ct.id " +
+                "where c.id = :cartID").setParameter("cartID", cartId);
+
+        return ApiResponse.builder().message((String) query.getSingleResult()).build();
+    }
+
+    @Override
     @Transactional
     public void payment(PaymentResponse response) {
         String paymentStatus;
@@ -147,13 +192,16 @@ public class UserServiceImpl implements UserService {
                 int ctId = (int) obj[0];
                 double price = (double)obj[1];
 
+                // Insert invoice
                 manager.createNativeQuery("insert into invoice (`Cart_id`, `Payment_id`) " +
                         "values (:cartId, :paymentId)").setParameter("cartId",i)
                         .setParameter("paymentId", response.getBankTranNo()).executeUpdate();
 
+                // Update cart status
                 manager.createNativeQuery("update cart set status = 1 where id = :cartId")
                         .setParameter("cartId", i).executeUpdate();
 
+                // Update event revenue
                 manager.createNativeQuery("update revenue r set r.totalRevenue = r.totalRevenue + :price where r.Events_id in " +
                         "(SELECT ct.Events_id " +
                         "FROM createticket ct " +
@@ -161,10 +209,68 @@ public class UserServiceImpl implements UserService {
                         "WHERE ct.id = :ctId);")
                         .setParameter("price", price)
                         .setParameter("ctId", ctId).executeUpdate();
+
+                // Update ticket quantity
+                manager.createNativeQuery("update createticket ct set ct.available = ct.available - " +
+                                "(select quantity from cart where id = :cartId) where ct.id = :ctId")
+                        .setParameter("cartId", i)
+                        .setParameter("ctId", ctId).executeUpdate();
+
+                UUID id = UUID.randomUUID();
+                manager.createNativeQuery("insert into ticketrelease (`id`, `status`, `Cart_id`) " +
+                        "values (?,?,?)")
+                        .setParameter(1, id.toString())
+                        .setParameter(2, 1)
+                        .setParameter(3, i).executeUpdate();
+                try{
+                    log.info("{}", QRCodeService.generateQRCode(id.toString()));
+                    manager.createNativeQuery("update ticketrelease t set t.qrcode = :qrcode " +
+                        "where t.Cart_id = :cartId").setParameter("qrcode", QRCodeService.generateQRCode(id.toString()))
+                            .setParameter("cartId", i).executeUpdate();
+                } catch (Exception e) {
+                    manager.createNativeQuery("update ticketrelease t set t.status = :status " +
+                            "where t.Cart_id = :cartId").setParameter("status", "Chưa tạo được mã")
+                            .setParameter("cartId", i).executeUpdate();
+                    log.error("Error: {}", e.getMessage());
+                    throw new RuntimeException(e);
+                }
             }
         }else{
             paymentStatus = "Thanh toán thất bại";
             newPayment.setParameter(2, paymentStatus).executeUpdate();
         }
+    }
+
+    @Override
+    public List<HistoryResponse> myHistory() {
+        Query query = manager.createNativeQuery("select tr.id, e.name, date_format(str_to_date(e.start_time, '%Y-%m-%d %H:%i:%s'), '%Y-%m-%d %H:%i'), " +
+                "date_format(str_to_date(e.start_time, '%Y-%m-%d %H:%i:%s'), '%H:%i'), " +
+                "date_format(str_to_date(e.end_time, '%Y-%m-%d %H:%i:%s'), '%H:%i'), " +
+                "Concat(e.city, ', ', e.location), ct.type_name " +
+                "from ticketrelease tr " +
+                "join cart c on tr.Cart_id = c.id " +
+                "join createticket ct on c.CreateTicket_id = ct.id " +
+                "join events e on ct.Events_id = e.id " +
+                "where c.Users_id = :uId", HistoryResponse.class)
+                .setParameter("uId", myInfor().getId());
+
+        return query.getResultList();
+    }
+
+    @Override
+    public HistoryResponseDetail getHistoryResponseDetail(String id) {
+        Query query = manager.createNativeQuery("select tr.id, tr.qrcode, e.name, " +
+                        "date_format(str_to_date(e.start_time, '%Y-%m-%d %H:%i:%s'), '%Y-%m-%d %H:%i'), " +
+                        "date_format(str_to_date(e.start_time, '%Y-%m-%d %H:%i:%s'), '%H:%i'), " +
+                        "date_format(str_to_date(e.end_time, '%Y-%m-%d %H:%i:%s'), '%H:%i'), " +
+                        "Concat(e.city, ', ', e.location), ct.type_name, c.quantity, c.cost " +
+                        "from ticketrelease tr " +
+                        "join cart c on tr.Cart_id = c.id " +
+                        "join createticket ct on c.CreateTicket_id = ct.id " +
+                        "join events e on ct.Events_id = e.id " +
+                        "where tr.id= :id", HistoryResponseDetail.class)
+                .setParameter("id", id);
+
+        return (HistoryResponseDetail) query.getSingleResult();
     }
 }
