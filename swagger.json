@@ -80,7 +80,7 @@
                 ]
             }
         },
-        "/user/infor/update": {
+        "/user/update": {
             "post": {
                 "tags": [
                     "User Controller"
@@ -111,106 +111,10 @@
                 }
             }
         },
-        "/user/cart/update": {
-            "post": {
-                "tags": [
-                    "User Controller"
-                ],
-                "summary": "Thay đổi số lượng sản phẩm",
-                "operationId": "updateCart",
-                "requestBody": {
-                    "content": {
-                        "application/json": {
-                            "schema": {
-                                "$ref": "#/components/schemas/UpdateCartRequest"
-                            }
-                        }
-                    },
-                    "required": true
-                },
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "content": {
-                            "*/*": {
-                                "schema": {
-                                    "$ref": "#/components/schemas/ApiResponse"
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-        },
-        "/user/cart/add": {
-            "post": {
-                "tags": [
-                    "User Controller"
-                ],
-                "summary": "Thêm sản phẩm vào giỏ hàng",
-                "operationId": "addToCart",
-                "requestBody": {
-                    "content": {
-                        "application/json": {
-                            "schema": {
-                                "type": "array",
-                                "items": {
-                                    "$ref": "#/components/schemas/AddToCartRequest"
-                                }
-                            }
-                        }
-                    },
-                    "required": true
-                },
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "content": {
-                            "*/*": {
-                                "schema": {
-                                    "$ref": "#/components/schemas/ApiResponse"
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-        },
-        "/merchant/infor/update": {
+        "/merchant/update/ticket/{id}": {
             "post": {
                 "tags": [
                     "Merchant Controller"
-                ],
-                "summary": "Cập nhật thông tin cá nhân của merchant",
-                "operationId": "updateMerchantInfor",
-                "requestBody": {
-                    "content": {
-                        "application/json": {
-                            "schema": {
-                                "$ref": "#/components/schemas/MURequest"
-                            }
-                        }
-                    },
-                    "required": true
-                },
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "content": {
-                            "*/*": {
-                                "schema": {
-                                    "$ref": "#/components/schemas/ApiResponseObject"
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-        },
-        "/event/update/ticket/{id}": {
-            "post": {
-                "tags": [
-                    "Event Controller"
                 ],
                 "summary": "Cập nhật thông tin loại vé",
                 "operationId": "updateTicketTemp",
@@ -249,10 +153,10 @@
                 }
             }
         },
-        "/event/update/second-step/{id}": {
+        "/merchant/update/second-step/{id}": {
             "get": {
                 "tags": [
-                    "Event Controller"
+                    "Merchant Controller"
                 ],
                 "summary": "Lấy thông tin về thơi gian và vé - Cập nhật",
                 "operationId": "getUpdateTicket",
@@ -282,7 +186,7 @@
             },
             "post": {
                 "tags": [
-                    "Event Controller"
+                    "Merchant Controller"
                 ],
                 "summary": "Cập nhật event - Bước 2",
                 "operationId": "updateTicket",
@@ -321,10 +225,10 @@
                 }
             }
         },
-        "/event/update/first-step/{id}": {
+        "/merchant/update/first-step/{id}": {
             "get": {
                 "tags": [
-                    "Event Controller"
+                    "Merchant Controller"
                 ],
                 "summary": "Lấy thông tin tổng quan của event - Cập nhật",
                 "operationId": "getEventUpdate",
@@ -354,7 +258,7 @@
             },
             "post": {
                 "tags": [
-                    "Event Controller"
+                    "Merchant Controller"
                 ],
                 "summary": "Cập nhật event - Bước 1",
                 "operationId": "update",
@@ -393,10 +297,41 @@
                 }
             }
         },
-        "/event/delete/category/{id}": {
+        "/merchant/profile/update": {
             "post": {
                 "tags": [
-                    "Event Controller"
+                    "Merchant Controller"
+                ],
+                "summary": "Cập nhật thông tin cá nhân của merchant",
+                "operationId": "updateMerchantInfor",
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/MURequest"
+                            }
+                        }
+                    },
+                    "required": true
+                },
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "*/*": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ApiResponseObject"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/merchant/delete/category/{id}": {
+            "post": {
+                "tags": [
+                    "Merchant Controller"
                 ],
                 "summary": "Xóa category cho event",
                 "operationId": "deleteCategory",
@@ -425,10 +360,10 @@
                 }
             }
         },
-        "/event/add/category/{id}": {
+        "/merchant/add/category/{id}": {
             "post": {
                 "tags": [
-                    "Event Controller"
+                    "Merchant Controller"
                 ],
                 "summary": "Thêm category cho event",
                 "operationId": "addCategory",
@@ -457,10 +392,10 @@
                 }
             }
         },
-        "/event/add-event": {
+        "/merchant/add-event": {
             "post": {
                 "tags": [
-                    "Event Controller"
+                    "Merchant Controller"
                 ],
                 "summary": "Tạo mới event - Bước 1",
                 "operationId": "addEvent",
@@ -488,10 +423,10 @@
                 }
             }
         },
-        "/event/add-event-ticket": {
+        "/merchant/add-event-ticket": {
             "post": {
                 "tags": [
-                    "Event Controller"
+                    "Merchant Controller"
                 ],
                 "summary": "Tạo mới event - Bước 2",
                 "operationId": "addEventTicket",
@@ -512,6 +447,228 @@
                             "*/*": {
                                 "schema": {
                                     "$ref": "#/components/schemas/ApiResponse"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/cart/update": {
+            "post": {
+                "tags": [
+                    "User Controller"
+                ],
+                "summary": "Thay đổi số lượng sản phẩm",
+                "operationId": "updateCart",
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/UpdateCartRequest"
+                            }
+                        }
+                    },
+                    "required": true
+                },
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "*/*": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ApiResponse"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/cart/add": {
+            "post": {
+                "tags": [
+                    "User Controller"
+                ],
+                "summary": "Thêm sản phẩm vào giỏ hàng",
+                "operationId": "addToCart",
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "array",
+                                "items": {
+                                    "$ref": "#/components/schemas/AddToCartRequest"
+                                }
+                            }
+                        }
+                    },
+                    "required": true
+                },
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "*/*": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ApiResponse"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/admin/eventMgmt/enable": {
+            "post": {
+                "tags": [
+                    "Admin Controller"
+                ],
+                "summary": "Kích hoạt tài khoản",
+                "operationId": "enableAccount_1",
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/DEAccountRequest"
+                            }
+                        }
+                    },
+                    "required": true
+                },
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "*/*": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ApiResponseObject"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/admin/eventMgmt/enable/{id}": {
+            "post": {
+                "tags": [
+                    "Admin Controller"
+                ],
+                "summary": "Kích hoạt event",
+                "operationId": "enableEvent",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "format": "int32"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "*/*": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ApiResponseObject"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/admin/eventMgmt/disable": {
+            "post": {
+                "tags": [
+                    "Admin Controller"
+                ],
+                "summary": "Vô hiệu hóa tài khoản",
+                "operationId": "disableAccount_1",
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/DEAccountRequest"
+                            }
+                        }
+                    },
+                    "required": true
+                },
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "*/*": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ApiResponseObject"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/admin/eventMgmt/disable/{id}": {
+            "post": {
+                "tags": [
+                    "Admin Controller"
+                ],
+                "summary": "Vô hiệu hóa event",
+                "operationId": "disableEvent",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "format": "int32"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "*/*": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ApiResponseObject"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/admin/categories/add": {
+            "post": {
+                "tags": [
+                    "Admin Controller"
+                ],
+                "summary": "Thêm mới category",
+                "operationId": "addNewCategories",
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/AddCatRequest"
+                            }
+                        }
+                    },
+                    "required": true
+                },
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "*/*": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ApiResponseObject"
                                 }
                             }
                         }
@@ -611,7 +768,7 @@
                 }
             }
         },
-        "/user/myInfor": {
+        "/user/profile": {
             "get": {
                 "tags": [
                     "User Controller"
@@ -632,7 +789,7 @@
                 }
             }
         },
-        "/user/my-cart": {
+        "/my-cart": {
             "get": {
                 "tags": [
                     "User Controller"
@@ -706,7 +863,7 @@
                 }
             }
         },
-        "/merchant/myInfor": {
+        "/merchant/profile": {
             "get": {
                 "tags": [
                     "Merchant Controller"
@@ -727,7 +884,243 @@
                 }
             }
         },
-        "/event/ticketType/{eventId}": {
+        "/merchant/myEvent": {
+            "get": {
+                "tags": [
+                    "Merchant Controller"
+                ],
+                "summary": "Danh sách event của merchant",
+                "operationId": "getMyEvent",
+                "parameters": [
+                    {
+                        "name": "status",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "format": "int32"
+                        }
+                    },
+                    {
+                        "name": "CategoryId",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "type": "integer",
+                                "format": "int32"
+                            }
+                        }
+                    },
+                    {
+                        "name": "time",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "city",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "*/*": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ApiResponseObject"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/merchant/get/{id}": {
+            "get": {
+                "tags": [
+                    "Merchant Controller"
+                ],
+                "summary": "Lấy thông tin chi tiết của event",
+                "operationId": "getEvent",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "format": "int32"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "*/*": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ApiResponseEventDTO"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/home/{id}": {
+            "get": {
+                "tags": [
+                    "Event Controller"
+                ],
+                "summary": "Lấy thông tin chi tiết của event",
+                "operationId": "getEvent_1",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "format": "int32"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "*/*": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ApiResponseEventDTO"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/home/search": {
+            "get": {
+                "tags": [
+                    "Event Controller"
+                ],
+                "summary": "Tìm kiếm event",
+                "operationId": "findEventByName",
+                "parameters": [
+                    {
+                        "name": "name",
+                        "in": "query",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "*/*": {
+                                "schema": {
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/home/event": {
+            "get": {
+                "tags": [
+                    "Event Controller"
+                ],
+                "summary": "Lọc Event",
+                "operationId": "getByFilter",
+                "parameters": [
+                    {
+                        "name": "MerchantId",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "format": "int32"
+                        }
+                    },
+                    {
+                        "name": "CategoryId",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "type": "integer",
+                                "format": "int32"
+                            }
+                        }
+                    },
+                    {
+                        "name": "time",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "city",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "*/*": {
+                                "schema": {
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/home/categories": {
+            "get": {
+                "tags": [
+                    "Event Controller"
+                ],
+                "summary": "Lấy danh sách categories",
+                "operationId": "getCategories",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "*/*": {
+                                "schema": {
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/home/booking/{eventId}": {
             "get": {
                 "tags": [
                     "Event Controller"
@@ -759,17 +1152,38 @@
                 }
             }
         },
-        "/event/search": {
+        "/history": {
             "get": {
                 "tags": [
-                    "Event Controller"
+                    "User Controller"
                 ],
-                "summary": "Tìm kiếm event",
-                "operationId": "findEventByName",
+                "summary": "Lấy lịch sử mua hàng",
+                "operationId": "getHistory",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "*/*": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ApiResponseListHistoryResponse"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/history/{id}": {
+            "get": {
+                "tags": [
+                    "User Controller"
+                ],
+                "summary": "Lấy chi tiết lịch sử mua hàng",
+                "operationId": "getHistoryDetail",
                 "parameters": [
                     {
-                        "name": "name",
-                        "in": "query",
+                        "name": "id",
+                        "in": "path",
                         "required": true,
                         "schema": {
                             "type": "string"
@@ -782,113 +1196,7 @@
                         "content": {
                             "*/*": {
                                 "schema": {
-                                    "type": "object"
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-        },
-        "/event/get": {
-            "get": {
-                "tags": [
-                    "Event Controller"
-                ],
-                "summary": "Lọc Event",
-                "operationId": "getByFilter",
-                "parameters": [
-                    {
-                        "name": "MerchantId",
-                        "in": "query",
-                        "required": false,
-                        "schema": {
-                            "type": "integer",
-                            "format": "int32"
-                        }
-                    },
-                    {
-                        "name": "CategoryId",
-                        "in": "query",
-                        "required": false,
-                        "schema": {
-                            "type": "array",
-                            "items": {
-                                "type": "integer",
-                                "format": "int32"
-                            }
-                        }
-                    },
-                    {
-                        "name": "allTime",
-                        "in": "query",
-                        "required": false,
-                        "schema": {
-                            "type": "integer",
-                            "format": "int32"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "content": {
-                            "*/*": {
-                                "schema": {
-                                    "type": "object"
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-        },
-        "/event/get/{id}": {
-            "get": {
-                "tags": [
-                    "Event Controller"
-                ],
-                "summary": "Lấy thông tin chi tiết của event",
-                "operationId": "getEvent",
-                "parameters": [
-                    {
-                        "name": "id",
-                        "in": "path",
-                        "required": true,
-                        "schema": {
-                            "type": "integer",
-                            "format": "int32"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "content": {
-                            "*/*": {
-                                "schema": {
-                                    "$ref": "#/components/schemas/ApiResponseEventDTO"
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-        },
-        "/event/categories": {
-            "get": {
-                "tags": [
-                    "Event Controller"
-                ],
-                "summary": "Lấy danh sách categories",
-                "operationId": "getCategories",
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "content": {
-                            "*/*": {
-                                "schema": {
-                                    "type": "object"
+                                    "$ref": "#/components/schemas/ApiResponseObject"
                                 }
                             }
                         }
@@ -904,7 +1212,7 @@
                 "operationId": "getInforPayment",
                 "parameters": [
                     {
-                        "name": "vnp_OrderInfo",
+                        "name": "cartId",
                         "in": "query",
                         "required": true,
                         "schema": {
@@ -968,6 +1276,39 @@
                 }
             }
         },
+        "/api/payment/direct_payment": {
+            "get": {
+                "tags": [
+                    "payment-controller"
+                ],
+                "operationId": "directPayment",
+                "parameters": [
+                    {
+                        "name": "arg0",
+                        "in": "query",
+                        "required": true,
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/components/schemas/AddToCartRequest"
+                            }
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "*/*": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ApiResponseObject"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
         "/api/payment/create_payment": {
             "get": {
                 "tags": [
@@ -991,6 +1332,70 @@
                             "*/*": {
                                 "schema": {
                                     "$ref": "#/components/schemas/ApiResponseObject"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/admin/statistics/{merchantId}": {
+            "get": {
+                "tags": [
+                    "Admin Controller"
+                ],
+                "summary": "Thống kê sự kiện theo merchant",
+                "operationId": "getStatistics_1",
+                "parameters": [
+                    {
+                        "name": "merchantId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "format": "int32"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "*/*": {
+                                "schema": {
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/admin/statistics/event/{id}": {
+            "get": {
+                "tags": [
+                    "Admin Controller"
+                ],
+                "summary": "Thống kê chi tiết của 1 sự kiện",
+                "operationId": "getStatisticByEvent_1",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "format": "int32"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "*/*": {
+                                "schema": {
+                                    "type": "object"
                                 }
                             }
                         }
@@ -1051,10 +1456,181 @@
                 }
             }
         },
-        "/account/{id}": {
+        "/admin/getAccount": {
             "get": {
                 "tags": [
-                    "Account Controller"
+                    "Admin Controller"
+                ],
+                "summary": "Lấy danh sách tất cả các tài khoản",
+                "operationId": "getAccount",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "*/*": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ApiResponseListAccountResponse"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/admin/gateway/add": {
+            "get": {
+                "tags": [
+                    "Admin Controller"
+                ],
+                "summary": "Thêm mới payment gateway",
+                "operationId": "addGateway",
+                "parameters": [
+                    {
+                        "name": "arg0",
+                        "in": "query",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/components/schemas/NewGWRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "*/*": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ApiResponseObject"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/admin/event": {
+            "get": {
+                "tags": [
+                    "Admin Controller"
+                ],
+                "summary": "Lấy danh sách sự kiện",
+                "operationId": "getByFilter_1",
+                "parameters": [
+                    {
+                        "name": "MerchantId",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "format": "int32"
+                        }
+                    },
+                    {
+                        "name": "CategoryId",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "type": "integer",
+                                "format": "int32"
+                            }
+                        }
+                    },
+                    {
+                        "name": "allTime",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "format": "int32"
+                        }
+                    },
+                    {
+                        "name": "city",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "*/*": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ApiResponseObject"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/admin/categories/delete/{id}": {
+            "get": {
+                "tags": [
+                    "Admin Controller"
+                ],
+                "summary": "Xóa 1 category",
+                "operationId": "deleteCategories",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "format": "int32"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "*/*": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ApiResponseObject"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/admin/allCategories": {
+            "get": {
+                "tags": [
+                    "Admin Controller"
+                ],
+                "summary": "Lấy danh sách categories",
+                "operationId": "getCategories_1",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "*/*": {
+                                "schema": {
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/admin/account/{id}": {
+            "get": {
+                "tags": [
+                    "Admin Controller"
                 ],
                 "summary": "Lấy 1 tài khoản cụ thể",
                 "operationId": "getById",
@@ -1088,33 +1664,7 @@
                 ]
             }
         },
-        "/account/getAccount": {
-            "get": {
-                "tags": [
-                    "Account Controller"
-                ],
-                "summary": "Lấy danh sách tất cả các tài khoản",
-                "operationId": "getAccount",
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "content": {
-                            "*/*": {
-                                "schema": {
-                                    "$ref": "#/components/schemas/ApiResponseListAccountResponse"
-                                }
-                            }
-                        }
-                    }
-                },
-                "security": [
-                    {
-                        "bearerAuth": []
-                    }
-                ]
-            }
-        },
-        "/user/cart/delete": {
+        "/cart/delete": {
             "delete": {
                 "tags": [
                     "User Controller"
@@ -1203,14 +1753,17 @@
                     }
                 }
             },
-            "UpdateCartRequest": {
+            "TicketTypeRequest": {
                 "type": "object",
                 "properties": {
-                    "cartId": {
-                        "type": "integer",
-                        "format": "int32"
+                    "typeName": {
+                        "type": "string"
                     },
-                    "updateNumber": {
+                    "price": {
+                        "type": "number",
+                        "format": "double"
+                    },
+                    "quantity": {
                         "type": "integer",
                         "format": "int32"
                     }
@@ -1231,14 +1784,48 @@
                     }
                 }
             },
-            "AddToCartRequest": {
+            "EAUSRequest": {
                 "type": "object",
                 "properties": {
-                    "createTicketId": {
-                        "type": "integer",
-                        "format": "int32"
+                    "start_time": {
+                        "type": "string"
                     },
-                    "quantity": {
+                    "end_time": {
+                        "type": "string"
+                    },
+                    "start_booking": {
+                        "type": "string"
+                    },
+                    "end_booking": {
+                        "type": "string"
+                    },
+                    "ticketTypeRequests": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/TicketTypeRequest"
+                        }
+                    }
+                }
+            },
+            "EUFRequest": {
+                "type": "object",
+                "properties": {
+                    "eventName": {
+                        "type": "string"
+                    },
+                    "eventDescription": {
+                        "type": "string"
+                    },
+                    "eventCity": {
+                        "type": "string"
+                    },
+                    "eventLocation": {
+                        "type": "string"
+                    },
+                    "eventBanner": {
+                        "type": "string"
+                    },
+                    "eventLimit": {
                         "type": "integer",
                         "format": "int32"
                     }
@@ -1276,66 +1863,6 @@
                     }
                 }
             },
-            "TicketTypeRequest": {
-                "type": "object",
-                "properties": {
-                    "typeName": {
-                        "type": "string"
-                    },
-                    "price": {
-                        "type": "number",
-                        "format": "double"
-                    },
-                    "quantity": {
-                        "type": "integer",
-                        "format": "int32"
-                    }
-                }
-            },
-            "EAUSRequest": {
-                "type": "object",
-                "properties": {
-                    "start_time": {
-                        "type": "string"
-                    },
-                    "end_time": {
-                        "type": "string"
-                    },
-                    "start_booking": {
-                        "type": "string"
-                    },
-                    "end_booking": {
-                        "type": "string"
-                    },
-                    "ticketTypeRequests": {
-                        "type": "array",
-                        "items": {
-                            "$ref": "#/components/schemas/TicketTypeRequest"
-                        }
-                    }
-                }
-            },
-            "EUFRequest": {
-                "type": "object",
-                "properties": {
-                    "eventName": {
-                        "type": "string"
-                    },
-                    "eventDescription": {
-                        "type": "string"
-                    },
-                    "eventLocation": {
-                        "type": "string"
-                    },
-                    "eventBanner": {
-                        "type": "string"
-                    },
-                    "eventLimit": {
-                        "type": "integer",
-                        "format": "int32"
-                    }
-                }
-            },
             "EAFRequest": {
                 "type": "object",
                 "properties": {
@@ -1343,6 +1870,9 @@
                         "type": "string"
                     },
                     "eventDescription": {
+                        "type": "string"
+                    },
+                    "eventCity": {
                         "type": "string"
                     },
                     "eventLocation": {
@@ -1361,6 +1891,53 @@
                     "eventLimit": {
                         "type": "integer",
                         "format": "int32"
+                    }
+                }
+            },
+            "UpdateCartRequest": {
+                "type": "object",
+                "properties": {
+                    "cartId": {
+                        "type": "integer",
+                        "format": "int32"
+                    },
+                    "updateNumber": {
+                        "type": "integer",
+                        "format": "int32"
+                    }
+                }
+            },
+            "AddToCartRequest": {
+                "type": "object",
+                "properties": {
+                    "createTicketId": {
+                        "type": "integer",
+                        "format": "int32"
+                    },
+                    "quantity": {
+                        "type": "integer",
+                        "format": "int32"
+                    }
+                }
+            },
+            "DEAccountRequest": {
+                "type": "object",
+                "properties": {
+                    "accountId": {
+                        "type": "integer",
+                        "format": "int32"
+                    },
+                    "roleId": {
+                        "type": "integer",
+                        "format": "int32"
+                    }
+                }
+            },
+            "AddCatRequest": {
+                "type": "object",
+                "properties": {
+                    "catName": {
+                        "type": "string"
                     }
                 }
             },
@@ -1475,6 +2052,10 @@
                         "type": "integer",
                         "format": "int32"
                     },
+                    "available": {
+                        "type": "integer",
+                        "format": "int32"
+                    },
                     "price": {
                         "type": "number",
                         "format": "double"
@@ -1484,45 +2065,6 @@
                         "format": "int32"
                     },
                     "eventName": {
-                        "type": "string"
-                    }
-                }
-            },
-            "ApiResponseMerchantsResponse": {
-                "type": "object",
-                "properties": {
-                    "code": {
-                        "type": "integer",
-                        "format": "int32"
-                    },
-                    "message": {
-                        "type": "string"
-                    },
-                    "result": {
-                        "$ref": "#/components/schemas/MerchantsResponse"
-                    }
-                }
-            },
-            "MerchantsResponse": {
-                "type": "object",
-                "properties": {
-                    "id": {
-                        "type": "integer",
-                        "format": "int32"
-                    },
-                    "name": {
-                        "type": "string"
-                    },
-                    "address": {
-                        "type": "string"
-                    },
-                    "phone": {
-                        "type": "string"
-                    },
-                    "license": {
-                        "type": "string"
-                    },
-                    "description": {
                         "type": "string"
                     }
                 }
@@ -1625,6 +2167,9 @@
                     "eventDescription": {
                         "type": "string"
                     },
+                    "eventCity": {
+                        "type": "string"
+                    },
                     "eventLocation": {
                         "type": "string"
                     },
@@ -1643,7 +2188,7 @@
                     }
                 }
             },
-            "ApiResponseListTicketTypeResponse": {
+            "ApiResponseMerchantsResponse": {
                 "type": "object",
                 "properties": {
                     "code": {
@@ -1654,30 +2199,31 @@
                         "type": "string"
                     },
                     "result": {
-                        "type": "array",
-                        "items": {
-                            "$ref": "#/components/schemas/TicketTypeResponse"
-                        }
+                        "$ref": "#/components/schemas/MerchantsResponse"
                     }
                 }
             },
-            "TicketTypeResponse": {
+            "MerchantsResponse": {
                 "type": "object",
                 "properties": {
                     "id": {
                         "type": "integer",
                         "format": "int32"
                     },
-                    "type_name": {
+                    "name": {
                         "type": "string"
                     },
-                    "price": {
-                        "type": "number",
-                        "format": "double"
+                    "address": {
+                        "type": "string"
                     },
-                    "available": {
-                        "type": "integer",
-                        "format": "int32"
+                    "phone": {
+                        "type": "string"
+                    },
+                    "license": {
+                        "type": "string"
+                    },
+                    "description": {
+                        "type": "string"
                     }
                 }
             },
@@ -1707,6 +2253,9 @@
                         "type": "string"
                     },
                     "description": {
+                        "type": "string"
+                    },
+                    "city": {
                         "type": "string"
                     },
                     "location": {
@@ -1756,6 +2305,88 @@
                     }
                 }
             },
+            "ApiResponseListTicketTypeResponse": {
+                "type": "object",
+                "properties": {
+                    "code": {
+                        "type": "integer",
+                        "format": "int32"
+                    },
+                    "message": {
+                        "type": "string"
+                    },
+                    "result": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/TicketTypeResponse"
+                        }
+                    }
+                }
+            },
+            "TicketTypeResponse": {
+                "type": "object",
+                "properties": {
+                    "id": {
+                        "type": "integer",
+                        "format": "int32"
+                    },
+                    "type_name": {
+                        "type": "string"
+                    },
+                    "price": {
+                        "type": "number",
+                        "format": "double"
+                    },
+                    "available": {
+                        "type": "integer",
+                        "format": "int32"
+                    }
+                }
+            },
+            "ApiResponseListHistoryResponse": {
+                "type": "object",
+                "properties": {
+                    "code": {
+                        "type": "integer",
+                        "format": "int32"
+                    },
+                    "message": {
+                        "type": "string"
+                    },
+                    "result": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/HistoryResponse"
+                        }
+                    }
+                }
+            },
+            "HistoryResponse": {
+                "type": "object",
+                "properties": {
+                    "ticketId": {
+                        "type": "string"
+                    },
+                    "eventName": {
+                        "type": "string"
+                    },
+                    "eventDate": {
+                        "type": "string"
+                    },
+                    "eventStartTime": {
+                        "type": "string"
+                    },
+                    "eventEndTime": {
+                        "type": "string"
+                    },
+                    "ticketName": {
+                        "type": "string"
+                    },
+                    "location": {
+                        "type": "string"
+                    }
+                }
+            },
             "PaymentRequest": {
                 "type": "object",
                 "properties": {
@@ -1787,21 +2418,6 @@
                     }
                 }
             },
-            "ApiResponseAccountResponse": {
-                "type": "object",
-                "properties": {
-                    "code": {
-                        "type": "integer",
-                        "format": "int32"
-                    },
-                    "message": {
-                        "type": "string"
-                    },
-                    "result": {
-                        "$ref": "#/components/schemas/AccountResponse"
-                    }
-                }
-            },
             "ApiResponseListAccountResponse": {
                 "type": "object",
                 "properties": {
@@ -1817,6 +2433,29 @@
                         "items": {
                             "$ref": "#/components/schemas/AccountResponse"
                         }
+                    }
+                }
+            },
+            "NewGWRequest": {
+                "type": "object",
+                "properties": {
+                    "gatewayName": {
+                        "type": "string"
+                    }
+                }
+            },
+            "ApiResponseAccountResponse": {
+                "type": "object",
+                "properties": {
+                    "code": {
+                        "type": "integer",
+                        "format": "int32"
+                    },
+                    "message": {
+                        "type": "string"
+                    },
+                    "result": {
+                        "$ref": "#/components/schemas/AccountResponse"
                     }
                 }
             },
