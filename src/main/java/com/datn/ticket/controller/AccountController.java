@@ -5,9 +5,7 @@ import com.datn.ticket.exception.AppException;
 import com.datn.ticket.exception.ErrorCode;
 import com.datn.ticket.model.Accounts;
 import com.datn.ticket.model.Roles;
-import com.datn.ticket.model.dto.request.IntrospectRequest;
-import com.datn.ticket.model.dto.request.LoginRequest;
-import com.datn.ticket.model.dto.request.SignUpRequest;
+import com.datn.ticket.model.dto.request.*;
 import com.datn.ticket.model.dto.response.AccountResponse;
 import com.datn.ticket.model.dto.response.ApiResponse;
 import com.datn.ticket.model.dto.response.AuthenticationResponse;
@@ -78,6 +76,18 @@ public class AccountController {
             throws ParseException, JOSEException {
         var result = accountService.introspect(request);
         return ApiResponse.<IntrospectResponse>builder().result(result).build();
+    }
+
+    @Operation(summary = "Đăng xuất")
+    @PostMapping("/log-out")
+    public void logout(@RequestBody LogoutRequest request) throws ParseException, JOSEException {
+        accountService.logout(request);
+    }
+
+    @Operation(summary = "Refresh token")
+    @PostMapping("/refresh-token")
+    public AuthenticationResponse refreshToken(@RequestBody RefreshRequest request) throws ParseException, JOSEException {
+        return accountService.refreshToken(request);
     }
 
     @SecurityRequirement(name = "bearerAuth")

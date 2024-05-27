@@ -17,6 +17,7 @@ import jakarta.persistence.TypedQuery;
 import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Repository;
 
 import java.math.BigDecimal;
@@ -35,6 +36,7 @@ public class AdminServiceImpl implements AdminService {
 
     // Lấy danh sách account
     @Override
+    @PreAuthorize("hasRole('Admin')")
     public List<AccountResponse> getAccount() {
         Query query = manager.createNativeQuery("select a.id, a.username, a.status, " +
                 "GROUP_CONCAT(DISTINCT r.role_name ORDER BY r.role_name ASC SEPARATOR ', ') " +
@@ -47,6 +49,7 @@ public class AdminServiceImpl implements AdminService {
 
     // Lấy account cụ thể
     @Override
+    @PreAuthorize("hasRole('Admin')")
     public AccountResponse getByID(Integer id) {
         Query query = manager.createNativeQuery("select a.id, a.username, a.status, " +
                 "GROUP_CONCAT(DISTINCT r.role_name ORDER BY r.role_name ASC SEPARATOR ', ') " +
@@ -63,6 +66,7 @@ public class AdminServiceImpl implements AdminService {
 
     // Lấy thông tin merchant cụ thể
     @Override
+    @PreAuthorize("hasRole('Admin')")
     public Merchants getMerchantInfor(Integer id) {
         TypedQuery<Merchants> getMerchant = manager.createQuery("Select m from Merchants m where m.id = :id", Merchants.class);
         getMerchant.setParameter("id", id);
@@ -71,6 +75,7 @@ public class AdminServiceImpl implements AdminService {
 
     // Lấy danh sách Merchant
     @Override
+    @PreAuthorize("hasRole('Admin')")
     public List<Merchants> getListMerchants() {
         TypedQuery<Merchants> getMerchant = manager.createQuery("Select m from Merchants m", Merchants.class);
         return getMerchant.getResultList();
@@ -78,6 +83,7 @@ public class AdminServiceImpl implements AdminService {
 
     // Thêm danh mục mới
     @Override
+    @PreAuthorize("hasRole('Admin')")
     @Transactional
     public void addNewCategory(Categories categories) {
         manager.persist(categories);
@@ -85,6 +91,7 @@ public class AdminServiceImpl implements AdminService {
 
     // Xóa danh mục
     @Override
+    @PreAuthorize("hasRole('Admin')")
     @Transactional
     public void removeCategory(int catId) {
         manager.createNativeQuery("delete from categories where id = :catId")
@@ -94,6 +101,7 @@ public class AdminServiceImpl implements AdminService {
 
     // Thêm cổng thanh toán
     @Override
+    @PreAuthorize("hasRole('Admin')")
     @Transactional
     public void addNewPaymentGateway(PaymentGateway gateway) {
         manager.persist(gateway);
@@ -102,6 +110,7 @@ public class AdminServiceImpl implements AdminService {
 
     // Vô hiệu hóa sự kiện
     @Override
+    @PreAuthorize("hasRole('Admin')")
     @Transactional
     public void disableEvent(int eventId) {
         Query query = manager.createNativeQuery("Update events e set e.status = 0 where e.id = :eventId");
@@ -110,6 +119,7 @@ public class AdminServiceImpl implements AdminService {
 
     // Kích hoạt sự kiện
     @Override
+    @PreAuthorize("hasRole('Admin')")
     @Transactional
     public void enableEvent(int eventId) {
         Query query = manager.createNativeQuery("Update events e set e.status = 1 where e.id = :eventId");
@@ -118,6 +128,7 @@ public class AdminServiceImpl implements AdminService {
 
     // Vô hiệu hóa tài khoản
     @Override
+    @PreAuthorize("hasRole('Admin')")
     @Transactional
     public void disaleAccount(int accountId, int roleId) {
         Query query = manager.createNativeQuery("Update account_has_role a set a.status = 0 " +
@@ -128,6 +139,7 @@ public class AdminServiceImpl implements AdminService {
 
     // Kích hoạt tài khoản
     @Override
+    @PreAuthorize("hasRole('Admin')")
     @Transactional
     public void enableAccount(int accountId, int roleId) {
         Query query = manager.createNativeQuery("Update account_has_role a set a.status = 1 " +
@@ -137,6 +149,7 @@ public class AdminServiceImpl implements AdminService {
     }
 
     @Override
+    @PreAuthorize("hasRole('Admin')")
     public ApiResponse<?> allEvents(Integer MerchantId, List<Integer> CategoryId, Integer allTime, String city) {
         List<Object[]> events = new ArrayList<>();
         Query getEvent;
@@ -180,12 +193,14 @@ public class AdminServiceImpl implements AdminService {
     }
 
     @Override
+    @PreAuthorize("hasRole('Admin')")
     public List<Categories> getAllCategories() {
         TypedQuery<Categories> query = manager.createQuery("select c from Categories c", Categories.class);
         return query.getResultList();
     }
 
     @Override
+    @PreAuthorize("hasRole('Admin')")
     public List<EventStatisticDTO> getStatistics(int merchantId) throws ParseException {
         String query = "select sum(c.quantity) as soldTicket, sum(c.cost) as totalRevenue from invoice i " +
                 "join cart c on i.Cart_id = c.id " +

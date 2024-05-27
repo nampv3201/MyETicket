@@ -14,6 +14,7 @@ import jakarta.persistence.Query;
 import jakarta.transaction.Transactional;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Repository;
 
@@ -37,23 +38,27 @@ public class UserServiceImpl implements UserService {
 
     @Override
     @Transactional
+    @PreAuthorize("hasRole('USER', 'ADMIN')")
     public void updateUser(Users user) {
         manager.merge(user);
     }
 
     @Override
+//    @PreAuthorize("hasRole('USER')")
     public Users myInfor() {
         var authentication = SecurityContextHolder.getContext().getAuthentication();
         String query = "Select u.* from users u " +
                 "join account a on u.Account_id = a.id " +
                 "where a.id = :id";
         Query getUsers = manager.createNativeQuery(query, Users.class);
+        log.info("User Account ID: {}", authentication.getName());
         getUsers.setParameter("id", authentication.getName());
         return (Users) getUsers.getSingleResult();
     }
 
     @Override
     @Transactional
+    @PreAuthorize("hasRole('USER', 'ADMIN')")
     public void addToCart(List<Cart> carts) {
         Users u = myInfor();
         for(Cart c : carts){
@@ -94,6 +99,7 @@ public class UserServiceImpl implements UserService {
 
     @Override
     @Transactional
+    @PreAuthorize("hasRole('USER', 'ADMIN')")
     public List<Integer> directOrder(List<Cart> carts) {
         Users u = myInfor();
         List<Integer> cartIds = new ArrayList<>();
@@ -113,6 +119,7 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
+    @PreAuthorize("hasRole('USER', 'ADMIN')")
     public Cart getSingleCart(int cartId) {
         return manager.createQuery("select c from Cart c where c.id = :cartId", Cart.class)
                 .setParameter("cartId", cartId)
@@ -120,6 +127,7 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
+    @PreAuthorize("hasRole('USER', 'ADMIN')")
     public List<CartResponse> myCart() {
         String query = "select c.id as Cart_id, ct.id as TicketType_id, ct.type_name, c.quantity, ct.available, c.cost, e.id as Event_id, e.name from cart c " +
                 "join createticket ct on c.CreateTicket_id = ct.id " +
@@ -133,6 +141,7 @@ public class UserServiceImpl implements UserService {
 
     @Override
     @Transactional
+    @PreAuthorize("hasRole('USER', 'ADMIN')")
     public void removeFromCart(List<Integer> cartId) {
         for(int i : cartId){
             manager.createNativeQuery("delete from cart where id = :id")
@@ -143,6 +152,7 @@ public class UserServiceImpl implements UserService {
 
     @Override
     @Transactional
+    @PreAuthorize("hasRole('USER', 'ADMIN')")
     public void updateCart(UpdateCartRequest request) {
         double result = ((Long) manager.createNativeQuery("select ct.price from createticket ct " +
                         "join cart c on c.CreateTicket_id = ct.id " +
@@ -158,6 +168,7 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
+    @PreAuthorize("hasRole('USER', 'ADMIN')")
     public ApiResponse checkQuantity(int cartId) {
         Query query = manager.createNativeQuery("SELECT CASE WHEN c.quantity < ct.available THEN 'OK' " +
                 "ELSE concat(ct.type_name + ' còn lại: ',  ct.available) END AS result " +
@@ -170,6 +181,7 @@ public class UserServiceImpl implements UserService {
 
     @Override
     @Transactional
+    @PreAuthorize("hasRole('USER', 'ADMIN')")
     public void payment(PaymentResponse response) {
         String paymentStatus;
         Query newPayment = manager.createNativeQuery("insert into payment (`id`, `payment_status`, `payment_time`, `payment_amount`, `PaymentMethod_id`, `Users_id`) " +
@@ -242,6 +254,7 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
+    @PreAuthorize("hasRole('USER', 'ADMIN')")
     public List<HistoryResponse> myHistory() {
         Query query = manager.createNativeQuery("select tr.id, e.name, date_format(str_to_date(e.start_time, '%Y-%m-%d %H:%i:%s'), '%Y-%m-%d %H:%i'), " +
                 "date_format(str_to_date(e.start_time, '%Y-%m-%d %H:%i:%s'), '%H:%i'), " +
@@ -258,6 +271,7 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
+    @PreAuthorize("hasRole('USER', 'ADMIN')")
     public HistoryResponseDetail getHistoryResponseDetail(String id) {
         Query query = manager.createNativeQuery("select tr.id, tr.qrcode, e.name, " +
                         "date_format(str_to_date(e.start_time, '%Y-%m-%d %H:%i:%s'), '%Y-%m-%d %H:%i'), " +

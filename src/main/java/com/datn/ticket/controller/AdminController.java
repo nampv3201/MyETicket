@@ -21,6 +21,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
 import java.text.ParseException;
@@ -49,6 +51,10 @@ public class AdminController {
     @Operation(summary = "Lấy 1 tài khoản cụ thể")
     @GetMapping("/account/{id}")
     public ApiResponse<AccountResponse> getById(@PathVariable("id") Integer id){
+        log.info(SecurityContextHolder.getContext().getAuthentication().getName());
+        for(GrantedAuthority text : SecurityContextHolder.getContext().getAuthentication().getAuthorities()){
+            log.info(text.getAuthority());
+        }
         return ApiResponse.<AccountResponse>builder()
                 .result(adminService.getByID(id))
                 .build();

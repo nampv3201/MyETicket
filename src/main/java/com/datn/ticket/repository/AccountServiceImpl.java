@@ -5,10 +5,14 @@ import com.datn.ticket.exception.ErrorCode;
 import com.datn.ticket.model.*;
 
 import java.text.ParseException;
-import java.util.StringJoiner;
-import java.util.UUID;
+import java.time.Instant;
+import java.time.temporal.ChronoUnit;
+import java.util.*;
+
 import com.datn.ticket.model.dto.AccountsDTO;
 import com.datn.ticket.model.dto.request.IntrospectRequest;
+import com.datn.ticket.model.dto.request.LogoutRequest;
+import com.datn.ticket.model.dto.request.RefreshRequest;
 import com.datn.ticket.model.dto.response.AccountResponse;
 import com.datn.ticket.model.dto.response.ApiResponse;
 import com.datn.ticket.model.dto.response.AuthenticationResponse;
@@ -20,12 +24,15 @@ import jakarta.persistence.EntityManager;
 import jakarta.persistence.Query;
 import jakarta.persistence.NoResultException;
 import jakarta.persistence.TypedQuery;
+import jakarta.persistence.criteria.CriteriaBuilder;
 import jakarta.transaction.Transactional;
 import lombok.experimental.NonFinal;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
@@ -40,10 +47,9 @@ import com.nimbusds.jwt.SignedJWT;
 import org.springframework.util.CollectionUtils;
 
 import javax.naming.Context;
-import java.util.ArrayList;
-import java.util.List;
 
 @Repository
+@Slf4j
 public class AccountServiceImpl implements AccountService {
 
     private final EntityManager manager;
@@ -127,6 +133,7 @@ public class AccountServiceImpl implements AccountService {
 
     @Override
     @Transactional
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<Object> disableAccount(Integer id) {
         Query query = manager.createQuery("Update Accounts a set a.status = 0 where a.id = :id");
         query.setParameter("id", id);
@@ -140,6 +147,7 @@ public class AccountServiceImpl implements AccountService {
 
     @Override
     @Transactional
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<Object> enableAccount(Integer id) {
         Query query = manager.createQuery("Update Accounts a set a.status = 1 where a.id = :id");
         query.setParameter("id", id);
@@ -149,6 +157,27 @@ public class AccountServiceImpl implements AccountService {
         }catch(Exception e){
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Có lỗi xảy ra, vui lòng thử lại sau");
         }
+    }
+
+    @Override
+    @Transactional
+    public void logout(LogoutRequest request) throws ParseException, JOSEException {
+        try {
+            var signToken = verifyToken(request.getToken(), true);
+
+            String jit = signToken.getJWTClaimsSet().getJWTID();
+            Date expiryTime = signToken.getJWTClaimsSet().getExpirationTime();
+
+            InvalidateToken invalidateToken = new InvalidateToken();
+            invalidateToken.setId(jit);
+            invalidateToken.setExpiryTime(expiryTime);
+
+            manager.persist(invalidateToken);
+        } catch (AppException exception){
+            log.info("Token already expired");
+        }
+
+
     }
 
     @Override
@@ -164,8 +193,12 @@ public class AccountServiceImpl implements AccountService {
         JWTClaimsSet jwtClaimsSet = new JWTClaimsSet.Builder()
                 .subject(String.valueOf(accounts.getId()))
                 .issuer("my ticket")
+                .issueTime(new Date())
+                .expirationTime(new Date(
+                        Instant.now().plus(1, ChronoUnit.HOURS).toEpochMilli()
+                ))
                 .jwtID(UUID.randomUUID().toString())
-                .claim("Scope", buildScope(accounts))
+                .claim("scope", buildScope(accounts))
                 .build();
 
         Payload payload = new Payload(jwtClaimsSet.toJSONObject());
@@ -180,15 +213,11 @@ public class AccountServiceImpl implements AccountService {
         }
     }
     public IntrospectResponse introspect(IntrospectRequest request) throws JOSEException, ParseException {
-        JWSVerifier verifier = new MACVerifier(SIGNER_KEY.getBytes());
-
         var token = request.getToken();
-        SignedJWT signedJWT = SignedJWT.parse(token);
         boolean isValid = true;
 
         try {
-//            verifyToken(token, false);
-            isValid = signedJWT.verify(verifier);
+            verifyToken(token, false);
         } catch (AppException e) {
             isValid = false;
         }
@@ -198,12 +227,62 @@ public class AccountServiceImpl implements AccountService {
 
     private SignedJWT verifyToken(String token, boolean isRefresh) throws JOSEException, ParseException {
         JWSVerifier verifier = new MACVerifier(SIGNER_KEY.getBytes());
-
         SignedJWT signedJWT = SignedJWT.parse(token);
+
+        Date expiryTime = (isRefresh)
+                ? new Date(signedJWT.getJWTClaimsSet().getIssueTime()
+                .toInstant().plus(30, ChronoUnit.MINUTES).toEpochMilli())
+                : signedJWT.getJWTClaimsSet().getExpirationTime();
 
         var verified = signedJWT.verify(verifier);
 
+        if(!(verified && expiryTime.after(new Date()))){
+            throw  new AppException(ErrorCode.UNAUTHENTICATED);
+        }
+
+        if(manager.createQuery("Select it from InvalidateToken it where it.id = :token", InvalidateToken.class)
+                .setParameter("token", signedJWT.getJWTClaimsSet().getJWTID())
+                .getResultList().size() > 0){
+            throw new AppException(ErrorCode.UNAUTHENTICATED);
+        }
+
         return signedJWT;
+    }
+
+    @Override
+    @Transactional
+    public AuthenticationResponse refreshToken(RefreshRequest request) throws ParseException, JOSEException {
+        var signedJWT = verifyToken(request.getToken(), true);
+
+        var jit = signedJWT.getJWTClaimsSet().getJWTID();
+        var expiryTime = signedJWT.getJWTClaimsSet().getExpirationTime();
+
+        InvalidateToken invalidatedToken =
+                InvalidateToken.builder().id(jit).expiryTime(expiryTime).build();
+
+        manager.persist(invalidatedToken);
+
+        var accountId = signedJWT.getJWTClaimsSet().getSubject();
+
+        Query customQuery = manager.createQuery("Select ar.accounts, ar.roles from AccountRole ar" +
+                " join ar.accounts a where a.id = :accountId");
+        customQuery.setParameter("accountId", accountId);
+        ArrayList<Integer> roles = new ArrayList<>();
+
+        List<Object[]> results = customQuery.getResultList();
+        Accounts a = new Accounts();
+        a = (Accounts) results.get(0)[0];
+
+        for(Object[] r : results){
+            Roles mrole = new Roles();
+            mrole = (Roles) r[1];
+            roles.add(mrole.getId());
+        }
+        a.setRoles(roles);
+
+        var token = generateToken(a);
+
+        return AuthenticationResponse.builder().token(token).authenticated(true).build();
     }
 
     private String buildScope(Accounts accounts){
