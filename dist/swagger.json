@@ -11,7 +11,7 @@
     },
     "servers": [
         {
-            "url": "http://localhost:8080"
+            "url": "https://nampv3201.github.io/MyETicket"
         }
     ],
     "security": [
