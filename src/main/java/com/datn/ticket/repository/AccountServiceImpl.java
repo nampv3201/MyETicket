@@ -85,6 +85,7 @@ public class AccountServiceImpl implements AccountService {
             AccountRole ar = new AccountRole();
             ar.setAccounts(account);
             ar.setRoles(r);
+            ar.setStatus(1);
             manager.persist(ar);
         }
     }
@@ -103,25 +104,31 @@ public class AccountServiceImpl implements AccountService {
     @Override
     public ResponseEntity<AuthenticationResponse> signIn(String username, String password, int role) {
         PasswordEncoder passwordEncoder = new BCryptPasswordEncoder(10);
-        Query customQuery = manager.createQuery("Select ar.accounts, ar.roles, a.username, ar.status from AccountRole ar" +
-                " join ar.accounts a where a.username = :username");
+        Query customQuery = manager.createNativeQuery("select a.id, a.username, a.password, a.status, ar.role_id, ar.status " +
+                " from account a" +
+                " join account_has_role ar on ar.Account_id = a.id " +
+                "where a.username = :username and ar.role_id = :role_id");
         customQuery.setParameter("username", username);
+        customQuery.setParameter("role_id", role);
         ArrayList<Integer> roles = new ArrayList<>();
         try{
             List<Object[]> results = customQuery.getResultList();
             Accounts a = new Accounts();
-            a = (Accounts) results.get(0)[0];
+            a.setId((Integer) results.get(0)[0]);
+            a.setUsername((String) results.get(0)[1]);
+            a.setPassword((String) results.get(0)[2]);
+            a.setStatus(Byte.toUnsignedInt((Byte) results.get(0)[3]));
             if(!passwordEncoder.matches(password, a.getPassword())){
                 return ResponseEntity.status(HttpStatus.NOT_FOUND).body(AuthenticationResponse.builder().token(null).authenticated(false).build());
             }
             for(Object[] r : results){
-                Roles mrole = new Roles();
-                mrole = (Roles) r[1];
-                roles.add(mrole.getId());
+                roles.add((Integer) results.get(0)[4]);
             }
             a.setRoles(roles);
 
-            if(a.getRoles().contains(role) && (Integer) results.get(0)[3] == 1){
+            log.info("before if");
+            if(Byte.toUnsignedInt((Byte) results.get(0)[5]) == 1){
+                log.info("inside if");
                 var token = generateToken(a);
                 return ResponseEntity.ok(AuthenticationResponse.builder().token(token).authenticated(true).build());
             }

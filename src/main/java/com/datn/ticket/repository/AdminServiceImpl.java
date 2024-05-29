@@ -8,6 +8,8 @@ import com.datn.ticket.model.PaymentGateway;
 import com.datn.ticket.model.dto.EventStatisticDTO;
 import com.datn.ticket.model.dto.response.AccountResponse;
 import com.datn.ticket.model.dto.response.ApiResponse;
+import com.datn.ticket.model.dto.response.PaymentHistoryResponse;
+import com.datn.ticket.model.dto.response.PaymentHistoryResponseDetail;
 import com.datn.ticket.model.mapper.EventHomeMapper;
 import com.datn.ticket.service.AdminService;
 import jakarta.persistence.EntityManager;
@@ -15,6 +17,7 @@ import jakarta.persistence.NoResultException;
 import jakarta.persistence.Query;
 import jakarta.persistence.TypedQuery;
 import jakarta.transaction.Transactional;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -22,10 +25,10 @@ import org.springframework.stereotype.Repository;
 
 import java.math.BigDecimal;
 import java.text.ParseException;
-import java.util.ArrayList;
-import java.util.List;
+import java.util.*;
 
 @Repository
+@Slf4j
 public class AdminServiceImpl implements AdminService {
     private final EntityManager manager;
 
@@ -193,7 +196,6 @@ public class AdminServiceImpl implements AdminService {
     }
 
     @Override
-    @PreAuthorize("hasRole('Admin')")
     public List<Categories> getAllCategories() {
         TypedQuery<Categories> query = manager.createQuery("select c from Categories c", Categories.class);
         return query.getResultList();
@@ -248,5 +250,92 @@ public class AdminServiceImpl implements AdminService {
             dtos.add(dto);
         }
         return dtos;
+    }
+
+    @Override
+    public ApiResponse<?> getPaymentHistoryDetail(String paymentId) {
+        List<Object> cart = new ArrayList<Object>();
+        PaymentHistoryResponseDetail response = new PaymentHistoryResponseDetail();
+        List<Object[]> historyResponseDetail =
+                manager.createNativeQuery("select p.id, p.payment_time, p.payment_status, c.id as cart_id, c.cost, u.id, u.name from payment p " +
+                        "join invoice i on i.Payment_id = p.id " +
+                        "join cart c on i.Cart_id = c.id " +
+                        "join createticket ct on c.CreateTicket_id = ct.id " +
+                        "join events e on e.id = ct.Events_id " +
+                        "join users u on c.Users_id = u.id " +
+                        "where p.id = :paymentId")
+                .setParameter("paymentId", paymentId)
+                .getResultList();
+        if(!historyResponseDetail.isEmpty()) {
+            response.setPaymentId(historyResponseDetail.get(0)[0].toString());
+            response.setPaymentTime(historyResponseDetail.get(0)[1].toString());
+            response.setPaymentStatus(historyResponseDetail.get(0)[2].toString());
+            response.setUId((Integer) historyResponseDetail.get(0)[5]);
+            response.setUName(historyResponseDetail.get(0)[6].toString());
+            for(Object[] o : historyResponseDetail){
+                Map<String, Object> myMap = new HashMap<>();
+                myMap.put("cardId", (Integer) o[3]);
+                myMap.put("price", (Double) o[4]);
+                cart.add(myMap);
+            }
+            response.setCart(cart);
+        }
+
+        try{
+            return ApiResponse.<PaymentHistoryResponseDetail>builder()
+                    .result(response)
+                    .build();
+        }catch (NoResultException e) {
+            log.error("Not found");
+            return ApiResponse.builder().message(e.getMessage()).build();
+        }catch(AppException e) {
+            throw new AppException(e.getErrorCode());
+        }
+    }
+
+    @Override
+    public ApiResponse<?> getPaymentHistory(String paymentDate, String status, Integer uId) {
+        StringBuilder sql = new StringBuilder("Select p.id, p.payment_time, p.payment_status, c.cost, u.id from payment p " +
+                "join invoice i on i.Payment_id = p.id " +
+                "join cart c on i.Cart_id = c.id " +
+                "join createticket ct on c.CreateTicket_id = ct.id " +
+                "join events e on e.id = ct.Events_id " +
+                "join users u on c.Users_id = u.id " +
+                "where 1=1 ");
+
+        if (paymentDate != null) {
+            sql.append("and Date(p.payment_time) = :paymentDate ");
+        }
+        if (status != null) {
+            sql.append("and p.payment_status = :status ");
+        }
+        if(uId != null){
+            sql.append("and u.id = :uId ");
+        }
+
+        Query query = manager.createNativeQuery(sql.toString(), PaymentHistoryResponse.class);
+        if (paymentDate != null) {
+            query.setParameter("paymentDate", paymentDate);
+        }
+        if (status != null) {
+            query.setParameter("status", status);
+        }
+        if(uId != null){
+            query.setParameter("uId", uId);
+        }
+
+        try {
+            return ApiResponse.<List<PaymentHistoryResponse>>builder()
+                    .result(query.getResultList())
+                    .build();
+        }catch (NoResultException e){
+            log.error("Not found");
+            return ApiResponse.<List<PaymentHistoryResponse>>builder().message(e.getMessage()).build();
+        }catch(AppException e){
+            throw new AppException(e.getErrorCode());
+        }catch (Exception e){
+            log.error(e.getMessage());
+            return ApiResponse.<List<PaymentHistoryResponse>>builder().message(e.getMessage()).build();
+        }
     }
 }

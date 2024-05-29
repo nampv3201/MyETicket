@@ -6,6 +6,8 @@ import com.datn.ticket.model.PaymentGateway;
 import com.datn.ticket.model.dto.EventStatisticDTO;
 import com.datn.ticket.model.dto.response.AccountResponse;
 import com.datn.ticket.model.dto.response.ApiResponse;
+import com.datn.ticket.model.dto.response.PaymentHistoryResponse;
+import com.datn.ticket.model.dto.response.PaymentHistoryResponseDetail;
 
 import java.text.ParseException;
 import java.util.List;
@@ -25,5 +27,8 @@ public interface AdminService {
     void enableAccount(int accountId, int roleId);
     ApiResponse<?> allEvents(Integer MerchantId, List<Integer> CategoryId, Integer allTime, String city);
     List<EventStatisticDTO> getStatistics(int merchantId) throws ParseException;
+
+    ApiResponse<?> getPaymentHistory(String paymentDate, String status, Integer uId);
+    ApiResponse<?> getPaymentHistoryDetail(String paymentId);
 
 }

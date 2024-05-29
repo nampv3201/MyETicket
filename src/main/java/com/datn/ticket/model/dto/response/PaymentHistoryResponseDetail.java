@@ -7,16 +7,15 @@ import java.util.Date;
 import java.util.List;
 
 @Data
+@Builder
 @NoArgsConstructor
 @AllArgsConstructor
-@Builder
 @FieldDefaults(level = AccessLevel.PRIVATE)
-public class PaymentResponse {
-    List<Integer> cartIds;
-    String bankTranNo;
-    String responseCode;
-    Date paymentDate;
-    double amount;
+public class PaymentHistoryResponseDetail {
+    String paymentId;
+    String paymentTime;
+    String paymentStatus;
+    List<Object> cart;
     int uId;
-    int methodId;
+    String uName;
 }

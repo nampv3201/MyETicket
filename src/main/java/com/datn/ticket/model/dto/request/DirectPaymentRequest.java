@@ -10,7 +10,7 @@ import java.util.List;
 @AllArgsConstructor
 @Builder
 @FieldDefaults(level = AccessLevel.PRIVATE)
-public class PaymentRequest {
-    List<Integer> cartId;
-    int method;
+public class DirectPaymentRequest {
+    int methodId;
+    List<AddToCartRequest> cartId;
 }

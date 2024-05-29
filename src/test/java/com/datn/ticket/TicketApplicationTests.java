@@ -9,17 +9,26 @@ import org.springframework.boot.test.context.SpringBootTest;
 import java.net.URLDecoder;
 import java.text.DecimalFormat;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 @SpringBootTest
 class TicketApplicationTests {
 
 	@Test
 	public void contextLoads() {
-		List<Integer> a = new ArrayList<>();
-		a.add(1);
-		a.add(2);
-		System.out.println(a.toString());
+		List<Object> test = new ArrayList<>();
+		for(int i = 0; i<2; i++) {
+			Map<String, Object> td= new HashMap<>();
+			td.put("test", "test");
+			td.put("number", i);
+			test.add(td);
+		}
+
+		for(Object obj : test) {
+			System.out.println(obj);
+		}
 	}
 
 }

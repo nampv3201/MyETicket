@@ -68,7 +68,7 @@ public class MerchantController {
             m.setPhone(muRequest.getPhone());
             merchantService.updateMerchant(m);
             return ApiResponse.builder()
-                    .result("abc")
+                    .result("Cập nhật thành công")
                     .build();
         }catch (Exception e){
 //            throw new AppException(ErrorCode.UNCATEGORIZED_EXCEPTION);

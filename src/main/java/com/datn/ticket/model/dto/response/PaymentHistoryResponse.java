@@ -4,19 +4,16 @@ import lombok.*;
 import lombok.experimental.FieldDefaults;
 
 import java.util.Date;
-import java.util.List;
 
 @Data
+@Builder
 @NoArgsConstructor
 @AllArgsConstructor
-@Builder
 @FieldDefaults(level = AccessLevel.PRIVATE)
-public class PaymentResponse {
-    List<Integer> cartIds;
-    String bankTranNo;
-    String responseCode;
-    Date paymentDate;
-    double amount;
+public class PaymentHistoryResponse {
+    String paymentId;
+    Date paymentTime;
+    String paymentStatus;
+    double paymentAmount;
     int uId;
-    int methodId;
 }

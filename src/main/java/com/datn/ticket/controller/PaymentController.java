@@ -2,6 +2,7 @@ package com.datn.ticket.controller;
 
 import com.datn.ticket.model.Cart;
 import com.datn.ticket.model.dto.request.AddToCartRequest;
+import com.datn.ticket.model.dto.request.DirectPaymentRequest;
 import com.datn.ticket.model.dto.request.PaymentRequest;
 import com.datn.ticket.model.dto.response.ApiResponse;
 import com.datn.ticket.configuration.VNPayConfig;
@@ -41,12 +42,12 @@ public class PaymentController {
     EventService eventService;
 
     @GetMapping("/direct_payment")
-    public ApiResponse<?> directPayment(@RequestBody List<AddToCartRequest> requests) throws UnsupportedEncodingException {
+    public ApiResponse<?> directPayment(@RequestBody DirectPaymentRequest requests) throws UnsupportedEncodingException {
         List<Integer> cartIds = new ArrayList<>();
         double totalCost = 0;
 
         List<Cart> carts = new ArrayList<>();
-        for(AddToCartRequest request : requests) {
+        for(AddToCartRequest request : requests.getCartId()) {
             Cart cart = new Cart();
             cart.setCreateTickets(eventService.getTicketType(request.getCreateTicketId()));
             cart.setQuantity(request.getQuantity());
@@ -62,7 +63,7 @@ public class PaymentController {
                 }
                 totalCost += userService.getSingleCart(cartId).getCost();
             }
-            String paymentUrl = configPayment(totalCost, cartIds);
+            String paymentUrl = configPayment(totalCost, cartIds, requests.getMethodId());
             RestTemplate restTemplate = new RestTemplate();
             restTemplate.getForEntity(paymentUrl, String.class);
             return ApiResponse.builder().result(paymentUrl)
@@ -88,7 +89,7 @@ public class PaymentController {
             totalCost += userService.getSingleCart(i).getCost();
         }
 
-        String paymentUrl = configPayment(totalCost, request.getCartId());
+        String paymentUrl = configPayment(totalCost, request.getCartId(), request.getMethod());
         RestTemplate restTemplate = new RestTemplate();
         restTemplate.getForEntity(paymentUrl, String.class);
         return ApiResponse.builder().message("Tạo yêu cầu thành công")
@@ -102,7 +103,8 @@ public class PaymentController {
                                           @RequestParam("vnp_BankTranNo") String bankTranNo,
                                           @RequestParam("vnp_PayDate") String paymentDate,
                                           @RequestParam("vnp_ResponseCode") String responseCode,
-                                          @RequestParam("userId") int uId) throws UnsupportedEncodingException {
+                                          @RequestParam("userId") int uId,
+                                          @RequestParam("vnp_OrderInfo") int methodId) throws UnsupportedEncodingException {
 
         try {
             // Chuyển đổi chuỗi JSON thành một mảng hoặc danh sách
@@ -130,8 +132,8 @@ public class PaymentController {
         }
 
     }
-    public String configPayment(double totalCost, List<Integer> cartId) throws UnsupportedEncodingException {
-            String orderType = "other";
+    public String configPayment(double totalCost, List<Integer> cartId, int paymentMethod) throws UnsupportedEncodingException {
+            String orderType = String.valueOf(paymentMethod);
             String bankCode = "NCB";
 
             String vnp_TxnRef = VNPayConfig.getRandomNumber(8);
@@ -149,7 +151,7 @@ public class PaymentController {
                 vnp_Params.put("vnp_BankCode", bankCode);
             }
             vnp_Params.put("vnp_TxnRef", vnp_TxnRef);
-            vnp_Params.put("vnp_OrderInfo", "Thanh toán đơn hàng");
+            vnp_Params.put("vnp_OrderInfo", String.valueOf(paymentMethod));
             vnp_Params.put("vnp_OrderType", orderType);
 
 //        String locate = req.getParameter("language");

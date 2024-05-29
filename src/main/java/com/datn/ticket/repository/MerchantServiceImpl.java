@@ -34,14 +34,14 @@ public class MerchantServiceImpl implements MerchantService {
 
     @Override
     @Transactional
-    @PreAuthorize("hasRole('MERCHANT', 'ADMIN')")
+    @PreAuthorize("hasRole('MERCHANT') || hasRole('ADMIN')")
     public void updateMerchant(Merchants merchants) {
         entityManager.merge(merchants);
     }
 
     @Override
     @Transactional
-    @PreAuthorize("hasRole('MERCHANT', 'ADMIN')")
+    @PreAuthorize("hasRole('MERCHANT') || hasRole('ADMIN')")
     public void addEvent(Events events, List<CreateTickets> ticketsList, List<Categories> categories) {
         entityManager.persist(events);
         if(entityManager.contains(events)){
@@ -61,7 +61,7 @@ public class MerchantServiceImpl implements MerchantService {
 
     @Override
     @Transactional()
-    @PreAuthorize("hasRole('MERCHANT', 'ADMIN')")
+    @PreAuthorize("hasRole('MERCHANT') || hasRole('ADMIN')")
     public ApiResponse<?> UpdateEvent(Events events, List<CreateTickets> updateTickets,
                                       List<CreateTickets> newTickets, List<Categories> newCategories, List<Categories> removeCategories) {
         try{
@@ -120,7 +120,7 @@ public class MerchantServiceImpl implements MerchantService {
     }
 
     @Override
-    @PreAuthorize("hasRole('MERCHANT', 'ADMIN')")
+    @PreAuthorize("hasRole('MERCHANT') || hasRole('ADMIN')")
     public Events getEventUpdate(int eventId) {
         TypedQuery<Events> eventQuery = entityManager.createQuery("Select e from Events e where e.id = :id", Events.class);
         eventQuery.setParameter("id", eventId);
@@ -129,7 +129,7 @@ public class MerchantServiceImpl implements MerchantService {
     }
 
     @Override
-    @PreAuthorize("hasRole('MERCHANT', 'ADMIN')")
+    @PreAuthorize("hasRole('MERCHANT') || hasRole('ADMIN')")
     public ApiResponse<?> myEvents(Integer status, List<Integer> CategoryId, String time, String city) {
         List<Object[]> events = new ArrayList<>();
         Query getEvent;
@@ -177,7 +177,7 @@ public class MerchantServiceImpl implements MerchantService {
 
 
     @Override
-    @PreAuthorize("hasRole('MERCHANT', 'ADMIN')")
+    @PreAuthorize("hasRole('MERCHANT') || hasRole('ADMIN')")
     public List<EventStatisticDTO> getStatistics() throws ParseException {
         Merchants m = myInfor();
         String query = "select sum(c.quantity) as soldTicket, sum(c.cost) as totalRevenue from invoice i " +
@@ -229,7 +229,7 @@ public class MerchantServiceImpl implements MerchantService {
     }
 
     @Override
-    @PreAuthorize("hasRole('MERCHANT', 'ADMIN')")
+    @PreAuthorize("hasRole('MERCHANT') || hasRole('ADMIN')")
     public List<StatisticsDetail> getStatisticsByEvent(int eventId) throws ParseException {
         String query = "select e.id, e.name, GROUP_CONCAT(DISTINCT cat.category_name SEPARATOR ', ') AS categories, " +
                 "CASE WHEN e.start_time > NOW() THEN 'Chưa diễn ra' ELSE 'Đã diễn ra' END AS Status, " +
@@ -267,7 +267,7 @@ public class MerchantServiceImpl implements MerchantService {
     }
 
     @Override
-    @PreAuthorize("hasRole('MERCHANT', 'ADMIN')")
+    @PreAuthorize("hasRole('MERCHANT') || hasRole('ADMIN')")
     public Merchants myInfor() {
         return (Merchants) entityManager.createNativeQuery("select m.* from merchants m " +
                 "join account a on m.Account_id = a.id " +

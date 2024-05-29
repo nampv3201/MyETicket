@@ -56,11 +56,12 @@ public class AccountController {
         a.setUsername(request.getUsername());
         a.setPassword(passwordEncoder.encode(request.getPassword()));
         a.setStatus(1);
-        try{
-            accountService.newAccount(a, request.getRole());
-        }catch(Exception e){
-            throw new AppException(ErrorCode.UNCATEGORIZED_EXCEPTION);
-        }
+        accountService.newAccount(a, request.getRole());
+//        try{
+//            accountService.newAccount(a, request.getRole());
+//        }catch(Exception e){
+//            throw new AppException(ErrorCode.UNCATEGORIZED_EXCEPTION);
+//        }
         return ApiResponse.builder().message("Đăng ký thành công").build();
     }
 

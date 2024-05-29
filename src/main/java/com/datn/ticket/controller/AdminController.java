@@ -195,18 +195,21 @@ public class AdminController {
         }
     }
 
-    @Operation(summary = "Kích hoạt tài khoản")
-    @PostMapping("/eventMgmt/enable")
-    public ApiResponse<?> enableAccount(@RequestBody DEAccountRequest request){
+    @Operation(summary = "Lấy thông tin payment")
+    @GetMapping("/payment-history")
+    public ApiResponse<?> pHistory(@RequestParam(value = "paymentDate", required = false) String pDate,
+                                   @RequestParam(value = "status", required = false) String status,
+                                   @RequestParam(value = "uId", required = false) Integer uId){
         try{
-            adminService.enableAccount(request.getAccountId(), request.getRoleId());
-            return ApiResponse.builder()
-                    .message("Kích hoạt thành công")
-                    .build();
+            return adminService.getPaymentHistory(pDate, status, uId);
         }catch (Exception e){
             throw new AppException(ErrorCode.UNCATEGORIZED_EXCEPTION);
         }
     }
 
-
+    @Operation(summary = "Payment Details")
+    @GetMapping("/payment-history/{id}")
+    public ApiResponse<?> pHistoryDetail(@PathVariable("id") String id){
+        return adminService.getPaymentHistoryDetail(id);
+    }
 }
