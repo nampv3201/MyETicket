@@ -1,15 +1,12 @@
 package com.datn.ticket.service;
 
 import com.datn.ticket.model.Accounts;
-import com.datn.ticket.model.InvalidateToken;
 import com.datn.ticket.model.Roles;
-import com.datn.ticket.model.dto.request.IntrospectRequest;
-import com.datn.ticket.model.dto.request.LogoutRequest;
-import com.datn.ticket.model.dto.request.RefreshRequest;
-import com.datn.ticket.model.dto.response.AccountResponse;
-import com.datn.ticket.model.dto.response.ApiResponse;
-import com.datn.ticket.model.dto.response.AuthenticationResponse;
-import com.datn.ticket.model.dto.response.IntrospectResponse;
+import com.datn.ticket.dto.request.IntrospectRequest;
+import com.datn.ticket.dto.request.LogoutRequest;
+import com.datn.ticket.dto.request.RefreshRequest;
+import com.datn.ticket.dto.response.AuthenticationResponse;
+import com.datn.ticket.dto.response.IntrospectResponse;
 import com.nimbusds.jose.JOSEException;
 import org.springframework.http.ResponseEntity;
 
@@ -22,8 +19,6 @@ public interface AccountService {
     Accounts getUsername(String username);
     ResponseEntity<AuthenticationResponse> signIn(String username, String password, int role);
     IntrospectResponse introspect(IntrospectRequest request) throws JOSEException, ParseException;
-    ResponseEntity<Object> disableAccount(Integer id);
-    ResponseEntity<Object> enableAccount(Integer id);
     Roles getRole(Integer id);
     void logout(LogoutRequest request) throws ParseException, JOSEException;
     AuthenticationResponse refreshToken(RefreshRequest request) throws ParseException, JOSEException;

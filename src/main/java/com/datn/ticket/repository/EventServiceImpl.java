@@ -1,11 +1,15 @@
 package com.datn.ticket.repository;
 
+import com.datn.ticket.dto.EventHome;
+import com.datn.ticket.exception.AppException;
+import com.datn.ticket.exception.ErrorCode;
 import com.datn.ticket.model.Categories;
 import com.datn.ticket.model.CreateTickets;
 import com.datn.ticket.model.Events;
-import com.datn.ticket.model.dto.response.CreateTicketsResponse;
-import com.datn.ticket.model.dto.EventDTO;
-import com.datn.ticket.model.dto.response.ApiResponse;
+import com.datn.ticket.dto.response.CreateTicketsResponse;
+import com.datn.ticket.dto.EventDTO;
+import com.datn.ticket.dto.response.ApiResponse;
+import com.datn.ticket.model.mapper.CategoriesMapper;
 import com.datn.ticket.model.mapper.CreateTicketMapper;
 import com.datn.ticket.model.mapper.EventHomeMapper;
 import com.datn.ticket.model.mapper.EventMapper;
@@ -15,7 +19,6 @@ import jakarta.persistence.Query;
 import jakarta.persistence.TypedQuery;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Repository;
 
@@ -86,16 +89,15 @@ public class EventServiceImpl implements EventService {
         if(CategoryId != null) {
             query.append("and e.id in (select ecat.Events_id from events_has_categories ecat where ecat.Categories_id in :CategoryId) ");
         }
-        if(time == null){
-            query.append("and e.end_time > now() ");
-        }
         if(time!=null){
             if(time.equals("before")){
                 query.append("and e.end_time < now() ");
+            }if(time.equals("after")){
+                query.append("and e.end_time > now() ");
             }
-            if(city != null){
-                query.append("and e.city = :city ");
-            }
+        }
+        if(city != null){
+            query.append("and e.city = :city ");
         }
 
         // Create Query
@@ -115,6 +117,81 @@ public class EventServiceImpl implements EventService {
 
         events = getEvent.getResultList();
         return ResponseEntity.ok().body(EventHomeMapper.eventHomeDTO(events));
+    }
+
+    @Override
+    public ResponseEntity<Object> getEventByFilterWithPage(int offset, int size, Integer MerchantId, List<Integer> CategoryId, String time,
+                                                           String city, String fromTime, String toTime, double minPrice, double maxPrice) {
+        List<Object[]> events = new ArrayList<>();
+        Query getEvent;
+        StringBuilder query = new StringBuilder("Select e.id, e.name, e.banner, e.city, e.location, e.start_booking, min(ct.price) " +
+                "from events e " +
+                "join createticket ct on ct.Events_id = e.id " +
+                "where e.status = 1 ");
+
+
+        // Add query by filtering
+        if(MerchantId != null) {
+            query.append("and e.Merchants_id = :MerchantId ");
+        }
+        if(CategoryId != null) {
+            query.append("and e.id in (select ecat.Events_id from events_has_categories ecat where ecat.Categories_id in :CategoryId) ");
+        }
+        if(time!=null){
+            if(time.equals("before")){
+                query.append("and e.end_time < now() ");
+            }if(time.equals("after")){
+                query.append("and e.end_time > now() ");
+            }
+        }
+        if(city != null){
+            query.append("and e.city = :city ");
+        }
+
+        // Create Query
+        query.append(" group by e.id, e.name limit :limit offset :offset");
+        getEvent = manager.createNativeQuery(query.toString())
+                .setParameter("limit", size)
+                .setParameter("offset", offset);
+
+        // Add Query Params
+        if(MerchantId != null) {
+            getEvent.setParameter("MerchantId", MerchantId);
+        }
+        if(CategoryId != null && !CategoryId.isEmpty()) {
+            getEvent.setParameter("CategoryId", CategoryId);
+        }
+        if(city != null){
+            getEvent.setParameter("city", city);
+        }
+
+        events = getEvent.getResultList();
+        return ResponseEntity.ok().body(EventHomeMapper.eventHomeDTO(events));
+    }
+
+    @Override
+    public ApiResponse<?> getEventByCategory(String category) {
+        String catName = CategoriesMapper.mapCategory(category);
+        Query query = manager.createNativeQuery("Select e.id, e.name, e.banner, e.city, e.location, e.start_booking, min(ct.price) " +
+                "from events e " +
+                "join createticket ct on ct.Events_id = e.id " +
+                "join events_has_categories ecat on ecat.Events_id = e.id " +
+                "join categories cat on ecat.Categories_id = cat.id " +
+                "where e.status = 1 and cat.category_name = :catName " +
+                "group by e.id, e.name")
+                .setParameter("catName", catName);
+//        try {
+//            List<Object[]> events = query.getResultList();
+//            return ApiResponse.<List<EventHome>>builder()
+//                   .result(EventHomeMapper.eventHomeDTO(events))
+//                   .build();
+//        }catch (Exception e) {
+//            throw new AppException(ErrorCode.UNCATEGORIZED_EXCEPTION);
+//        }
+        List<Object[]> events = query.getResultList();
+        return ApiResponse.<List<EventHome>>builder()
+                .result(EventHomeMapper.eventHomeDTO(events))
+                .build();
     }
 
     @Override

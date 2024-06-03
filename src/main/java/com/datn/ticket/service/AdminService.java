@@ -1,13 +1,14 @@
 package com.datn.ticket.service;
 
+import com.datn.ticket.dto.response.AMerchantResponse;
+import com.datn.ticket.dto.response.AUserResponse;
 import com.datn.ticket.model.Categories;
 import com.datn.ticket.model.Merchants;
 import com.datn.ticket.model.PaymentGateway;
-import com.datn.ticket.model.dto.EventStatisticDTO;
-import com.datn.ticket.model.dto.response.AccountResponse;
-import com.datn.ticket.model.dto.response.ApiResponse;
-import com.datn.ticket.model.dto.response.PaymentHistoryResponse;
-import com.datn.ticket.model.dto.response.PaymentHistoryResponseDetail;
+import com.datn.ticket.dto.EventStatisticDTO;
+import com.datn.ticket.dto.response.AccountResponse;
+import com.datn.ticket.dto.response.ApiResponse;
+import com.datn.ticket.model.Users;
 
 import java.text.ParseException;
 import java.util.List;
@@ -15,16 +16,19 @@ import java.util.List;
 public interface AdminService {
     List<AccountResponse> getAccount();
     AccountResponse getByID(Integer id);
+
     Merchants getMerchantInfor(Integer id);
-    List<Merchants> getListMerchants();
+    List<AMerchantResponse> getListMerchants();
+
+    Users getUserInfor(Integer id);
+    List<AUserResponse> getListUsers();
+
     List<Categories> getAllCategories();
     void addNewCategory(Categories categories);
     void removeCategory(int catId);
     void addNewPaymentGateway(PaymentGateway gateway);
-    void disableEvent(int eventId);
-    void enableEvent(int eventId);
-    void disaleAccount(int accountId, int roleId);
-    void enableAccount(int accountId, int roleId);
+    void changeEventStatus(int eventId);
+    void changeAccountStatus(String username, String rolerName);
     ApiResponse<?> allEvents(Integer MerchantId, List<Integer> CategoryId, Integer allTime, String city);
     List<EventStatisticDTO> getStatistics(int merchantId) throws ParseException;
 

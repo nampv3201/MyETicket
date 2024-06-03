@@ -1,35 +1,26 @@
 package com.datn.ticket.controller;
 
 
+import com.datn.ticket.dto.request.*;
 import com.datn.ticket.exception.AppException;
 import com.datn.ticket.exception.ErrorCode;
 import com.datn.ticket.model.Accounts;
-import com.datn.ticket.model.Roles;
-import com.datn.ticket.model.dto.request.*;
-import com.datn.ticket.model.dto.response.AccountResponse;
-import com.datn.ticket.model.dto.response.ApiResponse;
-import com.datn.ticket.model.dto.response.AuthenticationResponse;
-import com.datn.ticket.model.dto.response.IntrospectResponse;
+import com.datn.ticket.dto.response.ApiResponse;
+import com.datn.ticket.dto.response.AuthenticationResponse;
+import com.datn.ticket.dto.response.IntrospectResponse;
 import com.datn.ticket.service.AccountService;
-import com.google.gson.Gson;
-import com.google.gson.JsonArray;
-import com.google.gson.JsonElement;
-import com.google.gson.JsonObject;
 import com.nimbusds.jose.JOSEException;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
-import io.swagger.v3.oas.annotations.security.SecurityScheme;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
 
 import java.text.ParseException;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
 
 @RestController
 @RequestMapping("/account")
@@ -55,7 +46,7 @@ public class AccountController {
         Accounts a = new Accounts();
         a.setUsername(request.getUsername());
         a.setPassword(passwordEncoder.encode(request.getPassword()));
-        a.setStatus(1);
+        a.setCreateAt(java.sql.Date.valueOf(LocalDate.now()));
         accountService.newAccount(a, request.getRole());
 //        try{
 //            accountService.newAccount(a, request.getRole());
@@ -90,18 +81,5 @@ public class AccountController {
     public AuthenticationResponse refreshToken(@RequestBody RefreshRequest request) throws ParseException, JOSEException {
         return accountService.refreshToken(request);
     }
-
-    @SecurityRequirement(name = "bearerAuth")
-    @Operation(summary = "Disable tài khoản")
-    @PutMapping("/disable/{id}")
-    public void disableAccount(@PathVariable("id") int id){
-        accountService.disableAccount(id);
-    }
-
-    @SecurityRequirement(name = "bearerAuth")
-    @Operation(summary = "Enable tài khoản")
-    @PutMapping("/enable/{id}")
-    public void enableAccount(@PathVariable("id") int id){
-        accountService.enableAccount(id);
-    }
+    
 }

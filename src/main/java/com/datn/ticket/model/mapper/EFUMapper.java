@@ -2,7 +2,7 @@ package com.datn.ticket.model.mapper;
 
 import com.datn.ticket.model.Categories;
 import com.datn.ticket.model.Events;
-import com.datn.ticket.model.dto.EventFirstUpdate;
+import com.datn.ticket.dto.EventFirstUpdate;
 
 import java.util.List;
 

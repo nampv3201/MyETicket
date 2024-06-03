@@ -1,17 +1,17 @@
 package com.datn.ticket.controller;
 
+import com.datn.ticket.dto.response.*;
 import com.datn.ticket.exception.AppException;
 import com.datn.ticket.exception.ErrorCode;
 import com.datn.ticket.model.Categories;
 import com.datn.ticket.model.Merchants;
 import com.datn.ticket.model.PaymentGateway;
-import com.datn.ticket.model.dto.request.AddCatRequest;
-import com.datn.ticket.model.dto.request.DEAccountRequest;
-import com.datn.ticket.model.dto.request.NewGWRequest;
-import com.datn.ticket.model.dto.response.AccountResponse;
-import com.datn.ticket.model.dto.response.ApiResponse;
-import com.datn.ticket.model.dto.response.MerchantsResponse;
+import com.datn.ticket.dto.request.AddCatRequest;
+import com.datn.ticket.dto.request.DEAccountRequest;
+import com.datn.ticket.dto.request.NewGWRequest;
+import com.datn.ticket.model.Users;
 import com.datn.ticket.model.mapper.MerchantMapper;
+import com.datn.ticket.model.mapper.UsersMapper;
 import com.datn.ticket.service.AdminService;
 import com.datn.ticket.service.MerchantService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -61,26 +61,54 @@ public class AdminController {
     }
     @Operation(summary = "Lấy danh sách tất cả merchant trong hệ thống")
     @GetMapping("/merchantInfor")
-    public ResponseEntity<Object> getMerchants(){
-        try{
-            ArrayList<MerchantsResponse> merchantsResponses = new ArrayList<>();
-            for(Merchants m : adminService.getListMerchants()){
-                merchantsResponses.add(MerchantMapper.INSTANCE.merchantsDTO(m));
-            }
-            return ResponseEntity.ok(merchantsResponses);
-        }catch (Exception e){
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(e.getMessage());
-        }
+    public ApiResponse<?> getMerchants(){
+        return ApiResponse.<List<AMerchantResponse>>builder()
+                .result(adminService.getListMerchants())
+                .build();
+//        try{
+//            return ApiResponse.<List<AMerchantResponse>>builder()
+//                    .result(adminService.getListMerchants())
+//                    .build();
+//        }catch (AppException e){
+//            throw new AppException(e.getErrorCode());
+//        }
     }
 
     @Operation(summary = "Lấy thông tin của 1 merchant")
     @GetMapping("/merchantInfor/{id}")
-    public ResponseEntity<Object> getMerchantInfor(@PathVariable("id") int id){
+    public ApiResponse<?> getMerchantInfor(@PathVariable("id") int id){
         try{
             Merchants m = adminService.getMerchantInfor(id);
-            return ResponseEntity.ok(MerchantMapper.INSTANCE.merchantsDTO(m));
-        }catch (Exception e){
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(e.getMessage());
+            return ApiResponse.builder()
+                    .result(MerchantMapper.INSTANCE.merchantsDTO(m))
+                    .build();
+        }catch (AppException e){
+            throw new AppException(e.getErrorCode());
+        }
+    }
+
+    @Operation(summary = "Lấy danh sách tất cả user trong hệ thống")
+    @GetMapping("/userInfor")
+    public ApiResponse<?> getUsers(){
+        try{
+            return ApiResponse.<List<AUserResponse>>builder()
+                    .result(adminService.getListUsers())
+                    .build();
+        }catch (AppException e){
+            throw new AppException(e.getErrorCode());
+        }
+    }
+
+    @Operation(summary = "Lấy thông tin của 1 user")
+    @GetMapping("/userInfor/{id}")
+    public ApiResponse<?> getUserInfor(@PathVariable("id") int id){
+        try{
+            Users u = adminService.getUserInfor(id);
+            return ApiResponse.builder()
+                    .result(UsersMapper.INSTANCE.toUserDto(u))
+                    .build();
+        }catch (AppException e){
+            throw new AppException(e.getErrorCode());
         }
     }
 
@@ -92,6 +120,19 @@ public class AdminController {
                                               @RequestParam(value = "city", required = false) String city){
         log.info("{}", city);
         return adminService.allEvents(MerchantId, CategoryId, allTime, city);
+    }
+
+    @Operation(summary = "Đổi trạng thái event")
+    @PostMapping("/eventMgmt/change-status")
+    public ApiResponse<?> changeEventStatus(@PathVariable("id") int eventId){
+        try{
+            adminService.changeEventStatus(eventId);
+            return ApiResponse.builder()
+                    .message("Thành công")
+                    .build();
+        }catch (Exception e){
+            throw new AppException(ErrorCode.UNCATEGORIZED_EXCEPTION);
+        }
     }
 
     @Operation(summary = "Thống kê sự kiện theo merchant")
@@ -156,39 +197,13 @@ public class AdminController {
         }
     }
 
-    @Operation(summary = "Vô hiệu hóa event")
-    @PostMapping("/eventMgmt/disable/{id}")
-    public ApiResponse<?> disableEvent(@PathVariable("id") int id){
+    @Operation(summary = "Đổi trạng thái tài khoản")
+    @PostMapping("/account/change-status")
+    public ApiResponse<?> changeAccountStatus(@RequestBody DEAccountRequest request){
         try{
-            adminService.disableEvent(id);
+            adminService.changeAccountStatus(request.getUsername(), request.getRoleName());
             return ApiResponse.builder()
-                    .message("Vô hiệu hóa thành công")
-                    .build();
-        }catch (Exception e){
-            throw new AppException(ErrorCode.UNCATEGORIZED_EXCEPTION);
-        }
-    }
-
-    @Operation(summary = "Kích hoạt event")
-    @PostMapping("/eventMgmt/enable/{id}")
-    public ApiResponse<?> enableEvent(@PathVariable("id") int id){
-        try{
-            adminService.enableEvent(id);
-            return ApiResponse.builder()
-                    .message("Kích hoạt thành công")
-                    .build();
-        }catch (Exception e){
-            throw new AppException(ErrorCode.UNCATEGORIZED_EXCEPTION);
-        }
-    }
-
-    @Operation(summary = "Vô hiệu hóa tài khoản")
-    @PostMapping("/eventMgmt/disable")
-    public ApiResponse<?> disableAccount(@RequestBody DEAccountRequest request){
-        try{
-            adminService.disaleAccount(request.getAccountId(), request.getRoleId());
-            return ApiResponse.builder()
-                    .message("Vô hiệu hóa thành công")
+                    .message("Thành công")
                     .build();
         }catch (Exception e){
             throw new AppException(ErrorCode.UNCATEGORIZED_EXCEPTION);

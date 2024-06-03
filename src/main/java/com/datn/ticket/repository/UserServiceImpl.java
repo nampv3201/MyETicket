@@ -1,11 +1,9 @@
 package com.datn.ticket.repository;
 
-import com.datn.ticket.exception.AppException;
-import com.datn.ticket.exception.ErrorCode;
+import com.datn.ticket.dto.response.*;
 import com.datn.ticket.model.Cart;
 import com.datn.ticket.model.Users;
-import com.datn.ticket.model.dto.request.UpdateCartRequest;
-import com.datn.ticket.model.dto.response.*;
+import com.datn.ticket.dto.request.UpdateCartRequest;
 import com.datn.ticket.service.EventService;
 import com.datn.ticket.service.UserService;
 import com.datn.ticket.util.QRCodeService;

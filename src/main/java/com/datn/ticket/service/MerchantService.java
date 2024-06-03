@@ -4,9 +4,9 @@ import com.datn.ticket.model.Categories;
 import com.datn.ticket.model.CreateTickets;
 import com.datn.ticket.model.Events;
 import com.datn.ticket.model.Merchants;
-import com.datn.ticket.model.dto.EventStatisticDTO;
-import com.datn.ticket.model.dto.StatisticsDetail;
-import com.datn.ticket.model.dto.response.ApiResponse;
+import com.datn.ticket.dto.EventStatisticDTO;
+import com.datn.ticket.dto.StatisticsDetail;
+import com.datn.ticket.dto.response.ApiResponse;
 
 import java.text.ParseException;
 import java.util.List;

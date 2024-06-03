@@ -9,22 +9,16 @@ import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.*;
 
-import com.datn.ticket.model.dto.AccountsDTO;
-import com.datn.ticket.model.dto.request.IntrospectRequest;
-import com.datn.ticket.model.dto.request.LogoutRequest;
-import com.datn.ticket.model.dto.request.RefreshRequest;
-import com.datn.ticket.model.dto.response.AccountResponse;
-import com.datn.ticket.model.dto.response.ApiResponse;
-import com.datn.ticket.model.dto.response.AuthenticationResponse;
-import com.datn.ticket.model.dto.response.IntrospectResponse;
-import com.datn.ticket.model.mapper.AccountMapper;
+import com.datn.ticket.dto.request.IntrospectRequest;
+import com.datn.ticket.dto.request.LogoutRequest;
+import com.datn.ticket.dto.request.RefreshRequest;
+import com.datn.ticket.dto.response.AuthenticationResponse;
+import com.datn.ticket.dto.response.IntrospectResponse;
 import com.datn.ticket.service.AccountService;
-import com.datn.ticket.util.CurrentAccount;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.Query;
 import jakarta.persistence.NoResultException;
 import jakarta.persistence.TypedQuery;
-import jakarta.persistence.criteria.CriteriaBuilder;
 import jakarta.transaction.Transactional;
 import lombok.experimental.NonFinal;
 import lombok.extern.slf4j.Slf4j;
@@ -33,8 +27,6 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.security.core.context.SecurityContext;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Repository;
@@ -45,8 +37,6 @@ import com.nimbusds.jose.crypto.MACVerifier;
 import com.nimbusds.jwt.JWTClaimsSet;
 import com.nimbusds.jwt.SignedJWT;
 import org.springframework.util.CollectionUtils;
-
-import javax.naming.Context;
 
 @Repository
 @Slf4j
@@ -73,7 +63,6 @@ public class AccountServiceImpl implements AccountService {
                 Users u = new Users();
                 u.setPoint(0);
                 u.setAge(-1);
-                u.setStatus(1);
                 u.setAccounts(account);
                 manager.persist(u);
             } else if (id == 3) {
@@ -104,7 +93,7 @@ public class AccountServiceImpl implements AccountService {
     @Override
     public ResponseEntity<AuthenticationResponse> signIn(String username, String password, int role) {
         PasswordEncoder passwordEncoder = new BCryptPasswordEncoder(10);
-        Query customQuery = manager.createNativeQuery("select a.id, a.username, a.password, a.status, ar.role_id, ar.status " +
+        Query customQuery = manager.createNativeQuery("select a.id, a.username, a.password, a.create_at, ar.role_id, ar.status " +
                 " from account a" +
                 " join account_has_role ar on ar.Account_id = a.id " +
                 "where a.username = :username and ar.role_id = :role_id");
@@ -117,7 +106,7 @@ public class AccountServiceImpl implements AccountService {
             a.setId((Integer) results.get(0)[0]);
             a.setUsername((String) results.get(0)[1]);
             a.setPassword((String) results.get(0)[2]);
-            a.setStatus(Byte.toUnsignedInt((Byte) results.get(0)[3]));
+            a.setCreateAt((Date) results.get(0)[3]);
             if(!passwordEncoder.matches(password, a.getPassword())){
                 return ResponseEntity.status(HttpStatus.NOT_FOUND).body(AuthenticationResponse.builder().token(null).authenticated(false).build());
             }
@@ -135,34 +124,6 @@ public class AccountServiceImpl implements AccountService {
             return ResponseEntity.status(HttpStatus.FORBIDDEN).body(AuthenticationResponse.builder().token(null).authenticated(false).build());
         }catch (NoResultException e) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(AuthenticationResponse.builder().token(null).authenticated(false).build());
-        }
-    }
-
-    @Override
-    @Transactional
-    @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<Object> disableAccount(Integer id) {
-        Query query = manager.createQuery("Update Accounts a set a.status = 0 where a.id = :id");
-        query.setParameter("id", id);
-        try{
-            query.executeUpdate();
-            return ResponseEntity.ok("Disabled");
-        }catch(Exception e){
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Có lỗi xảy ra, vui lòng thử lại sau");
-        }
-    }
-
-    @Override
-    @Transactional
-    @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<Object> enableAccount(Integer id) {
-        Query query = manager.createQuery("Update Accounts a set a.status = 1 where a.id = :id");
-        query.setParameter("id", id);
-        try{
-            query.executeUpdate();
-            return ResponseEntity.ok("Enabled");
-        }catch(Exception e){
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Có lỗi xảy ra, vui lòng thử lại sau");
         }
     }
 

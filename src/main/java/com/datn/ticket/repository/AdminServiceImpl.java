@@ -1,15 +1,13 @@
 package com.datn.ticket.repository;
 
+import com.datn.ticket.dto.response.*;
 import com.datn.ticket.exception.AppException;
 import com.datn.ticket.exception.ErrorCode;
 import com.datn.ticket.model.Categories;
 import com.datn.ticket.model.Merchants;
 import com.datn.ticket.model.PaymentGateway;
-import com.datn.ticket.model.dto.EventStatisticDTO;
-import com.datn.ticket.model.dto.response.AccountResponse;
-import com.datn.ticket.model.dto.response.ApiResponse;
-import com.datn.ticket.model.dto.response.PaymentHistoryResponse;
-import com.datn.ticket.model.dto.response.PaymentHistoryResponseDetail;
+import com.datn.ticket.dto.EventStatisticDTO;
+import com.datn.ticket.model.Users;
 import com.datn.ticket.model.mapper.EventHomeMapper;
 import com.datn.ticket.service.AdminService;
 import jakarta.persistence.EntityManager;
@@ -19,7 +17,6 @@ import jakarta.persistence.TypedQuery;
 import jakarta.transaction.Transactional;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Repository;
 
@@ -39,9 +36,9 @@ public class AdminServiceImpl implements AdminService {
 
     // Lấy danh sách account
     @Override
-    @PreAuthorize("hasRole('Admin')")
+    @PreAuthorize("hasRole('ADMIN')")
     public List<AccountResponse> getAccount() {
-        Query query = manager.createNativeQuery("select a.id, a.username, a.status, " +
+        Query query = manager.createNativeQuery("select a.id, a.username, " +
                 "GROUP_CONCAT(DISTINCT r.role_name ORDER BY r.role_name ASC SEPARATOR ', ') " +
                 "from account a " +
                 "join account_has_role ar on a.id = ar.Account_id " +
@@ -52,9 +49,9 @@ public class AdminServiceImpl implements AdminService {
 
     // Lấy account cụ thể
     @Override
-    @PreAuthorize("hasRole('Admin')")
+    @PreAuthorize("hasRole('ADMIN')")
     public AccountResponse getByID(Integer id) {
-        Query query = manager.createNativeQuery("select a.id, a.username, a.status, " +
+        Query query = manager.createNativeQuery("select a.id, a.username, " +
                 "GROUP_CONCAT(DISTINCT r.role_name ORDER BY r.role_name ASC SEPARATOR ', ') " +
                 "from account a " +
                 "join account_has_role ar on a.id = ar.Account_id " +
@@ -69,7 +66,7 @@ public class AdminServiceImpl implements AdminService {
 
     // Lấy thông tin merchant cụ thể
     @Override
-    @PreAuthorize("hasRole('Admin')")
+    @PreAuthorize("hasRole('ADMIN')")
     public Merchants getMerchantInfor(Integer id) {
         TypedQuery<Merchants> getMerchant = manager.createQuery("Select m from Merchants m where m.id = :id", Merchants.class);
         getMerchant.setParameter("id", id);
@@ -78,15 +75,40 @@ public class AdminServiceImpl implements AdminService {
 
     // Lấy danh sách Merchant
     @Override
-    @PreAuthorize("hasRole('Admin')")
-    public List<Merchants> getListMerchants() {
-        TypedQuery<Merchants> getMerchant = manager.createQuery("Select m from Merchants m", Merchants.class);
+    @PreAuthorize("hasRole('ADMIN')")
+    public List<AMerchantResponse> getListMerchants() {
+        Query getMerchant = manager.createNativeQuery("select m.id, a.username, m.name, m.address, ar.status from merchants m " +
+                "join account a on m.Account_id = a.id " +
+                "join account_has_role ar on a.id = ar.Account_id " +
+                "join role r on ar.role_id = r.id " +
+                "where r.role_name = 'MERCHANT'", AMerchantResponse.class);
+        return getMerchant.getResultList();
+    }
+
+    // Lấy thông tin user cụ thể
+    @Override
+    @PreAuthorize("hasRole('ADMIN')")
+    public Users getUserInfor(Integer id) {
+        TypedQuery<Users> getUser = manager.createQuery("Select m from Users m where m.id = :id", Users.class);
+        getUser.setParameter("id", id);
+        return getUser.getSingleResult();
+    }
+
+    // Lấy danh sách User
+    @Override
+    @PreAuthorize("hasRole('ADMIN')")
+    public List<AUserResponse> getListUsers() {
+        Query getMerchant = manager.createNativeQuery("select u.id, a.username, u.name, u.address, u.phone, ar.status from users u " +
+                "join account a on u.Account_id = a.id " +
+                "join account_has_role ar on a.id = ar.Account_id " +
+                "join role r on ar.role_id = r.id " +
+                "where r.role_name = 'USER'", AUserResponse.class);
         return getMerchant.getResultList();
     }
 
     // Thêm danh mục mới
     @Override
-    @PreAuthorize("hasRole('Admin')")
+    @PreAuthorize("hasRole('ADMIN')")
     @Transactional
     public void addNewCategory(Categories categories) {
         manager.persist(categories);
@@ -94,7 +116,7 @@ public class AdminServiceImpl implements AdminService {
 
     // Xóa danh mục
     @Override
-    @PreAuthorize("hasRole('Admin')")
+    @PreAuthorize("hasRole('ADMIN')")
     @Transactional
     public void removeCategory(int catId) {
         manager.createNativeQuery("delete from categories where id = :catId")
@@ -104,55 +126,36 @@ public class AdminServiceImpl implements AdminService {
 
     // Thêm cổng thanh toán
     @Override
-    @PreAuthorize("hasRole('Admin')")
+    @PreAuthorize("hasRole('ADMIN')")
     @Transactional
     public void addNewPaymentGateway(PaymentGateway gateway) {
         manager.persist(gateway);
     }
 
-
-    // Vô hiệu hóa sự kiện
+    // Đổi trạng thái sự kiện
     @Override
-    @PreAuthorize("hasRole('Admin')")
+    @PreAuthorize("hasRole('ADMIN')")
     @Transactional
-    public void disableEvent(int eventId) {
-        Query query = manager.createNativeQuery("Update events e set e.status = 0 where e.id = :eventId");
-        query.setParameter("eventId", eventId).executeUpdate();
-    }
-
-    // Kích hoạt sự kiện
-    @Override
-    @PreAuthorize("hasRole('Admin')")
-    @Transactional
-    public void enableEvent(int eventId) {
-        Query query = manager.createNativeQuery("Update events e set e.status = 1 where e.id = :eventId");
+    public void changeEventStatus(int eventId) {
+        Query query = manager.createNativeQuery("Update events e set e.status = not e.status where e.id = :eventId");
         query.setParameter("eventId", eventId).executeUpdate();
     }
 
     // Vô hiệu hóa tài khoản
     @Override
-    @PreAuthorize("hasRole('Admin')")
+    @PreAuthorize("hasRole('ADMIN')")
     @Transactional
-    public void disaleAccount(int accountId, int roleId) {
-        Query query = manager.createNativeQuery("Update account_has_role a set a.status = 0 " +
-                "where a.Account_id = :accountId and a.role_id = :roleId");
+    public void changeAccountStatus(String accountId, String roleName) {
+        Query query = manager.createNativeQuery("Update account_has_role a set a.status = not a.status " +
+                "join role r on a.role_id = r.id " +
+                "where a.Account_id = :accountId and r.role_name = :roleName");
         query.setParameter("accountId", accountId)
-                .setParameter("roleId", roleId).executeUpdate();
+                .setParameter("roleName", roleName).executeUpdate();
     }
 
-    // Kích hoạt tài khoản
-    @Override
-    @PreAuthorize("hasRole('Admin')")
-    @Transactional
-    public void enableAccount(int accountId, int roleId) {
-        Query query = manager.createNativeQuery("Update account_has_role a set a.status = 1 " +
-                "where a.Account_id = :accountId and a.role_id = :roleId");
-        query.setParameter("accountId", accountId)
-                .setParameter("roleId", roleId).executeUpdate();
-    }
 
     @Override
-    @PreAuthorize("hasRole('Admin')")
+    @PreAuthorize("hasRole('ADMIN')")
     public ApiResponse<?> allEvents(Integer MerchantId, List<Integer> CategoryId, Integer allTime, String city) {
         List<Object[]> events = new ArrayList<>();
         Query getEvent;
@@ -202,7 +205,7 @@ public class AdminServiceImpl implements AdminService {
     }
 
     @Override
-    @PreAuthorize("hasRole('Admin')")
+    @PreAuthorize("hasRole('ADMIN')")
     public List<EventStatisticDTO> getStatistics(int merchantId) throws ParseException {
         String query = "select sum(c.quantity) as soldTicket, sum(c.cost) as totalRevenue from invoice i " +
                 "join cart c on i.Cart_id = c.id " +

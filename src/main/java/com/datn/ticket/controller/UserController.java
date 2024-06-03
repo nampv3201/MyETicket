@@ -1,15 +1,14 @@
 package com.datn.ticket.controller;
 
+import com.datn.ticket.dto.response.*;
 import com.datn.ticket.exception.AppException;
 import com.datn.ticket.exception.ErrorCode;
 import com.datn.ticket.model.Cart;
 import com.datn.ticket.model.Users;
-import com.datn.ticket.model.dto.UsersDTO;
-import com.datn.ticket.model.dto.request.AddToCartRequest;
-import com.datn.ticket.model.dto.request.RemoveFromCartRequest;
-import com.datn.ticket.model.dto.request.UpdateCartRequest;
-import com.datn.ticket.model.dto.request.UserUpdateRequest;
-import com.datn.ticket.model.dto.response.*;
+import com.datn.ticket.dto.request.AddToCartRequest;
+import com.datn.ticket.dto.request.RemoveFromCartRequest;
+import com.datn.ticket.dto.request.UpdateCartRequest;
+import com.datn.ticket.dto.request.UserUpdateRequest;
 import com.datn.ticket.model.mapper.UsersMapper;
 import com.datn.ticket.service.EventService;
 import com.datn.ticket.service.UserService;

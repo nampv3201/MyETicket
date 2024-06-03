@@ -1,7 +1,7 @@
 package com.datn.ticket.model.mapper;
 
 import com.datn.ticket.model.CreateTickets;
-import com.datn.ticket.model.dto.response.CreateTicketsResponse;
+import com.datn.ticket.dto.response.CreateTicketsResponse;
 
 public class CreateTicketMapper {
     public static CreateTicketsResponse createTicketsDTO(CreateTickets tickets){

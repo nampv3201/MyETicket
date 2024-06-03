@@ -1,8 +1,8 @@
 package com.datn.ticket.model.mapper;
 
 import com.datn.ticket.model.Events;
-import com.datn.ticket.model.dto.response.CreateTicketsResponse;
-import com.datn.ticket.model.dto.EventSecondUpdate;
+import com.datn.ticket.dto.response.CreateTicketsResponse;
+import com.datn.ticket.dto.EventSecondUpdate;
 
 import java.util.List;
 

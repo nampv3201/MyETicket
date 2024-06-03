@@ -27,9 +27,6 @@ public class Users {
     @Column(name = "point")
     private int point;
 
-    @Column(name = "status")
-    private int status;
-
     @OneToOne(cascade = CascadeType.ALL)
     @JoinColumn(name = "Account_id", referencedColumnName = "id")
     private Accounts accounts;
@@ -37,14 +34,13 @@ public class Users {
     public Users() {
     }
 
-    public Users(int id, String name, String address, int age, String phone, int point, int status, Accounts accounts) {
+    public Users(int id, String name, String address, int age, String phone, int point, Accounts accounts) {
         this.id = id;
         this.name = name;
         this.address = address;
         this.age = age;
         this.phone = phone;
         this.point = point;
-        this.status = status;
         this.accounts = accounts;
     }
 
@@ -70,10 +66,6 @@ public class Users {
 
     public void setPoint(int point) {
         this.point = point;
-    }
-
-    public void setStatus(int status) {
-        this.status = status;
     }
 
     public void setAccounts(Accounts accounts) {

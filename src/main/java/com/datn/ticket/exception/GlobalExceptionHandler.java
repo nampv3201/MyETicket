@@ -1,6 +1,6 @@
 package com.datn.ticket.exception;
 
-import com.datn.ticket.model.dto.response.ApiResponse;
+import com.datn.ticket.dto.response.ApiResponse;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;

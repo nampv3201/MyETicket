@@ -22,6 +22,7 @@ public class AccountRole {
     private Roles roles;
 
     @Getter
+    @Column(name = "status")
     private int status;
 
     public AccountRole() {

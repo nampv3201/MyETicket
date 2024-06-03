@@ -4,7 +4,7 @@ import java.text.ParseException;
 import java.util.Objects;
 import javax.crypto.spec.SecretKeySpec;
 
-import com.datn.ticket.model.dto.request.IntrospectRequest;
+import com.datn.ticket.dto.request.IntrospectRequest;
 import com.datn.ticket.service.AccountService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;

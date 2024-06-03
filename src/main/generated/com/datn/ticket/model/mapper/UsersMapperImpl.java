@@ -1,12 +1,12 @@
 package com.datn.ticket.model.mapper;
 
+import com.datn.ticket.dto.response.UserInforResponse;
 import com.datn.ticket.model.Users;
-import com.datn.ticket.model.dto.response.UserInforResponse;
 import javax.annotation.processing.Generated;
 
 @Generated(
     value = "org.mapstruct.ap.MappingProcessor",
-    date = "2024-05-24T16:27:52+0700",
+    date = "2024-05-30T12:28:54+0700",
     comments = "version: 1.5.5.Final, compiler: javac, environment: Java 19.0.1 (Oracle Corporation)"
 )
 public class UsersMapperImpl implements UsersMapper {

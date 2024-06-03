@@ -38,15 +38,13 @@ public class SecurityConfig{
     @Autowired
     private JwtAuthenticationEntryPoint jwtAuthenticationEntryPoint;
     private final String[] PUBLIC_ENDPOINTS = {
-            "/account/**", "/home/**", "/api/payment/infor", "/home/event",
+            "/swagger-ui/**", "/v3/api-docs/**", "/proxy/**", "/account/**", "/home/**", "/api/payment/infor", "/home/event",
     };
 
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity httpSecurity) throws Exception {
         httpSecurity
                 .authorizeHttpRequests(request -> request
-                        .requestMatchers("/swagger-ui/**", "/v3/api-docs/**", "/proxy/**")
-                        .permitAll()
                         .requestMatchers(PUBLIC_ENDPOINTS)
                         .permitAll()
                         .anyRequest()

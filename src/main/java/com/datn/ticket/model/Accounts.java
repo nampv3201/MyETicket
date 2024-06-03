@@ -4,7 +4,7 @@ import jakarta.persistence.*;
 import lombok.Getter;
 
 import java.util.ArrayList;
-import java.util.List;
+import java.util.Date;
 
 @Getter
 @Entity
@@ -22,8 +22,8 @@ public class Accounts {
     @Column(name = "password")
     private String password;
 
-    @Column(name = "status")
-    private int status;
+    @Column(name = "create_at")
+    private Date createAt;
 
     @Transient
     private ArrayList<Integer> roles;
@@ -31,10 +31,10 @@ public class Accounts {
     public Accounts() {
     }
 
-    public Accounts(String username, String password, int status) {
+    public Accounts(String username, String password, Date createAt) {
         this.username = username;
         this.password = password;
-        this.status = status;
+        this.createAt = createAt;
     }
 
     public void setId(int id) {
@@ -49,8 +49,8 @@ public class Accounts {
         this.password = password;
     }
 
-    public void setStatus(int status) {
-        this.status = status;
+    public void setCreateAt(Date status) {
+        this.createAt = status;
     }
 
     public void setRoles(ArrayList<Integer> roles) {

@@ -3,7 +3,7 @@ package com.datn.ticket.configuration;
 import java.io.IOException;
 
 import com.datn.ticket.exception.ErrorCode;
-import com.datn.ticket.model.dto.response.ApiResponse;
+import com.datn.ticket.dto.response.ApiResponse;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;

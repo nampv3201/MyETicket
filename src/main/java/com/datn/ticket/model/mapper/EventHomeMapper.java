@@ -1,11 +1,9 @@
 package com.datn.ticket.model.mapper;
 
-import com.datn.ticket.model.Events;
-import com.datn.ticket.model.dto.EventHome;
+import com.datn.ticket.dto.EventHome;
 
 import java.sql.Timestamp;
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.List;
 
 public class EventHomeMapper {
