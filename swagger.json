@@ -11,7 +11,7 @@
     },
     "servers": [
         {
-            "url": "http://localhost:8080"
+            "url": "https://nampv3201.github.io/MyETicket"
         }
     ],
     "security": [
@@ -519,37 +519,6 @@
                 }
             }
         },
-        "/admin/eventMgmt/enable": {
-            "post": {
-                "tags": [
-                    "Admin Controller"
-                ],
-                "summary": "Kích hoạt tài khoản",
-                "operationId": "enableAccount_1",
-                "requestBody": {
-                    "content": {
-                        "application/json": {
-                            "schema": {
-                                "$ref": "#/components/schemas/DEAccountRequest"
-                            }
-                        }
-                    },
-                    "required": true
-                },
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "content": {
-                            "*/*": {
-                                "schema": {
-                                    "$ref": "#/components/schemas/ApiResponseObject"
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-        },
         "/admin/eventMgmt/enable/{id}": {
             "post": {
                 "tags": [
@@ -734,6 +703,61 @@
                                 }
                             }
                         }
+                    }
+                }
+            }
+        },
+        "/account/refresh-token": {
+            "post": {
+                "tags": [
+                    "Account Controller"
+                ],
+                "summary": "Refresh token",
+                "operationId": "refreshToken",
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/RefreshRequest"
+                            }
+                        }
+                    },
+                    "required": true
+                },
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "*/*": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/AuthenticationResponse"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/account/log-out": {
+            "post": {
+                "tags": [
+                    "Account Controller"
+                ],
+                "summary": "Đăng xuất",
+                "operationId": "logout",
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/LogoutRequest"
+                            }
+                        }
+                    },
+                    "required": true
+                },
+                "responses": {
+                    "200": {
+                        "description": "OK"
                     }
                 }
             }
@@ -1260,6 +1284,15 @@
                             "type": "integer",
                             "format": "int32"
                         }
+                    },
+                    {
+                        "name": "vnp_OrderInfo",
+                        "in": "query",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "format": "int32"
+                        }
                     }
                 ],
                 "responses": {
@@ -1288,10 +1321,7 @@
                         "in": "query",
                         "required": true,
                         "schema": {
-                            "type": "array",
-                            "items": {
-                                "$ref": "#/components/schemas/AddToCartRequest"
-                            }
+                            "$ref": "#/components/schemas/DirectPaymentRequest"
                         }
                     }
                 ],
@@ -1396,6 +1426,85 @@
                             "*/*": {
                                 "schema": {
                                     "type": "object"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/admin/payment-history": {
+            "get": {
+                "tags": [
+                    "Admin Controller"
+                ],
+                "summary": "Lấy thông tin payment",
+                "operationId": "pHistory",
+                "parameters": [
+                    {
+                        "name": "paymentDate",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "status",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "uId",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "format": "int32"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "*/*": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ApiResponseObject"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/admin/payment-history/{id}": {
+            "get": {
+                "tags": [
+                    "Admin Controller"
+                ],
+                "summary": "Payment Details",
+                "operationId": "pHistoryDetail",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "*/*": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ApiResponseObject"
                                 }
                             }
                         }
@@ -1945,9 +2054,13 @@
                 "type": "object",
                 "properties": {
                     "username": {
+                        "maxLength": 2147483647,
+                        "minLength": 8,
                         "type": "string"
                     },
                     "password": {
+                        "maxLength": 2147483647,
+                        "minLength": 8,
                         "type": "string"
                     },
                     "role": {
@@ -1982,6 +2095,22 @@
                     },
                     "authenticated": {
                         "type": "boolean"
+                    }
+                }
+            },
+            "RefreshRequest": {
+                "type": "object",
+                "properties": {
+                    "token": {
+                        "type": "string"
+                    }
+                }
+            },
+            "LogoutRequest": {
+                "type": "object",
+                "properties": {
+                    "token": {
+                        "type": "string"
                     }
                 }
             },
@@ -2387,6 +2516,21 @@
                     }
                 }
             },
+            "DirectPaymentRequest": {
+                "type": "object",
+                "properties": {
+                    "methodId": {
+                        "type": "integer",
+                        "format": "int32"
+                    },
+                    "cartId": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/AddToCartRequest"
+                        }
+                    }
+                }
+            },
             "PaymentRequest": {
                 "type": "object",
                 "properties": {
@@ -2396,6 +2540,10 @@
                             "type": "integer",
                             "format": "int32"
                         }
+                    },
+                    "method": {
+                        "type": "integer",
+                        "format": "int32"
                     }
                 }
             },
