@@ -62,8 +62,8 @@ public class EventController {
                                                  @RequestParam(value = "city", required = false) String city,
                                                  @RequestParam(value = "fromTime", required = false) String fromTime,
                                                  @RequestParam(value = "toTime", required = false) String toTime,
-                                                 @RequestParam(value = "minPrice",required = false) Double minPrice,
-                                                 @RequestParam(value = "maxPrice",required = false) Double maxPrice){
+                                                 @RequestParam(value = "minPrice",required = false, defaultValue = "0.0") Double minPrice,
+                                                 @RequestParam(value = "maxPrice",required = false, defaultValue = "100000000.0") Double maxPrice){
         return eventService.getEventByFilterWithPage(offset, size, MerchantId, CategoryId, time, city, fromTime, toTime, minPrice, maxPrice);
     }
     @Operation(summary = "Lấy theo danh mục")

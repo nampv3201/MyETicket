@@ -11,5 +11,5 @@ import lombok.experimental.FieldDefaults;
 public class LoginRequest {
     String username;
     String password;
-    int role;
+    String role;
 }

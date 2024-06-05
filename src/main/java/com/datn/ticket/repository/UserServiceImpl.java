@@ -181,7 +181,6 @@ public class UserServiceImpl implements UserService {
     @Transactional
 //    @PreAuthorize("hasRole('USER') || hasRole('ADMIN')")
     public void payment(PaymentResponse response) {
-        log.info("inside method {}, {}, {}, {}", response.getBankTranNo(), response.getPaymentDate(), response.getAmount(), response.getUId());
         String paymentStatus;
         Query newPayment = manager.createNativeQuery("insert into payment (`id`, `payment_status`, `payment_time`, `payment_amount`, `PaymentMethod_id`, `Users_id`) " +
                 "values (?,?,?,?,?,?)")
@@ -227,12 +226,19 @@ public class UserServiceImpl implements UserService {
                         .setParameter("cartId", i)
                         .setParameter("ctId", ctId).executeUpdate();
 
+                // Generate ticket
                 UUID id = UUID.randomUUID();
                 manager.createNativeQuery("insert into ticketrelease (`id`, `status`, `Cart_id`) " +
                         "values (?,?,?)")
                         .setParameter(1, id.toString())
                         .setParameter(2, 1)
                         .setParameter(3, i).executeUpdate();
+
+                // Update user's points
+                manager.createNativeQuery("update users u set u.points = u.points + :point where u.id = :uid")
+                        .setParameter("point", ((Double) (response.getAmount()/100.0)).intValue())
+                        .setParameter("uid", response.getUId()).executeUpdate();
+
                 try{
                     log.info("{}", QRCodeService.generateQRCode(id.toString()));
                     manager.createNativeQuery("update ticketrelease t set t.qrcode = :qrcode " +

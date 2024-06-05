@@ -16,5 +16,5 @@ public class SignUpRequest {
     String username;
     @Size(min = 8, message = "Yêu cầu ít nhất 8 ký tự")
     String password;
-    List<Integer> role;
+    List<String> role;
 }

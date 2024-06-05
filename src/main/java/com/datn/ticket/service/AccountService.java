@@ -15,9 +15,9 @@ import java.util.List;
 
 public interface AccountService {
 
-    void newAccount(Accounts account, List<Integer> roleID);
+    void newAccount(Accounts account, List<String> role);
     Accounts getUsername(String username);
-    ResponseEntity<AuthenticationResponse> signIn(String username, String password, int role);
+    ResponseEntity<AuthenticationResponse> signIn(String username, String password, String role);
     IntrospectResponse introspect(IntrospectRequest request) throws JOSEException, ParseException;
     Roles getRole(Integer id);
     void logout(LogoutRequest request) throws ParseException, JOSEException;

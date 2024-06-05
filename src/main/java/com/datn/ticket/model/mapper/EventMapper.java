@@ -24,6 +24,7 @@ public class EventMapper {
         eventDTO.setMerchantName(events.getMerchants().getName());
         eventDTO.setCreateTicketsResponseList(createTicketsResponseList);
         eventDTO.setCategories(categories);
+        eventDTO.setStatus(events.getStatus());
 
         return eventDTO;
     }

@@ -13,6 +13,7 @@ import com.datn.ticket.model.Users;
 import com.datn.ticket.model.mapper.MerchantMapper;
 import com.datn.ticket.model.mapper.UsersMapper;
 import com.datn.ticket.service.AdminService;
+import com.datn.ticket.service.EventService;
 import com.datn.ticket.service.MerchantService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
@@ -40,6 +41,9 @@ public class AdminController {
     @Autowired
     MerchantService merchantService;
 
+    @Autowired
+    EventService eventService;
+
     @SecurityRequirement(name = "bearerAuth")
     @Operation(summary = "Lấy danh sách tất cả các tài khoản")
     @GetMapping("/getAccount")
@@ -62,16 +66,13 @@ public class AdminController {
     @Operation(summary = "Lấy danh sách tất cả merchant trong hệ thống")
     @GetMapping("/merchantInfor")
     public ApiResponse<?> getMerchants(){
-        return ApiResponse.<List<AMerchantResponse>>builder()
-                .result(adminService.getListMerchants())
-                .build();
-//        try{
-//            return ApiResponse.<List<AMerchantResponse>>builder()
-//                    .result(adminService.getListMerchants())
-//                    .build();
-//        }catch (AppException e){
-//            throw new AppException(e.getErrorCode());
-//        }
+        try{
+            return ApiResponse.<List<AMerchantResponse>>builder()
+                    .result(adminService.getListMerchants())
+                    .build();
+        }catch (AppException e){
+            throw new AppException(e.getErrorCode());
+        }
     }
 
     @Operation(summary = "Lấy thông tin của 1 merchant")
@@ -122,6 +123,12 @@ public class AdminController {
         return adminService.allEvents(MerchantId, CategoryId, allTime, city);
     }
 
+    @Operation(summary = "Lấy sự kiện cụ thể")
+    @GetMapping("/event/{id}")
+    public ApiResponse<?> getEvent(@PathVariable("id") int id){
+        return eventService.getEvent(id);
+    }
+
     @Operation(summary = "Đổi trạng thái event")
     @PostMapping("/eventMgmt/change-status")
     public ApiResponse<?> changeEventStatus(@PathVariable("id") int eventId){
@@ -170,7 +177,7 @@ public class AdminController {
     }
 
     @Operation(summary = "Xóa 1 category")
-    @GetMapping("/categories/delete/{id}")
+    @PostMapping("/categories/delete/{id}")
     public ApiResponse<?> deleteCategories(@PathVariable("id") int id){
         try{
             adminService.removeCategory(id);
@@ -183,7 +190,7 @@ public class AdminController {
     }
 
     @Operation(summary = "Thêm mới payment gateway")
-    @GetMapping("/gateway/add")
+    @PostMapping("/gateway/add")
     public ApiResponse<?> addGateway(@RequestBody NewGWRequest request){
         try{
             PaymentGateway gateway = new PaymentGateway();

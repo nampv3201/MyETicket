@@ -287,7 +287,7 @@ public class MerchantController {
     }
 
     @Operation(summary = "Cập nhật event - Bước 2")
-    @PostMapping("/update/second-step/{id}")
+        @PostMapping("/update/second-step/{id}")
     public ApiResponse updateTicket(@PathVariable("id") int eventId, @RequestBody EAUSRequest eausRequest) throws ParseException {
         HttpSession session = request.getSession(false);
         if (session == null) {
@@ -337,12 +337,6 @@ public class MerchantController {
         return ApiResponse.builder()
                 .result(merchantService.myEvents(status, CategoryId, time, city))
                 .build();
-    }
-
-    @Operation(summary = "Lấy thông tin chi tiết của event")
-    @GetMapping("/get/{id}")
-    public ApiResponse<EventDTO> getEvent(@PathVariable("id") int id){
-        return eventService.getEvent(id);
     }
 
     @Operation(summary = "Thống kê sự kiện theo merchant")

@@ -127,7 +127,7 @@ public class EventServiceImpl implements EventService {
         StringBuilder query = new StringBuilder("Select e.id, e.name, e.banner, e.city, e.location, e.start_booking, min(ct.price) " +
                 "from events e " +
                 "join createticket ct on ct.Events_id = e.id " +
-                "where e.status = 1 ");
+                "where e.status = 1 and min(ct.price)");
 
 
         // Add query by filtering
@@ -149,10 +149,13 @@ public class EventServiceImpl implements EventService {
         }
 
         // Create Query
-        query.append(" group by e.id, e.name limit :limit offset :offset");
+        query.append(" group by e.id, e.name limit :limit offset :offset " +
+                "having having min(ct.price) between :minPrice and :maxPrice");
         getEvent = manager.createNativeQuery(query.toString())
                 .setParameter("limit", size)
-                .setParameter("offset", offset);
+                .setParameter("offset", offset)
+                .setParameter("minPrice", minPrice)
+                .setParameter("maxPrice", maxPrice);
 
         // Add Query Params
         if(MerchantId != null) {

@@ -55,27 +55,32 @@ public class AccountServiceImpl implements AccountService {
 
     @Override
     @Transactional
-    public void newAccount(Accounts account, List<Integer> roleID) {
+    public void newAccount(Accounts account, List<String> roles) {
         manager.persist(account);
         List<Roles> aRoles;
-        for(int id : roleID){
-            if(id == 2){
+        for(String role : roles){
+            if(role.toUpperCase(Locale.ROOT).equals("USER")){
                 Users u = new Users();
                 u.setPoint(0);
                 u.setAge(-1);
                 u.setAccounts(account);
                 manager.persist(u);
-            } else if (id == 3) {
+            } else if (role.toUpperCase(Locale.ROOT).equals("MERCHANT")) {
                 Merchants m = new Merchants();
                 m.setAccounts(account);
                 manager.persist(m);
             }
-            Roles r = getRole(id);
-            AccountRole ar = new AccountRole();
-            ar.setAccounts(account);
-            ar.setRoles(r);
-            ar.setStatus(1);
-            manager.persist(ar);
+//            Roles r = getRole(id);
+//            AccountRole ar = new AccountRole();
+//            ar.setAccounts(account);
+//            ar.setRoles(r);
+//            ar.setStatus(1);
+//            manager.persist(ar);
+            manager.createNativeQuery("insert into account_has_role (`Account_id`, `role_id`, `status`) " +
+                    "values (:accountId, (select r.id from role r where r.role_name = :roleName), 1)")
+                    .setParameter("accountId", account.getId())
+                    .setParameter("roleName", role.toUpperCase(Locale.ROOT))
+                    .executeUpdate();
         }
     }
 
@@ -91,14 +96,15 @@ public class AccountServiceImpl implements AccountService {
     }
 
     @Override
-    public ResponseEntity<AuthenticationResponse> signIn(String username, String password, int role) {
+    public ResponseEntity<AuthenticationResponse> signIn(String username, String password, String role) {
         PasswordEncoder passwordEncoder = new BCryptPasswordEncoder(10);
         Query customQuery = manager.createNativeQuery("select a.id, a.username, a.password, a.create_at, ar.role_id, ar.status " +
                 " from account a" +
                 " join account_has_role ar on ar.Account_id = a.id " +
-                "where a.username = :username and ar.role_id = :role_id");
+                "join role r on ar.role_id = r.id " +
+                "where a.username = :username and r.role_name = :role");
         customQuery.setParameter("username", username);
-        customQuery.setParameter("role_id", role);
+        customQuery.setParameter("role", role.toUpperCase(Locale.ROOT));
         ArrayList<Integer> roles = new ArrayList<>();
         try{
             List<Object[]> results = customQuery.getResultList();
@@ -114,10 +120,7 @@ public class AccountServiceImpl implements AccountService {
                 roles.add((Integer) results.get(0)[4]);
             }
             a.setRoles(roles);
-
-            log.info("before if");
             if(Byte.toUnsignedInt((Byte) results.get(0)[5]) == 1){
-                log.info("inside if");
                 var token = generateToken(a);
                 return ResponseEntity.ok(AuthenticationResponse.builder().token(token).authenticated(true).build());
             }
