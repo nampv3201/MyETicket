@@ -13,7 +13,7 @@ public interface EventService {
     ResponseEntity<Object> findEventByName(String name);
     ResponseEntity<Object> getEventByFilter(Integer MerchantId, List<Integer> CategoryId, String time, String city);
     ResponseEntity<Object> getEventByFilterWithPage(int offset, int size, Integer MerchantId, List<Integer> CategoryId, String time, String city,
-                                                    String fromTime, String toTime, double minPrice, double maxPrice);
+                                                    String fromTime, String toTime, Double minPrice, Double maxPrice);
     ApiResponse<?> getEventByCategory(String category);
     CreateTickets getTicketType(Integer ticketTypeID);
     List<Categories> getAllCategories();

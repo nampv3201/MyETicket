@@ -19,7 +19,7 @@ public interface UserService {
     void removeFromCart(List<Integer> cartId);
     void updateCart(UpdateCartRequest request);
     ApiResponse checkQuantity(int cartId);
-    void payment(PaymentResponse response);
+    String payment(PaymentResponse response);
     List<HistoryResponse> myHistory();
     HistoryResponseDetail getHistoryResponseDetail(String id);
 }

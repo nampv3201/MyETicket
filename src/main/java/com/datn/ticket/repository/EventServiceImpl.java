@@ -23,6 +23,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Repository;
 
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 
 @Repository
@@ -121,13 +122,13 @@ public class EventServiceImpl implements EventService {
 
     @Override
     public ResponseEntity<Object> getEventByFilterWithPage(int offset, int size, Integer MerchantId, List<Integer> CategoryId, String time,
-                                                           String city, String fromTime, String toTime, double minPrice, double maxPrice) {
+                                                           String city, String fromTime, String toTime, Double minPrice, Double maxPrice) {
         List<Object[]> events = new ArrayList<>();
         Query getEvent;
         StringBuilder query = new StringBuilder("Select e.id, e.name, e.banner, e.city, e.location, e.start_booking, min(ct.price) " +
                 "from events e " +
                 "join createticket ct on ct.Events_id = e.id " +
-                "where e.status = 1 and min(ct.price)");
+                "where e.status = 1 ");
 
 
         // Add query by filtering
@@ -149,13 +150,17 @@ public class EventServiceImpl implements EventService {
         }
 
         // Create Query
-        query.append(" group by e.id, e.name limit :limit offset :offset " +
-                "having having min(ct.price) between :minPrice and :maxPrice");
+        query.append(" group by e.id, e.name " +
+                "having e.start_booking between :fromTime and :toTime " +
+                "and min(ct.price) between :minPrice and :maxPrice " +
+                "limit :limit offset :offset ");
         getEvent = manager.createNativeQuery(query.toString())
-                .setParameter("limit", size)
-                .setParameter("offset", offset)
+                .setParameter("fromTime", fromTime)
+                .setParameter("toTime", toTime)
                 .setParameter("minPrice", minPrice)
-                .setParameter("maxPrice", maxPrice);
+                .setParameter("maxPrice", String.valueOf(maxPrice))
+                .setParameter("limit", size)
+                .setParameter("offset", offset);
 
         // Add Query Params
         if(MerchantId != null) {

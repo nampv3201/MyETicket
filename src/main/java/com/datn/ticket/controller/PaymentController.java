@@ -98,7 +98,6 @@ public class PaymentController {
     @GetMapping("/infor")
     public ApiResponse<?> getInforPayment(@RequestParam("cartId") String cartId,
                                           @RequestParam("vnp_Amount") double amount,
-                                          @RequestParam("vnp_BankTranNo") String bankTranNo,
                                           @RequestParam("vnp_PayDate") String paymentDate,
                                           @RequestParam("vnp_ResponseCode") String responseCode,
                                           @RequestParam("userId") int uId,
@@ -112,6 +111,8 @@ public class PaymentController {
             DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyyMMddHHmmss");
             Date dateTime = Date.from(LocalDateTime.parse(paymentDate, formatter).atZone(java.time.ZoneId.systemDefault()).toInstant());
 
+            String bankTranNo = UUID.randomUUID().toString();
+
             PaymentResponse response = new PaymentResponse();
             response.setCartIds(cartIds);
             response.setBankTranNo(bankTranNo);
@@ -120,8 +121,8 @@ public class PaymentController {
             response.setResponseCode(responseCode);
             response.setUId(uId);
             try{
-                userService.payment(response);
-                return ApiResponse.<PaymentResponse>builder().message("Thanh toán thành công").build();
+
+                return ApiResponse.<PaymentResponse>builder().message(userService.payment(response)).build();
             }catch (Exception e){
                 return ApiResponse.builder().message(e.getMessage()).build();
             }

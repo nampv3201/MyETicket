@@ -14,6 +14,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.time.LocalDate;
 import java.util.List;
 
 @RestController
@@ -56,12 +57,12 @@ public class EventController {
     @GetMapping("/event-paging")
     public ResponseEntity<Object> getEventPaging(@RequestParam(value = "offset", defaultValue = "0") int offset,
                                                  @RequestParam(value = "size", defaultValue = "10") int size,
-                                                 @RequestParam(value = "MerchantId", required = false) Integer MerchantId,
-                                                 @RequestParam(value = "CategoryId",required = false) List<Integer> CategoryId,
+                                                 @RequestParam(value = "merchantId", required = false) Integer MerchantId,
+                                                 @RequestParam(value = "categoryId",required = false) List<Integer> CategoryId,
                                                  @RequestParam(value = "time",required = false) String time,
                                                  @RequestParam(value = "city", required = false) String city,
-                                                 @RequestParam(value = "fromTime", required = false) String fromTime,
-                                                 @RequestParam(value = "toTime", required = false) String toTime,
+                                                 @RequestParam(value = "fromTime", required = false, defaultValue = "2020-01-01") String fromTime,
+                                                 @RequestParam(value = "toTime", required = false, defaultValue = "2999-01-01") String toTime,
                                                  @RequestParam(value = "minPrice",required = false, defaultValue = "0.0") Double minPrice,
                                                  @RequestParam(value = "maxPrice",required = false, defaultValue = "100000000.0") Double maxPrice){
         return eventService.getEventByFilterWithPage(offset, size, MerchantId, CategoryId, time, city, fromTime, toTime, minPrice, maxPrice);

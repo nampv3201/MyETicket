@@ -180,10 +180,10 @@ public class UserServiceImpl implements UserService {
     @Override
     @Transactional
 //    @PreAuthorize("hasRole('USER') || hasRole('ADMIN')")
-    public void payment(PaymentResponse response) {
+    public String payment(PaymentResponse response) {
         String paymentStatus;
-        Query newPayment = manager.createNativeQuery("insert into payment (`id`, `payment_status`, `payment_time`, `payment_amount`, `PaymentMethod_id`, `Users_id`) " +
-                "values (?,?,?,?,?,?)")
+        Query newPayment = manager.createNativeQuery("insert into payment (`id`, `payment_status`, `create_time`, `payment_time`, `payment_amount`, `PaymentMethod_id`, `Users_id`) " +
+                "values (?,?,?,now(),?,?,?)")
                 .setParameter(1, response.getBankTranNo())
                 .setParameter(3, response.getPaymentDate())
                 .setParameter(4, response.getAmount())
@@ -235,8 +235,8 @@ public class UserServiceImpl implements UserService {
                         .setParameter(3, i).executeUpdate();
 
                 // Update user's points
-                manager.createNativeQuery("update users u set u.points = u.points + :point where u.id = :uid")
-                        .setParameter("point", ((Double) (response.getAmount()/100.0)).intValue())
+                manager.createNativeQuery("update users u set u.point = u.point + :point where u.id = :uid")
+                        .setParameter("point", ((Double) (response.getAmount()/10000.0)).intValue())
                         .setParameter("uid", response.getUId()).executeUpdate();
 
                 try{
@@ -256,6 +256,7 @@ public class UserServiceImpl implements UserService {
             paymentStatus = "Thanh toán thất bại";
             newPayment.setParameter(2, paymentStatus).executeUpdate();
         }
+        return paymentStatus;
     }
 
     @Override
