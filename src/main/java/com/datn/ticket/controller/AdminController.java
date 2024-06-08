@@ -130,7 +130,7 @@ public class AdminController {
     }
 
     @Operation(summary = "Đổi trạng thái event")
-    @PostMapping("/eventMgmt/change-status")
+    @PostMapping("/eventMgmt/change-status/{id}")
     public ApiResponse<?> changeEventStatus(@PathVariable("id") int eventId){
         try{
             adminService.changeEventStatus(eventId);
@@ -179,14 +179,19 @@ public class AdminController {
     @Operation(summary = "Xóa 1 category")
     @PostMapping("/categories/delete/{id}")
     public ApiResponse<?> deleteCategories(@PathVariable("id") int id){
-        try{
-            adminService.removeCategory(id);
-            return ApiResponse.builder()
-                    .message("Xóa thành công")
-                    .build();
-        }catch (Exception e){
-            throw new AppException(ErrorCode.UNCATEGORIZED_EXCEPTION);
-        }
+        log.info("INSIDE");
+//        try{
+//            adminService.removeCategory(id);
+//            return ApiResponse.builder()
+//                    .message("Xóa thành công")
+//                    .build();
+//        }catch (Exception e){
+//            throw new AppException(ErrorCode.UNCATEGORIZED_EXCEPTION);
+//        }
+        adminService.removeCategory(id);
+        return ApiResponse.builder()
+                .message("Xóa thành công")
+                .build();
     }
 
     @Operation(summary = "Thêm mới payment gateway")

@@ -19,6 +19,7 @@ import jakarta.persistence.Query;
 import jakarta.persistence.TypedQuery;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Repository;
 
@@ -62,15 +63,20 @@ public class EventServiceImpl implements EventService {
         Query categoryQuery = manager.createQuery("SELECT ec.categories.category_name FROM EventCat ec " +
                 "WHERE ec.events = :event");
         categoryQuery.setParameter("event", e);
-        categoryList = categoryQuery.getResultList();
-
-        TypedQuery<CreateTickets> typedQuery = manager.createQuery("Select tt from CreateTickets tt where tt.events = :event", CreateTickets.class);
-        typedQuery.setParameter("event", e);
-        for(CreateTickets c : typedQuery.getResultList()){
-            ticketsDTOS.add(CreateTicketMapper.createTicketsDTO(c));
+        try {
+            categoryList = categoryQuery.getResultList();
+            TypedQuery<CreateTickets> typedQuery = manager.createQuery("Select tt from CreateTickets tt where tt.events = :event", CreateTickets.class);
+            typedQuery.setParameter("event", e);
+            for (CreateTickets c : typedQuery.getResultList()) {
+                ticketsDTOS.add(CreateTicketMapper.createTicketsDTO(c));
+            }
+            return ApiResponse.<EventDTO>builder()
+                    .result(EventMapper.eventDTO(e, categoryList, ticketsDTOS)).build();
+        }catch (EmptyResultDataAccessException ex){
+            throw AppException.from(ex, ErrorCode.ITEM_NOT_FOUND);
+        }catch (Exception ex){
+            throw new AppException(ErrorCode.UNCATEGORIZED_EXCEPTION);
         }
-        return ApiResponse.<EventDTO>builder()
-                        .result(EventMapper.eventDTO(e, categoryList, ticketsDTOS)).build();
     }
 
     @Override
@@ -115,9 +121,12 @@ public class EventServiceImpl implements EventService {
         if(city != null){
             getEvent.setParameter("city", city);
         }
-
-        events = getEvent.getResultList();
-        return ResponseEntity.ok().body(EventHomeMapper.eventHomeDTO(events));
+        try {
+            events = getEvent.getResultList();
+            return ResponseEntity.ok().body(EventHomeMapper.eventHomeDTO(events));
+        }catch(Exception ex){
+            throw new AppException(ErrorCode.UNCATEGORIZED_EXCEPTION);
+        }
     }
 
     @Override
@@ -172,9 +181,12 @@ public class EventServiceImpl implements EventService {
         if(city != null){
             getEvent.setParameter("city", city);
         }
-
-        events = getEvent.getResultList();
-        return ResponseEntity.ok().body(EventHomeMapper.eventHomeDTO(events));
+        try {
+            events = getEvent.getResultList();
+            return ResponseEntity.ok().body(EventHomeMapper.eventHomeDTO(events));
+        }catch (EmptyResultDataAccessException e){
+            throw AppException.from(e, ErrorCode.ITEM_NOT_FOUND);
+        }
     }
 
     @Override
@@ -188,18 +200,14 @@ public class EventServiceImpl implements EventService {
                 "where e.status = 1 and cat.category_name = :catName " +
                 "group by e.id, e.name")
                 .setParameter("catName", catName);
-//        try {
-//            List<Object[]> events = query.getResultList();
-//            return ApiResponse.<List<EventHome>>builder()
-//                   .result(EventHomeMapper.eventHomeDTO(events))
-//                   .build();
-//        }catch (Exception e) {
-//            throw new AppException(ErrorCode.UNCATEGORIZED_EXCEPTION);
-//        }
-        List<Object[]> events = query.getResultList();
-        return ApiResponse.<List<EventHome>>builder()
-                .result(EventHomeMapper.eventHomeDTO(events))
-                .build();
+        try {
+            List<Object[]> events = query.getResultList();
+            return ApiResponse.<List<EventHome>>builder()
+                   .result(EventHomeMapper.eventHomeDTO(events))
+                   .build();
+        }catch (Exception e) {
+            throw new AppException(ErrorCode.UNCATEGORIZED_EXCEPTION);
+        }
     }
 
     @Override

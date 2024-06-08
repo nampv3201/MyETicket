@@ -49,7 +49,6 @@ public class UserServiceImpl implements UserService {
                 "join account a on u.Account_id = a.id " +
                 "where a.id = :id";
         Query getUsers = manager.createNativeQuery(query, Users.class);
-        log.info("User Account ID: {}", authentication.getName());
         getUsers.setParameter("id", authentication.getName());
         return (Users) getUsers.getSingleResult();
     }
@@ -131,7 +130,6 @@ public class UserServiceImpl implements UserService {
                 "join createticket ct on c.CreateTicket_id = ct.id " +
                 "join events e on ct.Events_id = e.id " +
                 "where c.Users_id = :UID and c.status = 0";
-        log.info("UID: {}", SecurityContextHolder.getContext().getAuthentication().getName());
         return manager.createNativeQuery(query, CartResponse.class)
                 .setParameter("UID", myInfor().getId())
                 .getResultList();
@@ -156,7 +154,6 @@ public class UserServiceImpl implements UserService {
                         "join cart c on c.CreateTicket_id = ct.id " +
                         "where c.id =:id")
                 .setParameter("id", request.getCartId()).getSingleResult()).doubleValue();
-        log.info("Cost {}", result);
         Double price = request.getUpdateNumber() * result;
         manager.createNativeQuery("update cart set cart.quantity = :quantity, cart.cost = :cost where cart.id = :id")
                 .setParameter("quantity", request.getUpdateNumber())
@@ -240,7 +237,6 @@ public class UserServiceImpl implements UserService {
                         .setParameter("uid", response.getUId()).executeUpdate();
 
                 try{
-                    log.info("{}", QRCodeService.generateQRCode(id.toString()));
                     manager.createNativeQuery("update ticketrelease t set t.qrcode = :qrcode " +
                         "where t.Cart_id = :cartId").setParameter("qrcode", QRCodeService.generateQRCode(id.toString()))
                             .setParameter("cartId", i).executeUpdate();
@@ -248,7 +244,6 @@ public class UserServiceImpl implements UserService {
                     manager.createNativeQuery("update ticketrelease t set t.status = :status " +
                             "where t.Cart_id = :cartId").setParameter("status", "Chưa tạo được mã")
                             .setParameter("cartId", i).executeUpdate();
-                    log.error("Error: {}", e.getMessage());
                     throw new RuntimeException(e);
                 }
             }
@@ -262,7 +257,7 @@ public class UserServiceImpl implements UserService {
     @Override
     @PreAuthorize("hasRole('USER') || hasRole('ADMIN')")
     public List<HistoryResponse> myHistory() {
-        Query query = manager.createNativeQuery("select tr.id, e.name, date_format(str_to_date(e.start_time, '%Y-%m-%d %H:%i:%s'), '%Y-%m-%d %H:%i'), " +
+        Query query = manager.createNativeQuery("select tr.id, e.name, date_format(str_to_date(e.start_time, '%Y-%m-%d %H:%i:%s'), '%Y-%m-%d'), " +
                 "date_format(str_to_date(e.start_time, '%Y-%m-%d %H:%i:%s'), '%H:%i'), " +
                 "date_format(str_to_date(e.end_time, '%Y-%m-%d %H:%i:%s'), '%H:%i'), " +
                 "Concat(e.city, ', ', e.location), ct.type_name " +

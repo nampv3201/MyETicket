@@ -60,20 +60,15 @@ public class MerchantController {
     @Operation(summary = "Cập nhật thông tin cá nhân của merchant")
     @PostMapping("/profile/update")
     public ApiResponse<?> updateMerchantInfor(@RequestBody MURequest muRequest){
-        try{
-            Merchants m = merchantService.myInfor();
-            m.setName(muRequest.getName());
-            m.setAddress(muRequest.getAddress());
-            m.setDescription(muRequest.getDescription());
-            m.setPhone(muRequest.getPhone());
-            merchantService.updateMerchant(m);
-            return ApiResponse.builder()
-                    .result("Cập nhật thành công")
-                    .build();
-        }catch (Exception e){
-//            throw new AppException(ErrorCode.UNCATEGORIZED_EXCEPTION);
-            return ApiResponse.<MerchantsResponse>builder().message(e.getMessage()).build();
-        }
+        Merchants m = merchantService.myInfor();
+        m.setName(muRequest.getName());
+        m.setAddress(muRequest.getAddress());
+        m.setDescription(muRequest.getDescription());
+        m.setPhone(muRequest.getPhone());
+        merchantService.updateMerchant(m);
+        return ApiResponse.builder()
+                .result("Cập nhật thành công")
+                .build();
     }
 
     @Operation(summary = "Tạo mới event - Bước 1")
@@ -90,7 +85,7 @@ public class MerchantController {
             newEvent.setBanner(eafRequest.getEventBanner());
             newEvent.setMax_limit(eafRequest.getEventLimit());
             newEvent.setStatus(1);
-
+            newEvent.setDeleted(0);
 
             session.setAttribute("tempEvent", newEvent);
             session.setAttribute("tempCategories", eafRequest.getCategories());
@@ -321,7 +316,7 @@ public class MerchantController {
         try{
             String status = merchantService.UpdateEvent(e, updateTicket, addTickets, addCat, removeCat).getMessage();
             session.invalidate();
-            return ApiResponse.builder().message("status").build();
+            return ApiResponse.builder().result(status).build();
         }catch(Exception ex){
             return ApiResponse.builder().message(ex.getMessage()).build();
         }
@@ -349,5 +344,13 @@ public class MerchantController {
     @GetMapping("/statistics/event/{id}")
     public ResponseEntity<Object> getStatisticByEvent(@PathVariable("id") int id) throws ParseException {
         return ResponseEntity.ok().body(merchantService.getStatisticsByEvent(id));
+    }
+
+    @Operation(summary = "Chỉnh sửa trạng thái sự kiện")
+    @PostMapping("/event-status/{id}")
+    public ApiResponse<?> updateStatus(@PathVariable("id") int eventId) {
+        return ApiResponse.builder()
+               .result(merchantService.deEvents(eventId))
+               .build();
     }
 }

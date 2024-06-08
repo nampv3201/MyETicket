@@ -18,6 +18,6 @@ public class HistoryResponse {
     String eventDate;
     String eventStartTime;
     String eventEndTime;
-    String ticketName;
     String location;
+    String ticketName;
 }

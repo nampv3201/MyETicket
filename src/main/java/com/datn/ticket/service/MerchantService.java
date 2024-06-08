@@ -21,5 +21,6 @@ public interface MerchantService {
     ApiResponse<?> UpdateEvent(Events events, List<CreateTickets> updateTickets,
                                List<CreateTickets> newTickets, List<Categories> newCategories, List<Categories> removeCategories);
     ApiResponse<?> myEvents(Integer status, List<Integer> CategoryId, String time, String city);
+    String deEvents(int eventId);
     Merchants myInfor();
 }

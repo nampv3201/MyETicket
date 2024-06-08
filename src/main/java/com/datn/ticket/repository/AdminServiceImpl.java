@@ -145,11 +145,13 @@ public class AdminServiceImpl implements AdminService {
     @Override
     @PreAuthorize("hasRole('ADMIN')")
     @Transactional
-    public void changeAccountStatus(String accountId, String roleName) {
-        Query query = manager.createNativeQuery("Update account_has_role a set a.status = not a.status " +
-                "join role r on a.role_id = r.id " +
-                "where a.Account_id = :accountId and r.role_name = :roleName");
-        query.setParameter("accountId", accountId)
+    public void changeAccountStatus(String username, String roleName) {
+        Query query = manager.createNativeQuery("Update account_has_role ar " +
+                "join role r on ar.role_id = r.id " +
+                "join account a on ar.Account_id = a.id " +
+                "set ar.status = not ar.status " +
+                "where a.username = :username and r.role_name = :roleName");
+        query.setParameter("username", username)
                 .setParameter("roleName", roleName).executeUpdate();
     }
 

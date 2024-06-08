@@ -14,8 +14,11 @@ import com.datn.ticket.service.EventService;
 import com.datn.ticket.service.UserService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.persistence.NoResultException;
+import jakarta.persistence.PersistenceException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.ArrayList;
@@ -85,9 +88,7 @@ public class UserController {
                    .message("Thêm vào giỏ hàng thành công")
                    .build();
         }catch (Exception e){
-            return ApiResponse.builder()
-                    .message(e.getMessage())
-                    .build();
+            throw new AppException(ErrorCode.UNCATEGORIZED_EXCEPTION);
         }
     }
 
@@ -123,20 +124,24 @@ public class UserController {
             userService.updateCart(request);
             return ApiResponse.builder()
                     .build();
+        }catch (AppException e){
+            throw new AppException(e.getErrorCode());
         }catch (Exception e){
-            return ApiResponse.builder()
-                    .message(e.getMessage())
-                    .build();
+            throw new AppException(ErrorCode.UNCATEGORIZED_EXCEPTION);
         }
     }
 
     @Operation(summary = "Lấy lịch sử mua hàng")
     @GetMapping("/history")
-    public ApiResponse<List<HistoryResponse>> getHistory(){
+    public ApiResponse<?> getHistory(){
         try{
             return ApiResponse.<List<HistoryResponse>>builder()
                     .result(userService.myHistory())
                     .build();
+        }catch (AppException e){
+            return ApiResponse.builder().message(e.getMessage()).build();
+        }catch (EmptyResultDataAccessException e){
+            throw AppException.from(e, ErrorCode.ITEM_NOT_FOUND);
         }catch (Exception e){
             throw new AppException(ErrorCode.UNCATEGORIZED_EXCEPTION);
         }
@@ -147,8 +152,11 @@ public class UserController {
     public ApiResponse<?> getHistoryDetail(@PathVariable("id") String id){
         try{
             return ApiResponse.<HistoryResponseDetail>builder().result(userService.getHistoryResponseDetail(id)).build();
+        }catch (AppException e){
+            throw new AppException(e.getErrorCode());
+        }catch (EmptyResultDataAccessException e){
+            throw AppException.from(e, ErrorCode.ITEM_NOT_FOUND);
         }catch (Exception e){
-            log.error(e.getMessage());
             throw new AppException(ErrorCode.UNCATEGORIZED_EXCEPTION);
         }
     }

@@ -36,7 +36,11 @@ public class MerchantServiceImpl implements MerchantService {
     @Transactional
     @PreAuthorize("hasRole('MERCHANT') || hasRole('ADMIN')")
     public void updateMerchant(Merchants merchants) {
-        entityManager.merge(merchants);
+        try {
+            entityManager.merge(merchants);
+        }catch (Exception ex){
+            throw new AppException(ErrorCode.USER_NOT_EXISTED);
+        }
     }
 
     @Override
@@ -56,6 +60,9 @@ public class MerchantServiceImpl implements MerchantService {
                 ec.setCategories(cat);
                 entityManager.persist(ec);
             }
+
+            entityManager.createNativeQuery("insert into revenue (`Events_id`, `totalRevenue`) values (:eventId, 0)")
+                    .setParameter("eventId", events.getId()).executeUpdate();
         }
     }
 
@@ -268,11 +275,29 @@ public class MerchantServiceImpl implements MerchantService {
 
     @Override
     @PreAuthorize("hasRole('MERCHANT') || hasRole('ADMIN')")
+    @Transactional
+    public String deEvents(int id) {
+        try{
+            entityManager.createNativeQuery("update events set deleted = not deleted where id = :id")
+                    .setParameter("id", id)
+                    .executeUpdate();
+            return "Thành công";
+        }catch (Exception e){
+            return "Thất bại";
+        }
+    }
+
+    @Override
+    @PreAuthorize("hasRole('MERCHANT') || hasRole('ADMIN')")
     public Merchants myInfor() {
-        return (Merchants) entityManager.createNativeQuery("select m.* from merchants m " +
-                "join account a on m.Account_id = a.id " +
-                "where a.id = :id", Merchants.class)
-                .setParameter("id", SecurityContextHolder.getContext().getAuthentication().getName())
-                .getSingleResult();
+        try {
+            return (Merchants) entityManager.createNativeQuery("select m.* from merchants m " +
+                            "join account a on m.Account_id = a.id " +
+                            "where a.id = :id", Merchants.class)
+                    .setParameter("id", SecurityContextHolder.getContext().getAuthentication().getName())
+                    .getSingleResult();
+        }catch (Exception ex){
+            throw new AppException(ErrorCode.USER_NOT_EXISTED);
+        }
     }
 }
