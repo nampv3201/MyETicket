@@ -2,7 +2,7 @@ plugins {
 	id 'java'
 	id 'org.springframework.boot' version '3.2.4'
 	id 'io.spring.dependency-management' version '1.1.4'
-	id "org.springdoc.openapi-gradle-plugin" version "1.8.0"
+//	id "org.springdoc.openapi-gradle-plugin" version "1.8.0"
 }
 
 group = 'com.datn'
@@ -19,6 +19,7 @@ repositories {
 dependencies {
 	implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
 	implementation 'org.springframework.boot:spring-boot-starter-web'
+	implementation 'org.springframework.boot:spring-boot-starter-mail'
 	developmentOnly 'org.springframework.boot:spring-boot-devtools'
 	implementation 'org.springframework.boot:spring-boot-starter-oauth2-resource-server'
 	runtimeOnly 'com.mysql:mysql-connector-j'
@@ -28,8 +29,7 @@ dependencies {
 //	testImplementation 'org.springframework.security:spring-security-test'
 
 	implementation 'org.springdoc:springdoc-openapi-starter-webmvc-ui:2.5.0'
-//	implementation 'org.springdoc:springdoc-openapi-ui:1.6.15'
-	implementation 'org.springdoc:springdoc-openapi-security:2.5.0'
+//	implementation 'org.springdoc:springdoc-openapi-security:2.5.0'
 
 	// Gson
 	implementation 'com.google.code.gson:gson:2.10.1'
@@ -46,6 +46,9 @@ dependencies {
 
 	implementation 'com.google.zxing:core:3.5.3'
 	implementation 'com.google.zxing:javase:3.5.3'
+
+	//SMS using twilio
+	implementation 'com.twilio.sdk:twilio:10.1.5'
 
 }
 

@@ -1,6 +1,9 @@
 package com.datn.ticket.repository;
 
 import com.datn.ticket.dto.response.*;
+import com.datn.ticket.exception.AppException;
+import com.datn.ticket.exception.ErrorCode;
+import com.datn.ticket.model.Accounts;
 import com.datn.ticket.model.Cart;
 import com.datn.ticket.model.Users;
 import com.datn.ticket.dto.request.UpdateCartRequest;
@@ -8,12 +11,15 @@ import com.datn.ticket.service.EventService;
 import com.datn.ticket.service.UserService;
 import com.datn.ticket.util.QRCodeService;
 import jakarta.persistence.EntityManager;
+import jakarta.persistence.NoResultException;
 import jakarta.persistence.Query;
 import jakarta.transaction.Transactional;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Repository;
 
 import java.util.ArrayList;
@@ -26,7 +32,7 @@ public class UserServiceImpl implements UserService {
     private final EntityManager manager;
 
     @Autowired
-    EventService eventService;
+    private EventService eventService;
 
     @Autowired
     public UserServiceImpl(EntityManager entityManager){

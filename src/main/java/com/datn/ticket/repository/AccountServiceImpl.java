@@ -1,11 +1,16 @@
 package com.datn.ticket.repository;
 
+import com.datn.ticket.dto.response.ApiResponse;
 import com.datn.ticket.exception.AppException;
 import com.datn.ticket.exception.ErrorCode;
 import com.datn.ticket.model.*;
 
+import java.security.SecureRandom;
 import java.text.ParseException;
 import java.time.Instant;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
+import java.time.format.DateTimeFormatter;
 import java.time.temporal.ChronoUnit;
 import java.util.*;
 
@@ -15,6 +20,8 @@ import com.datn.ticket.dto.request.RefreshRequest;
 import com.datn.ticket.dto.response.AuthenticationResponse;
 import com.datn.ticket.dto.response.IntrospectResponse;
 import com.datn.ticket.service.AccountService;
+import com.datn.ticket.util.EmailUtil;
+import com.twilio.Twilio;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.Query;
 import jakarta.persistence.NoResultException;
@@ -26,7 +33,10 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.mail.SimpleMailMessage;
+import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Repository;
@@ -44,13 +54,21 @@ public class AccountServiceImpl implements AccountService {
 
     private final EntityManager manager;
 
+    @Autowired
+    JavaMailSender mailSender;
+
     @NonFinal
     @Value("${jwt.signerKey}")
     protected String SIGNER_KEY;
 
+    // Email
+    @Value("${spring.mail.username}")
+    private String fromEmail;
+
     @Autowired
     public AccountServiceImpl(EntityManager manager) {
         this.manager = manager;
+//        Twilio.init(twilioId, twilioToken);
     }
 
     @Override
@@ -70,12 +88,6 @@ public class AccountServiceImpl implements AccountService {
                 m.setAccounts(account);
                 manager.persist(m);
             }
-//            Roles r = getRole(id);
-//            AccountRole ar = new AccountRole();
-//            ar.setAccounts(account);
-//            ar.setRoles(r);
-//            ar.setStatus(1);
-//            manager.persist(ar);
             manager.createNativeQuery("insert into account_has_role (`Account_id`, `role_id`, `status`) " +
                     "values (:accountId, (select r.id from role r where r.role_name = :roleName), 1)")
                     .setParameter("accountId", account.getId())
@@ -89,6 +101,17 @@ public class AccountServiceImpl implements AccountService {
         try {
             TypedQuery<Accounts> query = manager.createQuery("Select a from Accounts a where a.username = :username", Accounts.class);
             query.setParameter("username", username);
+            return query.getSingleResult();
+        } catch (NoResultException e) {
+            return null;
+        }
+    }
+
+    @Override
+    public Accounts getEmail(String email) {
+        try {
+            TypedQuery<Accounts> query = manager.createQuery("Select a from Accounts a where a.email = :email", Accounts.class);
+            query.setParameter("email", email);
             return query.getSingleResult();
         } catch (NoResultException e) {
             return null;
@@ -147,8 +170,77 @@ public class AccountServiceImpl implements AccountService {
         } catch (AppException exception){
             log.info("Token already expired");
         }
+    }
 
+    @Override
+    @Transactional
+    public ApiResponse<?> changePassword(String oldPassword, String newPassword) {
+        PasswordEncoder passwordEncoder = new BCryptPasswordEncoder(10);
+        try {
+            Accounts a = (Accounts) manager.createNativeQuery("Select * from Account a where a.id = :id", Accounts.class)
+                    .setParameter("id", SecurityContextHolder.getContext().getAuthentication().getName())
+                    .getSingleResult();
+            log.info("input: {}", passwordEncoder.encode(oldPassword));
+            log.info("db: {}", a.getPassword());
+            if (passwordEncoder.matches(oldPassword, a.getPassword())) {
+                a.setPassword(passwordEncoder.encode(newPassword));
+                manager.createNativeQuery("update Account a set a.password = :password where a.id = :id")
+                        .setParameter("password", a.getPassword())
+                        .setParameter("id", SecurityContextHolder.getContext().getAuthentication().getName())
+                        .executeUpdate();
+            }else{
+                return ApiResponse.builder().message("Mật khẩu cũ không chính xác").build();
+            }
+            return ApiResponse.builder().message("Đổi mật khẩu thành công").build();
+        }catch (NoResultException ne){
+            throw new AppException(ErrorCode.USER_NOT_EXISTED);
+        }
+    }
 
+    @Override
+    @Transactional
+    public ApiResponse<?> verifyOTP(String email, String OTP) {
+        try {
+            ForgotPassword myPw = (ForgotPassword) manager.createNativeQuery("select * from forgotpassword fp " +
+                            "join account a on fp.Account_Id = a.id " +
+                            "where a.email = :email", ForgotPassword.class)
+                    .setParameter("email", email)
+                    .getSingleResult();
+
+            if(!myPw.getOTP().equals(OTP)){
+                return ApiResponse.builder().message("OTP không khớp").build();
+            }
+            if(myPw.getExpirationTime().before(Date.from(LocalDateTime.now()
+                    .atZone(ZoneId.systemDefault()).toInstant()))){
+                return ApiResponse.builder().message("OTP hết hiệu lực").build();
+            }
+            manager.createNativeQuery("update forgotpassword set `expirationTime` = :expirationTime " +
+                            "where Account_Id = :accountId")
+                    .setParameter("accountId", getEmail(email).getId())
+                    .setParameter("expirationTime", LocalDateTime.now()
+                            .format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")))
+                    .executeUpdate();
+
+            return ApiResponse.builder().message("True").build();
+        }catch(Exception e){
+            throw new AppException(ErrorCode.UNCATEGORIZED_EXCEPTION);
+        }
+    }
+
+    @Override
+    @Transactional
+    public ApiResponse<?> resetPassword(String email, String newPassword) {
+        try{
+            manager.createNativeQuery("update account set `password` = :password " +
+                            "where email = :email")
+                    .setParameter("email", email)
+                    .setParameter("password",  newPassword)
+                    .executeUpdate();
+
+            return ApiResponse.builder().message("Thành công").build();
+        }catch (Exception e){
+            throw new AppException(ErrorCode.UNCATEGORIZED_EXCEPTION);
+        }
     }
 
     @Override
@@ -156,6 +248,76 @@ public class AccountServiceImpl implements AccountService {
         TypedQuery<Roles> query = manager.createQuery("Select r from Roles r where r.id = :id", Roles.class);
         query.setParameter("id", id);
         return query.getSingleResult();
+    }
+    @Override
+    @Transactional
+    public AuthenticationResponse refreshToken(RefreshRequest request) throws ParseException, JOSEException {
+        var signedJWT = verifyToken(request.getToken(), true);
+
+        var jit = signedJWT.getJWTClaimsSet().getJWTID();
+        var expiryTime = signedJWT.getJWTClaimsSet().getExpirationTime();
+
+        InvalidateToken invalidatedToken =
+                InvalidateToken.builder().id(jit).expiryTime(expiryTime).build();
+
+        manager.persist(invalidatedToken);
+
+        var accountId = signedJWT.getJWTClaimsSet().getSubject();
+
+        Query customQuery = manager.createQuery("Select ar.accounts, ar.roles from AccountRole ar" +
+                " join ar.accounts a where a.id = :accountId");
+        customQuery.setParameter("accountId", accountId);
+        ArrayList<Integer> roles = new ArrayList<>();
+
+        List<Object[]> results = customQuery.getResultList();
+        Accounts a = new Accounts();
+        a = (Accounts) results.get(0)[0];
+
+        for(Object[] r : results){
+            Roles mrole = new Roles();
+            mrole = (Roles) r[1];
+            roles.add(mrole.getId());
+        }
+        a.setRoles(roles);
+
+        var token = generateToken(a);
+
+        return AuthenticationResponse.builder().token(token).authenticated(true).build();
+    }
+
+    @Override
+    @Transactional
+    public String sendOTP(String email) {
+        SimpleMailMessage message = new SimpleMailMessage();
+        String OTP = genOTP();
+        EmailUtil content = new EmailUtil("Quên mật khẩu", "Mã OTP của bạn là: " + OTP
+            + "\nVui lòng không tiết lộ mã OTP này cho b kỳ ai." +
+                "\nNếu bạn không gửi yêu cầu này, vui lòng bỏ qua tin nhắn");
+
+        try{
+            manager.createNativeQuery("insert into forgotpassword (`Account_Id`, `OTP`, `expirationTime`) " +
+                    "values (:accountId, :otp, :expirationTime) " +
+                    "ON DUPLICATE KEY  " +
+                    "UPDATE `OTP` = :otp, `expirationTime` = :expirationTime")
+                    .setParameter("accountId", getEmail(email).getId())
+                    .setParameter("otp", OTP)
+                    .setParameter("expirationTime", LocalDateTime.now().plusMinutes(5)
+                            .format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")))
+                    .executeUpdate();
+
+            message.setFrom(fromEmail);
+            message.setSubject(content.getSubject());
+            message.setText(content.getMessage());
+            message.setTo(email);
+            mailSender.send(message);
+        }catch(NoResultException e){
+            throw new AppException(ErrorCode.USER_NOT_EXISTED);
+        }catch(Exception e){
+            log.error(Arrays.toString(e.getStackTrace()));
+            throw new AppException((ErrorCode.UNCATEGORIZED_EXCEPTION));
+        }
+
+        return "Gửi thành công";
     }
 
     private String generateToken(Accounts accounts) {
@@ -220,42 +382,6 @@ public class AccountServiceImpl implements AccountService {
         return signedJWT;
     }
 
-    @Override
-    @Transactional
-    public AuthenticationResponse refreshToken(RefreshRequest request) throws ParseException, JOSEException {
-        var signedJWT = verifyToken(request.getToken(), true);
-
-        var jit = signedJWT.getJWTClaimsSet().getJWTID();
-        var expiryTime = signedJWT.getJWTClaimsSet().getExpirationTime();
-
-        InvalidateToken invalidatedToken =
-                InvalidateToken.builder().id(jit).expiryTime(expiryTime).build();
-
-        manager.persist(invalidatedToken);
-
-        var accountId = signedJWT.getJWTClaimsSet().getSubject();
-
-        Query customQuery = manager.createQuery("Select ar.accounts, ar.roles from AccountRole ar" +
-                " join ar.accounts a where a.id = :accountId");
-        customQuery.setParameter("accountId", accountId);
-        ArrayList<Integer> roles = new ArrayList<>();
-
-        List<Object[]> results = customQuery.getResultList();
-        Accounts a = new Accounts();
-        a = (Accounts) results.get(0)[0];
-
-        for(Object[] r : results){
-            Roles mrole = new Roles();
-            mrole = (Roles) r[1];
-            roles.add(mrole.getId());
-        }
-        a.setRoles(roles);
-
-        var token = generateToken(a);
-
-        return AuthenticationResponse.builder().token(token).authenticated(true).build();
-    }
-
     private String buildScope(Accounts accounts){
         StringJoiner joiner = new StringJoiner(" ");
         if(!CollectionUtils.isEmpty(accounts.getRoles())){
@@ -265,5 +391,19 @@ public class AccountServiceImpl implements AccountService {
         }
 
         return joiner.toString();
+    }
+
+    private String genOTP(){
+        SecureRandom random = new SecureRandom();
+
+        // Tạo một StringBuilder để xây dựng OTP
+        StringBuilder otp = new StringBuilder();
+
+        // Tạo mã OTP với độ dài đã cho
+        for (int i = 0; i < 6; i++) {
+            otp.append(random.nextInt(10)); // Số ngẫu nhiên từ 0-9
+        }
+
+        return otp.toString();
     }
 }

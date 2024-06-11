@@ -11,8 +11,10 @@ import com.datn.ticket.dto.response.IntrospectResponse;
 import com.datn.ticket.service.AccountService;
 import com.nimbusds.jose.JOSEException;
 import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpSession;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -20,16 +22,19 @@ import org.springframework.web.bind.annotation.*;
 
 import java.text.ParseException;
 import java.time.LocalDate;
-import java.time.format.DateTimeFormatter;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/account")
 @Tag(name = "Account Controller")
+@Slf4j
 public class AccountController {
     private final AccountService accountService;
 
     @Autowired
     private PasswordEncoder passwordEncoder;
+    @Autowired
+    private HttpServletRequest sessionnequest;
 
     @Autowired
     public AccountController(AccountService accountService) {
@@ -43,16 +48,21 @@ public class AccountController {
             throw new AppException(ErrorCode.USER_EXISTED);
         }
 
+        if(accountService.getEmail(request.getEmail()) != null){
+            throw new AppException(ErrorCode.USER_EXISTED);
+        }
+
         Accounts a = new Accounts();
         a.setUsername(request.getUsername());
         a.setPassword(passwordEncoder.encode(request.getPassword()));
+        a.setEmail(request.getEmail());
         a.setCreateAt(java.sql.Date.valueOf(LocalDate.now()));
-        accountService.newAccount(a, request.getRole());
-//        try{
-//            accountService.newAccount(a, request.getRole());
-//        }catch(Exception e){
-//            throw new AppException(ErrorCode.UNCATEGORIZED_EXCEPTION);
-//        }
+//        accountService.newAccount(a, request.getRole());
+        try{
+            accountService.newAccount(a, request.getRole());
+        }catch(Exception e){
+            throw new AppException(ErrorCode.UNCATEGORIZED_EXCEPTION);
+        }
         return ApiResponse.builder().message("Đăng ký thành công").build();
     }
 
@@ -80,6 +90,40 @@ public class AccountController {
     @PostMapping("/refresh-token")
     public AuthenticationResponse refreshToken(@RequestBody RefreshRequest request) throws ParseException, JOSEException {
         return accountService.refreshToken(request);
+    }
+
+    @Operation(summary = "Thay đổi mật khẩu")
+    @PostMapping("/change-pasword")
+    public ApiResponse<?> changePassword(@RequestBody ChangePasswordRequest request){
+        return accountService.changePassword(request.getOldPassword(), request.getNewPassword());
+    }
+
+    @Operation(summary = "Quên mật khẩu")
+    @PostMapping("/forgot_password")
+    public ApiResponse<?> forgotPassword(@RequestBody Map<String, String> email) throws ParseException, JOSEException {
+        if(accountService.getEmail(email.get("email")) == null){
+            throw new AppException(ErrorCode.ITEM_NOT_EXIST);        }
+        return ApiResponse.builder().message(accountService.sendOTP(email.get("email"))).build();
+    }
+
+    @Operation(summary = "Verify OTP")
+    @PostMapping("/verifyOTP")
+    public ApiResponse<?> verifyOTP(@RequestBody VerifyOTPRequest request) {
+        HttpSession session = sessionnequest.getSession(true);
+        session.setMaxInactiveInterval(3 * 60);
+
+        session.setAttribute("email", request.getEmail());
+        return accountService.verifyOTP(request.getEmail(), request.getOTP());
+    }
+
+    @Operation(summary = "resetPassword")
+    @PostMapping("/resetPassword")
+    public ApiResponse<?> resetPassword(@RequestBody ResetPasswordRequest request) {
+        HttpSession session = sessionnequest.getSession(false);
+        if(session == null){
+            throw new AppException(ErrorCode.SESSION_EXPIRED);
+        }
+        return accountService.resetPassword(session.getAttribute("email").toString(), passwordEncoder.encode(request.getPassword()));
     }
     
 }

@@ -15,8 +15,10 @@ public enum ErrorCode {
     UNAUTHENTICATED(1006, "Yêu cầu xác thực tài khoản", HttpStatus.UNAUTHORIZED),
     UNAUTHORIZED(1007, "You do not have permission", HttpStatus.FORBIDDEN),
     INVALID_DOB(1008, "Your age must be at least {min}", HttpStatus.BAD_REQUEST),
-    SESSION_EXPIRED(1009, "Session invalidated", HttpStatus.BAD_REQUEST),
-    ITEM_NOT_FOUND(1010, "Không tìm thấy", HttpStatus.NOT_FOUND);
+    SESSION_EXPIRED(1009, "Session timeout", HttpStatus.BAD_REQUEST),
+    ITEM_NOT_FOUND(1010, "Không tìm thấy", HttpStatus.NOT_FOUND),
+    EMAIL_EXISTED(1011, "Email đã được đăng ký", HttpStatus.BAD_REQUEST),
+    ITEM_NOT_EXIST(1012, "Thông tin về chưa được đăng ký", HttpStatus.BAD_REQUEST);
     ;
 
     ErrorCode(int code, String message, HttpStatusCode statusCode) {

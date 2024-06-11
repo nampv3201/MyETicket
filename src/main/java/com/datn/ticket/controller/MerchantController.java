@@ -75,6 +75,7 @@ public class MerchantController {
     @PostMapping("/add-event")
     public ApiResponse addEvent(@RequestBody EAFRequest eafRequest) throws ParseException{
         HttpSession session = request.getSession(true);
+        session.setMaxInactiveInterval(30 * 60);
         Events newEvent = new Events();
 
         try{
@@ -151,6 +152,7 @@ public class MerchantController {
     @GetMapping("/update/first-step/{id}")
     public ApiResponse<EventFirstUpdate> getEventUpdate(@PathVariable("id") int eventId){
         HttpSession session = request.getSession(true);
+        session.setMaxInactiveInterval(30 * 60);
         session.setAttribute("tempTicketUpdate", new ArrayList<CreateTickets>());
         session.setAttribute("tempCategoriesAdd", new ArrayList<Categories>());
         session.setAttribute("tempCategoriesRemove", new ArrayList<Categories>());

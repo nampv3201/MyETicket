@@ -1,12 +1,17 @@
 package com.datn.ticket.model;
 
 import jakarta.persistence.*;
+import lombok.AllArgsConstructor;
+import lombok.Data;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 
 import java.util.ArrayList;
 import java.util.Date;
 
-@Getter
+@Data
+@NoArgsConstructor
+@AllArgsConstructor
 @Entity
 @Table(name = "account")
 public class Accounts {
@@ -22,38 +27,13 @@ public class Accounts {
     @Column(name = "password")
     private String password;
 
+    @Column(name = "email")
+    private String email;
+
     @Column(name = "create_at")
     private Date createAt;
 
     @Transient
     private ArrayList<Integer> roles;
 
-    public Accounts() {
-    }
-
-    public Accounts(String username, String password, Date createAt) {
-        this.username = username;
-        this.password = password;
-        this.createAt = createAt;
-    }
-
-    public void setId(int id) {
-        this.id = id;
-    }
-
-    public void setUsername(String username) {
-        this.username = username;
-    }
-
-    public void setPassword(String password) {
-        this.password = password;
-    }
-
-    public void setCreateAt(Date status) {
-        this.createAt = status;
-    }
-
-    public void setRoles(ArrayList<Integer> roles) {
-        this.roles = roles;
-    }
 }
