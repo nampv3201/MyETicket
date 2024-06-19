@@ -29,6 +29,7 @@ import org.springframework.web.bind.annotation.*;
 import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/admin")
@@ -113,14 +114,28 @@ public class AdminController {
         }
     }
 
+    @Operation(summary = "Danh sách sự kiần phê duyệt")
+    @GetMapping("/event/pending")
+    public ApiResponse<?> getPendingEvent(){
+        return ApiResponse.<List<AdminEventResponse>>builder()
+                .result(adminService.getEventPending())
+                .build();
+    }
+
     @Operation(summary = "Lấy danh sách sự kiện")
     @GetMapping("/event")
-    public ApiResponse<?> getByFilter(@RequestParam(value = "MerchantId", required = false) Integer MerchantId,
-                                              @RequestParam(value = "CategoryId",required = false) List<Integer> CategoryId,
-                                              @RequestParam(value = "allTime",required = false) Integer allTime,
-                                              @RequestParam(value = "city", required = false) String city){
-        log.info("{}", city);
-        return adminService.allEvents(MerchantId, CategoryId, allTime, city);
+    public ApiResponse<?> getByFilter(@RequestParam(value = "offset", defaultValue = "0") int offset,
+                                      @RequestParam(value = "size", defaultValue = "10") int size,
+                                      @RequestParam(value = "merchantName", required = false) String merchantName,
+                                      @RequestParam(value = "categoriesId",required = false) List<Integer> categoriesId,
+                                      @RequestParam(value = "time",required = false) String time,
+                                      @RequestParam(value = "city", required = false) List<String> city,
+                                      @RequestParam(value = "fromTime", required = false, defaultValue = "2020-01-01") String fromTime,
+                                      @RequestParam(value = "toTime", required = false, defaultValue = "2999-01-01") String toTime,
+                                      @RequestParam(value = "minPrice",required = false, defaultValue = "0.0") Double minPrice,
+                                      @RequestParam(value = "maxPrice",required = false, defaultValue = "100000000.0") Double maxPrice,
+                                      @RequestParam(value = "status", required = false) String status){
+        return adminService.allEvents(offset, size, merchantName, categoriesId, time, city, fromTime, toTime, minPrice, maxPrice, status);
     }
 
     @Operation(summary = "Lấy sự kiện cụ thể")
@@ -131,15 +146,21 @@ public class AdminController {
 
     @Operation(summary = "Đổi trạng thái event")
     @PostMapping("/eventMgmt/change-status/{id}")
-    public ApiResponse<?> changeEventStatus(@PathVariable("id") int eventId){
-        try{
-            adminService.changeEventStatus(eventId);
+    public ApiResponse<?> changeEventStatus(@PathVariable("id") int eventId,
+                                            @RequestBody(required = false) Map<String, String> requestMap){
+//        try{
+            if(requestMap == null){
+                adminService.changeEventStatus(eventId, null);
+            }
+            else{
+                adminService.changeEventStatus(eventId, requestMap.get("status"));
+            }
             return ApiResponse.builder()
                     .message("Thành công")
                     .build();
-        }catch (Exception e){
-            throw new AppException(ErrorCode.UNCATEGORIZED_EXCEPTION);
-        }
+//        }catch (Exception e){
+//            throw new AppException(ErrorCode.UNCATEGORIZED_EXCEPTION);
+//        }
     }
 
     @Operation(summary = "Thống kê sự kiện theo merchant")
@@ -179,19 +200,14 @@ public class AdminController {
     @Operation(summary = "Xóa 1 category")
     @PostMapping("/categories/delete/{id}")
     public ApiResponse<?> deleteCategories(@PathVariable("id") int id){
-        log.info("INSIDE");
-//        try{
-//            adminService.removeCategory(id);
-//            return ApiResponse.builder()
-//                    .message("Xóa thành công")
-//                    .build();
-//        }catch (Exception e){
-//            throw new AppException(ErrorCode.UNCATEGORIZED_EXCEPTION);
-//        }
-        adminService.removeCategory(id);
-        return ApiResponse.builder()
-                .message("Xóa thành công")
-                .build();
+        try{
+            adminService.removeCategory(id);
+            return ApiResponse.builder()
+                    .message("Xóa thành công")
+                    .build();
+        }catch (Exception e){
+            throw new AppException(ErrorCode.UNCATEGORIZED_EXCEPTION);
+        }
     }
 
     @Operation(summary = "Thêm mới payment gateway")

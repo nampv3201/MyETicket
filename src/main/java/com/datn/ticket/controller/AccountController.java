@@ -59,7 +59,7 @@ public class AccountController {
         a.setCreateAt(java.sql.Date.valueOf(LocalDate.now()));
 //        accountService.newAccount(a, request.getRole());
         try{
-            accountService.newAccount(a, request.getRole());
+            accountService.newAccount(a, request);
         }catch(Exception e){
             throw new AppException(ErrorCode.UNCATEGORIZED_EXCEPTION);
         }
@@ -70,7 +70,7 @@ public class AccountController {
     @Operation(summary = "Đăng nhập")
     @PostMapping("/sign-in")
     public ResponseEntity<AuthenticationResponse> signIn(@RequestBody LoginRequest request){
-        return accountService.signIn(request.getUsername(), request.getPassword(), request.getRole());
+        return accountService.signIn(request.getUsername(), request.getPassword());
     }
 
     @PostMapping("/introspect")

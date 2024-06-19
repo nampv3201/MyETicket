@@ -28,9 +28,9 @@ public class EventDTO {
     int merchantId;
     String merchantName;
     List<String> categories;
-    int status;
+    String status;
 
     List<CreateTicketsResponse> createTicketsResponseList;
 
-
+    List<EventHome> suggestEvents;
 }

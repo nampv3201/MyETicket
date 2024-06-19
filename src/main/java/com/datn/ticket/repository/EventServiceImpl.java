@@ -43,7 +43,7 @@ public class EventServiceImpl implements EventService {
         Query query = manager.createNativeQuery("Select e.id, e.name, e.banner, e.city, e.location, e.start_booking, min(ct.price) " +
                 "from events e " +
                 "join createticket ct on ct.Events_id = e.id " +
-                "where e.name like :keyWord and e.status = 1 group by e.id");
+                "where e.name like :keyWord and e.status = 'available' group by e.id");
         query.setParameter("keyWord", "%" + keyWord + "%");
         List<Object[]> events = query.getResultList();
 
@@ -70,8 +70,12 @@ public class EventServiceImpl implements EventService {
             for (CreateTickets c : typedQuery.getResultList()) {
                 ticketsDTOS.add(CreateTicketMapper.createTicketsDTO(c));
             }
+
+            List<EventHome> suggest_events = getSuggestEvents();
+
             return ApiResponse.<EventDTO>builder()
-                    .result(EventMapper.eventDTO(e, categoryList, ticketsDTOS)).build();
+                    .result(EventMapper.eventDTO(e, categoryList, ticketsDTOS, suggest_events)).build();
+
         }catch (EmptyResultDataAccessException ex){
             throw AppException.from(ex, ErrorCode.ITEM_NOT_FOUND);
         }catch (Exception ex){
@@ -80,13 +84,14 @@ public class EventServiceImpl implements EventService {
     }
 
     @Override
-    public ResponseEntity<Object> getEventByFilter(Integer MerchantId, List<Integer> CategoryId, String time, String city) {
+    public ResponseEntity<Object> getEventByFilterWithPage(Integer offset, Integer size, Integer MerchantId, List<Integer> CategoryId, String time,
+                                                           List<String> city, String fromTime, String toTime, Double minPrice, Double maxPrice) {
         List<Object[]> events = new ArrayList<>();
         Query getEvent;
         StringBuilder query = new StringBuilder("Select e.id, e.name, e.banner, e.city, e.location, e.start_booking, min(ct.price) " +
                 "from events e " +
                 "join createticket ct on ct.Events_id = e.id " +
-                "where e.status = 1 ");
+                "where e.status = 'available' ");
 
 
         // Add query by filtering
@@ -104,58 +109,7 @@ public class EventServiceImpl implements EventService {
             }
         }
         if(city != null){
-            query.append("and e.city = :city ");
-        }
-
-        // Create Query
-        query.append("group by e.id, e.name");
-        getEvent = manager.createNativeQuery(query.toString());
-
-        // Add Query Params
-        if(MerchantId != null) {
-            getEvent.setParameter("MerchantId", MerchantId);
-        }
-        if(CategoryId != null && !CategoryId.isEmpty()) {
-            getEvent.setParameter("CategoryId", CategoryId);
-        }
-        if(city != null){
-            getEvent.setParameter("city", city);
-        }
-        try {
-            events = getEvent.getResultList();
-            return ResponseEntity.ok().body(EventHomeMapper.eventHomeDTO(events));
-        }catch(Exception ex){
-            throw new AppException(ErrorCode.UNCATEGORIZED_EXCEPTION);
-        }
-    }
-
-    @Override
-    public ResponseEntity<Object> getEventByFilterWithPage(int offset, int size, Integer MerchantId, List<Integer> CategoryId, String time,
-                                                           String city, String fromTime, String toTime, Double minPrice, Double maxPrice) {
-        List<Object[]> events = new ArrayList<>();
-        Query getEvent;
-        StringBuilder query = new StringBuilder("Select e.id, e.name, e.banner, e.city, e.location, e.start_booking, min(ct.price) " +
-                "from events e " +
-                "join createticket ct on ct.Events_id = e.id " +
-                "where e.status = 1 ");
-
-
-        // Add query by filtering
-        if(MerchantId != null) {
-            query.append("and e.Merchants_id = :MerchantId ");
-        }
-        if(CategoryId != null) {
-            query.append("and e.id in (select ecat.Events_id from events_has_categories ecat where ecat.Categories_id in :CategoryId) ");
-        }
-        if(time!=null){
-            if(time.equals("before")){
-                query.append("and e.end_time < now() ");
-            }if(time.equals("after")){
-                query.append("and e.end_time > now() ");
-            }
-        }
-        if(city != null){
-            query.append("and e.city = :city ");
+            query.append("and e.city in :city ");
         }
 
         // Create Query
@@ -197,7 +151,7 @@ public class EventServiceImpl implements EventService {
                 "join createticket ct on ct.Events_id = e.id " +
                 "join events_has_categories ecat on ecat.Events_id = e.id " +
                 "join categories cat on ecat.Categories_id = cat.id " +
-                "where e.status = 1 and cat.category_name = :catName " +
+                "where e.status = 'available' and cat.category_name = :catName " +
                 "group by e.id, e.name")
                 .setParameter("catName", catName);
         try {
@@ -260,7 +214,18 @@ public class EventServiceImpl implements EventService {
         return query.getSingleResult();
     }
 
+    public List<EventHome> getSuggestEvents(){
+        List<Object[]> suggestions = new ArrayList<>();
+        suggestions = manager.createNativeQuery("Select e.id, e.name, e.banner, e.city, e.location, e.start_booking, min(ct.price) " +
+                "from events e " +
+                "join createticket ct on ct.Events_id = e.id " +
+                "where e.status = 'available' and e.end_time > now() " +
+                "group by e.id, e.name " +
+                "ORDER BY RAND() " +
+                "LIMIT 2 offset 0").getResultList();
 
+        return EventHomeMapper.eventHomeDTO(suggestions);
+    }
 }
 
 

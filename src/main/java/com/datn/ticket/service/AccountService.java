@@ -1,5 +1,6 @@
 package com.datn.ticket.service;
 
+import com.datn.ticket.dto.request.SignUpRequest;
 import com.datn.ticket.dto.response.ApiResponse;
 import com.datn.ticket.model.Accounts;
 import com.datn.ticket.model.Roles;
@@ -16,10 +17,10 @@ import java.util.List;
 
 public interface AccountService {
 
-    void newAccount(Accounts account, List<String> role);
+    void newAccount(Accounts account, SignUpRequest request);
     Accounts getUsername(String username);
     Accounts getEmail(String email);
-    ResponseEntity<AuthenticationResponse> signIn(String username, String password, String role);
+    ResponseEntity<AuthenticationResponse> signIn(String username, String password);
     IntrospectResponse introspect(IntrospectRequest request) throws JOSEException, ParseException;
     Roles getRole(Integer id);
     void logout(LogoutRequest request) throws ParseException, JOSEException;

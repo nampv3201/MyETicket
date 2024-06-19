@@ -1,5 +1,6 @@
 package com.datn.ticket.repository;
 
+import com.datn.ticket.dto.request.SignUpRequest;
 import com.datn.ticket.dto.response.ApiResponse;
 import com.datn.ticket.exception.AppException;
 import com.datn.ticket.exception.ErrorCode;
@@ -22,6 +23,8 @@ import com.datn.ticket.dto.response.IntrospectResponse;
 import com.datn.ticket.service.AccountService;
 import com.datn.ticket.util.EmailUtil;
 import com.twilio.Twilio;
+import io.jsonwebtoken.Claims;
+import io.jsonwebtoken.Jwts;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.Query;
 import jakarta.persistence.NoResultException;
@@ -48,6 +51,8 @@ import com.nimbusds.jwt.JWTClaimsSet;
 import com.nimbusds.jwt.SignedJWT;
 import org.springframework.util.CollectionUtils;
 
+import static org.hibernate.boot.model.process.spi.MetadataBuildingProcess.build;
+
 @Repository
 @Slf4j
 public class AccountServiceImpl implements AccountService {
@@ -68,32 +73,37 @@ public class AccountServiceImpl implements AccountService {
     @Autowired
     public AccountServiceImpl(EntityManager manager) {
         this.manager = manager;
-//        Twilio.init(twilioId, twilioToken);
     }
 
     @Override
     @Transactional
-    public void newAccount(Accounts account, List<String> roles) {
+    public void newAccount(Accounts account, SignUpRequest request) {
+
         manager.persist(account);
-        List<Roles> aRoles;
-        for(String role : roles){
-            if(role.toUpperCase(Locale.ROOT).equals("USER")){
-                Users u = new Users();
-                u.setPoint(0);
-                u.setAge(-1);
-                u.setAccounts(account);
-                manager.persist(u);
-            } else if (role.toUpperCase(Locale.ROOT).equals("MERCHANT")) {
-                Merchants m = new Merchants();
-                m.setAccounts(account);
-                manager.persist(m);
-            }
-            manager.createNativeQuery("insert into account_has_role (`Account_id`, `role_id`, `status`) " +
-                    "values (:accountId, (select r.id from role r where r.role_name = :roleName), 1)")
-                    .setParameter("accountId", account.getId())
-                    .setParameter("roleName", role.toUpperCase(Locale.ROOT))
-                    .executeUpdate();
+        Query query = manager.createNativeQuery("insert into account_has_role (`Account_id`, `role_id`, `status`) " +
+                        "values (:accountId, (select r.id from role r where r.role_name = :roleName), 1)")
+                .setParameter("accountId", account.getId());
+
+        if (request.getMerchantInfor() != null) {
+            Merchants m = new Merchants();
+            m.setName(request.getMerchantInfor().getName());
+            m.setAddress(request.getMerchantInfor().getAddress());
+            m.setPhone(request.getMerchantInfor().getPhone());
+            m.setLicense(request.getMerchantInfor().getLicense());
+            m.setAccounts(account);
+            manager.persist(m);
+            query.setParameter("roleName", "MERCHANT").executeUpdate();
+            log.info("Merchant");
         }
+
+        Users u = new Users();
+        u.setPoint(0);
+        u.setAge(-1);
+        u.setAccounts(account);
+        manager.persist(u);
+
+        query.setParameter("roleName", "USER")
+                .executeUpdate();
     }
 
     @Override
@@ -119,15 +129,14 @@ public class AccountServiceImpl implements AccountService {
     }
 
     @Override
-    public ResponseEntity<AuthenticationResponse> signIn(String username, String password, String role) {
+    public ResponseEntity<AuthenticationResponse> signIn(String username, String password) {
         PasswordEncoder passwordEncoder = new BCryptPasswordEncoder(10);
         Query customQuery = manager.createNativeQuery("select a.id, a.username, a.password, a.create_at, ar.role_id, ar.status " +
                 " from account a" +
                 " join account_has_role ar on ar.Account_id = a.id " +
                 "join role r on ar.role_id = r.id " +
-                "where a.username = :username and r.role_name = :role");
+                "where a.username = :username and ar.status = 1 ");
         customQuery.setParameter("username", username);
-        customQuery.setParameter("role", role.toUpperCase(Locale.ROOT));
         ArrayList<Integer> roles = new ArrayList<>();
         try{
             List<Object[]> results = customQuery.getResultList();
@@ -140,16 +149,25 @@ public class AccountServiceImpl implements AccountService {
                 return ResponseEntity.status(HttpStatus.NOT_FOUND).body(AuthenticationResponse.builder().token(null).authenticated(false).build());
             }
             for(Object[] r : results){
-                roles.add((Integer) results.get(0)[4]);
+                roles.add((Integer) r[4]);
             }
             a.setRoles(roles);
             if(Byte.toUnsignedInt((Byte) results.get(0)[5]) == 1){
                 var token = generateToken(a);
-                return ResponseEntity.ok(AuthenticationResponse.builder().token(token).authenticated(true).build());
+                SignedJWT signedJWT = SignedJWT.parse(token);
+
+                return ResponseEntity.ok(AuthenticationResponse.builder()
+                        .token(token)
+                        .authenticated(true)
+                        .username(results.get(0)[1].toString())
+                        .role(buildScope(a))
+                        .build());
             }
             return ResponseEntity.status(HttpStatus.FORBIDDEN).body(AuthenticationResponse.builder().token(null).authenticated(false).build());
         }catch (NoResultException e) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(AuthenticationResponse.builder().token(null).authenticated(false).build());
+        } catch (ParseException e) {
+            throw new RuntimeException(e);
         }
     }
 
@@ -282,7 +300,10 @@ public class AccountServiceImpl implements AccountService {
 
         var token = generateToken(a);
 
-        return AuthenticationResponse.builder().token(token).authenticated(true).build();
+        return AuthenticationResponse.builder().token(token).authenticated(true)
+                .role(buildScope(a))
+                .username(a.getUsername())
+                .build();
     }
 
     @Override

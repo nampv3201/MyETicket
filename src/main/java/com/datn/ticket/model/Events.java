@@ -50,7 +50,7 @@ public class Events {
     private String banner;
 
     @Column(name="status")
-    private int status;
+    private String status;
 
     @Column(name="deleted")
     private int deleted;

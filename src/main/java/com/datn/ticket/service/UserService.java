@@ -1,10 +1,14 @@
 package com.datn.ticket.service;
 
+import com.datn.ticket.dto.request.MerchantSignUpRequest;
+import com.datn.ticket.dto.request.SignUpMerchantInApp;
 import com.datn.ticket.dto.response.*;
 import com.datn.ticket.model.Cart;
 import com.datn.ticket.model.Users;
 import com.datn.ticket.dto.request.UpdateCartRequest;
+import com.nimbusds.jose.JOSEException;
 
+import java.text.ParseException;
 import java.util.List;
 
 public interface UserService {
@@ -22,4 +26,5 @@ public interface UserService {
     String payment(PaymentResponse response);
     List<HistoryResponse> myHistory();
     HistoryResponseDetail getHistoryResponseDetail(String id);
+    ApiResponse<?> signUpMerchant(SignUpMerchantInApp signUpRequest) throws ParseException, JOSEException;
 }

@@ -85,7 +85,7 @@ public class MerchantController {
             newEvent.setLocation(eafRequest.getEventLocation());
             newEvent.setBanner(eafRequest.getEventBanner());
             newEvent.setMax_limit(eafRequest.getEventLimit());
-            newEvent.setStatus(1);
+            newEvent.setStatus("pending");
             newEvent.setDeleted(0);
 
             session.setAttribute("tempEvent", newEvent);
@@ -139,7 +139,7 @@ public class MerchantController {
             session.removeAttribute("tempEvent");
             session.removeAttribute("tempCategories");
             session.invalidate();
-            return ApiResponse.builder().message("Tạo mới thành công").build();
+            return ApiResponse.builder().message("Sự kiện đã được thêm, vui lòng chờ phê duyệt").build();
         }catch (Exception e){
             session.invalidate();
             throw new AppException(ErrorCode.UNCATEGORIZED_EXCEPTION);

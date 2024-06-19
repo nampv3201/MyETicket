@@ -17,5 +17,5 @@ public class SignUpRequest {
     @Size(min = 8, message = "Yêu cầu ít nhất 8 ký tự")
     String password;
     String email;
-    List<String> role;
+    MerchantSignUpRequest merchantInfor;
 }

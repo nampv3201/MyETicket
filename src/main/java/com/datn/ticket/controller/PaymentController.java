@@ -61,7 +61,7 @@ public class PaymentController {
                 }
                 totalCost += userService.getSingleCart(cartId).getCost();
             }
-            String paymentUrl = configPayment(totalCost, cartIds, requests.getMethodId());
+            String paymentUrl = configPayment(totalCost, cartIds, requests.getMethodId(), requests.getEmail());
             RestTemplate restTemplate = new RestTemplate();
             restTemplate.getForEntity(paymentUrl, String.class);
             return ApiResponse.builder().result(paymentUrl)
@@ -87,7 +87,7 @@ public class PaymentController {
             totalCost += userService.getSingleCart(i).getCost();
         }
 
-        String paymentUrl = configPayment(totalCost, request.getCartId(), request.getMethod());
+        String paymentUrl = configPayment(totalCost, request.getCartId(), request.getMethod(), request.getEmail());
         RestTemplate restTemplate = new RestTemplate();
         restTemplate.getForEntity(paymentUrl, String.class);
         return ApiResponse.builder().message("Tạo yêu cầu thành công")
@@ -101,7 +101,8 @@ public class PaymentController {
                                           @RequestParam("vnp_PayDate") String paymentDate,
                                           @RequestParam("vnp_ResponseCode") String responseCode,
                                           @RequestParam("userId") int uId,
-                                          @RequestParam("vnp_OrderInfo") int methodId) throws UnsupportedEncodingException {
+                                          @RequestParam("vnp_OrderInfo") int methodId,
+                                          @RequestParam("email") String email) throws UnsupportedEncodingException {
 
         try {
             // Chuyển đổi chuỗi JSON thành một mảng hoặc danh sách
@@ -120,6 +121,7 @@ public class PaymentController {
             response.setPaymentDate(dateTime);
             response.setResponseCode(responseCode);
             response.setUId(uId);
+            response.setEmail(email);
             try{
 
                 return ApiResponse.<PaymentResponse>builder().message(userService.payment(response)).build();
@@ -131,7 +133,7 @@ public class PaymentController {
         }
 
     }
-    public String configPayment(double totalCost, List<Integer> cartId, int paymentMethod) throws UnsupportedEncodingException {
+    public String configPayment(double totalCost, List<Integer> cartId, int paymentMethod, String email) throws UnsupportedEncodingException {
             String orderType = String.valueOf(paymentMethod);
             String bankCode = "NCB";
 
@@ -160,7 +162,9 @@ public class PaymentController {
             } else {
                 vnp_Params.put("vnp_Locale", "vn");
             }
-            vnp_Params.put("vnp_ReturnUrl", VNPayConfig.vnp_ReturnUrl + "?userId=" + userService.myInfor().getId() + "&cartId=" + URLEncoder.encode(cartId.toString(), StandardCharsets.UTF_8.toString()));
+            vnp_Params.put("vnp_ReturnUrl", VNPayConfig.vnp_ReturnUrl + "?userId=" + userService.myInfor().getId() +
+                    "&cartId=" + URLEncoder.encode(cartId.toString(), StandardCharsets.UTF_8.toString()) +
+                    "&email=" + URLEncoder.encode(email, StandardCharsets.UTF_8.toString()));
             vnp_Params.put("vnp_IpAddr", "vnp_IpAddr");
 
             Calendar cld = Calendar.getInstance(TimeZone.getTimeZone("Etc/GMT+7"));

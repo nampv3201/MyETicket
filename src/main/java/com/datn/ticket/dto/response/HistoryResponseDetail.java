@@ -4,6 +4,8 @@ import lombok.*;
 import lombok.experimental.FieldDefaults;
 
 import java.util.Date;
+import java.util.List;
+import java.util.Map;
 
 @Data
 @NoArgsConstructor
@@ -16,11 +18,10 @@ public class HistoryResponseDetail {
     String ticketId;
     String qrcode;
     String eventName;
-    String ticketName;
     String eventDate;
     String eventStartTime;
     String eventEndTime;
     String location;
-    int quantity;
+    List<Map<String, Object>> typeTicket;
     double totalPrice;
 }

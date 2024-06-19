@@ -9,6 +9,7 @@ import com.datn.ticket.model.Users;
 import com.datn.ticket.model.mapper.UsersMapper;
 import com.datn.ticket.service.EventService;
 import com.datn.ticket.service.UserService;
+import com.nimbusds.jose.JOSEException;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.persistence.NoResultException;
@@ -18,6 +19,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.web.bind.annotation.*;
 
+import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -46,6 +48,16 @@ public class UserController {
                     .build();
         }catch (Exception e){
             throw new AppException(ErrorCode.USER_NOT_EXISTED);
+        }
+    }
+
+    @Operation(summary = "Đăng ký trở thành merchant")
+    @PostMapping("/user/sign-up-merchant")
+    public ApiResponse<?> signUpMerchant(@RequestBody SignUpMerchantInApp signUpMerchantInApp) throws ParseException, JOSEException {
+        try{
+            return userService.signUpMerchant(signUpMerchantInApp);
+        } catch (Exception e){
+            throw new AppException(ErrorCode.UNCATEGORIZED_EXCEPTION);
         }
     }
 

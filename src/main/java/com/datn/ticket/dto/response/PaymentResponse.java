@@ -19,4 +19,6 @@ public class PaymentResponse {
     double amount;
     int uId;
     int methodId;
+
+    String email;
 }

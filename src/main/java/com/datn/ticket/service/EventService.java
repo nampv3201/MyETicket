@@ -11,8 +11,7 @@ import java.util.List;
 public interface EventService {
     ApiResponse<EventDTO> getEvent(int id);
     ResponseEntity<Object> findEventByName(String name);
-    ResponseEntity<Object> getEventByFilter(Integer MerchantId, List<Integer> CategoryId, String time, String city);
-    ResponseEntity<Object> getEventByFilterWithPage(int offset, int size, Integer MerchantId, List<Integer> CategoryId, String time, String city,
+    ResponseEntity<Object> getEventByFilterWithPage(Integer offset, Integer size, Integer MerchantId, List<Integer> CategoryId, String time, List<String> city,
                                                     String fromTime, String toTime, Double minPrice, Double maxPrice);
     ApiResponse<?> getEventByCategory(String category);
     CreateTickets getTicketType(Integer ticketTypeID);

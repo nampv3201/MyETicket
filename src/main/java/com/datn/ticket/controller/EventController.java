@@ -44,23 +44,14 @@ public class EventController {
         return eventService.getEvent(id);
     }
 
-    @Operation(summary = "Lọc Event")
-    @GetMapping("/event")
-    public ResponseEntity<Object> getByFilter(@RequestParam(value = "MerchantId", required = false) Integer MerchantId,
-                                              @RequestParam(value = "CategoryId",required = false) List<Integer> CategoryId,
-                                              @RequestParam(value = "time",required = false) String time,
-                                              @RequestParam(value = "city", required = false) String city){
-        return eventService.getEventByFilter(MerchantId, CategoryId, time, city);
-    }
-
     @Operation(summary = "Phân trang")
-    @GetMapping("/event-paging")
+    @GetMapping("/event")
     public ResponseEntity<Object> getEventPaging(@RequestParam(value = "offset", defaultValue = "0") int offset,
                                                  @RequestParam(value = "size", defaultValue = "10") int size,
                                                  @RequestParam(value = "merchantId", required = false) Integer MerchantId,
                                                  @RequestParam(value = "categoryId",required = false) List<Integer> CategoryId,
                                                  @RequestParam(value = "time",required = false) String time,
-                                                 @RequestParam(value = "city", required = false) String city,
+                                                 @RequestParam(value = "city", required = false) List<String> city,
                                                  @RequestParam(value = "fromTime", required = false, defaultValue = "2020-01-01") String fromTime,
                                                  @RequestParam(value = "toTime", required = false, defaultValue = "2999-01-01") String toTime,
                                                  @RequestParam(value = "minPrice",required = false, defaultValue = "0.0") Double minPrice,

@@ -1,23 +1,20 @@
 package com.datn.ticket.dto.response;
 
-import lombok.*;
+import lombok.AccessLevel;
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
 import lombok.experimental.FieldDefaults;
-
-import java.util.Date;
 
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-@Builder
-@Getter
-@Setter
 @FieldDefaults(level = AccessLevel.PRIVATE)
-public class HistoryResponse {
-    String ticketId;
+public class AdminEventResponse {
+    int eventId;
     String eventName;
-    String eventDate;
-    String eventStartTime;
-    String eventEndTime;
-    String paymentDate;
     String location;
+    String status;
+    int mId;
+    String mName;
 }

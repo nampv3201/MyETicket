@@ -1,7 +1,9 @@
 package com.datn.ticket.model.mapper;
 
 import com.datn.ticket.dto.EventHome;
+import com.datn.ticket.dto.response.AdminGetAllEventResponse;
 
+import java.math.BigDecimal;
 import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.List;
@@ -23,5 +25,27 @@ public class EventHomeMapper {
         }
 
         return eventHomes;
+    }
+
+    public static List<AdminGetAllEventResponse> adminAllEvents(List<Object[]> events){
+        List<AdminGetAllEventResponse> result = new ArrayList<>();
+        for(Object[] e : events){
+            AdminGetAllEventResponse response = new AdminGetAllEventResponse();
+            response.setEventId((Integer) e[0]);
+            response.setEventName((String) e[1]);
+            response.setLocation((String) e[2]);
+            response.setCategory((String) e[3]);
+            response.setEventTime((String) e[4]);
+            response.setTotalTicket(((BigDecimal) e[5]).toPlainString());
+            response.setAvailable(((BigDecimal) e[6]).toPlainString());
+            response.setMinPrice(((Long) e[7]).toString());
+            response.setStatus((String) e[8]);
+            response.setMId((int) e[9]);
+            response.setMName((String) e[10]);
+
+            result.add(response);
+        }
+
+        return result;
     }
 }

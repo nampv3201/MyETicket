@@ -18,7 +18,9 @@ public enum ErrorCode {
     SESSION_EXPIRED(1009, "Session timeout", HttpStatus.BAD_REQUEST),
     ITEM_NOT_FOUND(1010, "Không tìm thấy", HttpStatus.NOT_FOUND),
     EMAIL_EXISTED(1011, "Email đã được đăng ký", HttpStatus.BAD_REQUEST),
-    ITEM_NOT_EXIST(1012, "Thông tin về chưa được đăng ký", HttpStatus.BAD_REQUEST);
+    ITEM_NOT_EXIST(1012, "Thông tin về chưa được đăng ký", HttpStatus.BAD_REQUEST),
+    ROLE_HAS_REGISTERED(1013, "Bạn đã đăng ký làm merchant", HttpStatus.BAD_REQUEST),
+    LICENSE_HAS_REGISTERED(1015, "Giấy phép kinh doanh đã được đăng ký", HttpStatus.BAD_REQUEST),
     ;
 
     ErrorCode(int code, String message, HttpStatusCode statusCode) {
