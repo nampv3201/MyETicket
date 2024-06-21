@@ -29,6 +29,7 @@ import java.io.ByteArrayOutputStream;
 import java.io.UnsupportedEncodingException;
 import java.util.Base64;
 import java.util.List;
+import java.util.Map;
 
 @Service
 @Slf4j
@@ -65,31 +66,30 @@ public class QRCodeService {
         return result.getText();
     }
 
-    @Async
-    public void sendQR(String QRCode, String email, List<Object[]> eventMail) throws MessagingException, UnsupportedEncodingException {
-        for(Object[] row : eventMail){
-            MimeMessage message = emailSender.createMimeMessage();
-            MimeMessageHelper helper = new MimeMessageHelper(message, true);
+//    @Async
+    public void sendQR(Map<String, String> qrMap, String email, Object[] eventMail) throws MessagingException, UnsupportedEncodingException {
+        MimeMessage message = emailSender.createMimeMessage();
+        MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
 
+        helper.setFrom(new InternetAddress(fromEmail, "ETicket"));
+        helper.setTo(email);
+        helper.setSubject((String) eventMail[1]);
 
-            helper.setFrom(new InternetAddress(fromEmail, "ETicket"));
-            helper.setTo(email);
-            helper.setSubject((String) row[1]);
-            StringBuilder txtMail = new StringBuilder();
-            txtMail.append(String.format("Bạn đã đặt vé cho sự kiện: %s.Trong đó bao gồm:\n", row[1]));
-            String[] type = row[3].toString().split(",");
-            for(String txt : type){
-                txtMail.append(String.format("  %s\n", txt));
-            }
-            txtMail.append(String.format("Chi tiết sự kiện: http://localhost:8080/home/%s", row[0]));
-            message.setText(txtMail.toString());
+        StringBuilder txtMail = new StringBuilder();
+        txtMail.append(String.format("Bạn đã đặt vé cho sự kiện: %s.Trong đó bao gồm:\n", eventMail[1]));
+        String[] type = eventMail[3].toString().split(",");
+        for(String txt : type){
+            txtMail.append(String.format("%s\n", txt));
+        }
+        txtMail.append(String.format("Chi tiết sự kiện: <a href='http://localhost:8080/home/%s'>Click here</a>", eventMail[0]));
+        helper.setText(txtMail.toString());
 
-            byte[] qrCodeBytes = Base64.getDecoder().decode(QRCode);
+        for(Map.Entry<String, String> qr : qrMap.entrySet()){
+            byte[] qrCodeBytes = Base64.getDecoder().decode(qr.getValue());
             InputStreamSource qrCodeSource = new ByteArrayResource(qrCodeBytes);
-            helper.addAttachment("QRCode.png", qrCodeSource);
-
-            emailSender.send(message);
+            helper.addAttachment(qr.getKey() + ".png", qrCodeSource);
         }
 
+        emailSender.send(message);
     }
 }

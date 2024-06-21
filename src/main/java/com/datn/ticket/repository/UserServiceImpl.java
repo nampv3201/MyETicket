@@ -14,9 +14,11 @@ import com.datn.ticket.service.EventService;
 import com.datn.ticket.service.UserService;
 import com.datn.ticket.util.QRCodeService;
 import com.nimbusds.jose.JOSEException;
+import jakarta.mail.MessagingException;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.Query;
 import jakarta.transaction.Transactional;
+import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.mail.javamail.JavaMailSender;
@@ -25,8 +27,10 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Repository;
 import org.springframework.web.bind.annotation.RequestBody;
 
+import java.io.UnsupportedEncodingException;
 import java.text.ParseException;
 import java.util.*;
+import java.util.stream.IntStream;
 
 @Repository
 @Slf4j
@@ -75,7 +79,8 @@ public class UserServiceImpl implements UserService {
     @PreAuthorize("hasRole('USER') || hasRole('ADMIN') || hasRole('MERCHANT')")
     public ApiResponse<?> signUpMerchant(SignUpMerchantInApp signUpRequest) throws ParseException, JOSEException {
         var authentication = SecurityContextHolder.getContext().getAuthentication();
-        // check role
+
+        // check if registered
         Query query = manager.createNativeQuery("select * from account_has_role ar where ar.Account_id = :account_id " +
                 "and ar.role_id = 2").setParameter("account_id", authentication.getName());
         if (query.getResultList().size() > 0) {
@@ -84,7 +89,7 @@ public class UserServiceImpl implements UserService {
         }
 
         // check condition
-        if(checkMerchantCondition(signUpRequest.getSignUpRequest().getLicense())){
+        if(checkMerchantCondition(signUpRequest.getSignUpRequest().getLicense()) == false){
             log.info(signUpRequest.getSignUpRequest().getLicense());
             return ApiResponse.builder()
                     .code(ErrorCode.LICENSE_HAS_REGISTERED.getCode())
@@ -92,6 +97,7 @@ public class UserServiceImpl implements UserService {
                     .build();
         }
 
+        // Create merchant
         manager.createNativeQuery("insert into merchants " +
                         "(`name`, `address`, `phone`, `license`, `Account_id`) " +
                         "values (:name, :address, :phone, :license, :Account_id)")
@@ -101,6 +107,7 @@ public class UserServiceImpl implements UserService {
                 .setParameter("license", signUpRequest.getSignUpRequest().getLicense())
                 .setParameter("Account_id", authentication.getName()).executeUpdate();
 
+        // Add role
         manager.createNativeQuery("insert into account_has_role " +
                         "(`Account_id`, `role_id`, `status`) " +
                         "values (:account_id, 2, 1)")
@@ -111,6 +118,7 @@ public class UserServiceImpl implements UserService {
                 .build());
 
         return ApiResponse.<AuthenticationResponse>builder()
+                .message("Đăng ký thành công")
                 .result(res).build();
     }
 
@@ -235,6 +243,7 @@ public class UserServiceImpl implements UserService {
         return ApiResponse.builder().message((String) query.getSingleResult()).build();
     }
 
+    @SneakyThrows
     @Override
     @Transactional
 //    @PreAuthorize("hasRole('USER') || hasRole('ADMIN')")
@@ -254,7 +263,7 @@ public class UserServiceImpl implements UserService {
             newPayment.setParameter(2, paymentStatus).executeUpdate();
 
             // Thông tin events
-            List<Object[]> eventMail = manager.createNativeQuery("select e.id, e.name, " +
+            List<Object[]> eventMails = manager.createNativeQuery("select e.id, e.name, " +
                             "group_concat(c.id SEPARATOR ', ') as tType, " +
                             "group_concat(concat(c.quantity, ' vé loại ', ct.type_name) SEPARATOR ', ') as ticket " +
                             "from Cart c " +
@@ -264,68 +273,75 @@ public class UserServiceImpl implements UserService {
                             "group by e.id, e.name")
                     .setParameter("cartId", response.getCartIds()).getResultList();
 
-            // Tạo invoice
-            for(int i : response.getCartIds()){
-                Object[] obj = (Object[]) manager.createNativeQuery("select c.CreateTicket_id, c.cost from Cart c where c.id = :cartId")
-                                .setParameter("cartId", i).getSingleResult();
+            for(Object[] row : eventMails){
+                Map<String, String> qrCode = new HashMap<>();
+                int[] cartIds = Arrays.stream(row[2].toString().split(", ")).mapToInt(Integer::parseInt).toArray();
 
-                int ctId = (int) obj[0];
-                double price = (double)obj[1];
+                // Cập nhật
+                for(int cartId : cartIds){
+                    Object[] obj = (Object[]) manager.createNativeQuery("select c.CreateTicket_id, c.cost, ct.type_name, c.quantity " +
+                                    "from Cart c " +
+                                    "join createTicket ct on c.CreateTicket_id = ct.id " +
+                                    "where c.id = :cartId")
+                            .setParameter("cartId", cartId).getSingleResult();
 
-                // Insert invoice
-                manager.createNativeQuery("insert into invoice (`Cart_id`, `Payment_id`) " +
-                        "values (:cartId, :paymentId)").setParameter("cartId",i)
-                        .setParameter("paymentId", response.getBankTranNo()).executeUpdate();
+                    int ctId = Integer.parseInt(String.valueOf(obj[0]));
+                    double price = Double.parseDouble(String.valueOf(obj[1]));
+                    String ctName = (String)obj[2];
+                    int quantity = Integer.parseInt(String.valueOf(obj[3]));
 
-                // Update cart status
-                manager.createNativeQuery("update cart set status = 1 where id = :cartId")
-                        .setParameter("cartId", i).executeUpdate();
+                    // Insert invoice
+                    manager.createNativeQuery("insert into invoice (`Cart_id`, `Payment_id`) " +
+                                    "values (:cartId, :paymentId)").setParameter("cartId",cartId)
+                            .setParameter("paymentId", response.getBankTranNo()).executeUpdate();
 
-                // Update event revenue
-                manager.createNativeQuery("update revenue r set r.totalRevenue = r.totalRevenue + :price where r.Events_id in " +
-                        "(SELECT ct.Events_id " +
-                        "FROM createticket ct " +
-                        "JOIN events e ON ct.Events_id = e.id " +
-                        "WHERE ct.id = :ctId);")
-                        .setParameter("price", price)
-                        .setParameter("ctId", ctId).executeUpdate();
+                    // Update cart status
+                    manager.createNativeQuery("update cart c set c.status = 1 where c.id = :cartId")
+                            .setParameter("cartId", cartId).executeUpdate();
 
-                // Update ticket quantity
-                manager.createNativeQuery("update createticket ct set ct.available = ct.available - " +
-                                "(select quantity from cart where id = :cartId) where ct.id = :ctId")
-                        .setParameter("cartId", i)
-                        .setParameter("ctId", ctId).executeUpdate();
+                    // Update event revenue
+                    manager.createNativeQuery("update revenue r set r.totalRevenue = r.totalRevenue + :price where r.Events_id in " +
+                                    "(SELECT ct.Events_id " +
+                                    "FROM createticket ct " +
+                                    "JOIN events e ON ct.Events_id = e.id " +
+                                    "WHERE ct.id = :ctId);")
+                            .setParameter("price", price)
+                            .setParameter("ctId", ctId).executeUpdate();
 
-                // Update user's points
-                manager.createNativeQuery("update users u set u.point = u.point + :point where u.id = :uid")
-                        .setParameter("point", ((Double) (response.getAmount()/10000.0)).intValue())
-                        .setParameter("uid", response.getUId()).executeUpdate();
-            }
+                    // Update ticket quantity
+                    manager.createNativeQuery("update createticket ct set ct.available = ct.available - " +
+                                    "(select quantity from cart where id = :cartId) where ct.id = :ctId")
+                            .setParameter("cartId", cartId)
+                            .setParameter("ctId", ctId).executeUpdate();
 
-            for(Object[] row : eventMail){
-                // Generate ticket
-                UUID id = UUID.randomUUID();
-                manager.createNativeQuery("insert into ticketrelease (`id`, `status`, `Cart_id`) " +
-                                "values (?,?,?)")
-                        .setParameter(1, id.toString())
-                        .setParameter(2, 1)
-                        .setParameter(3, row[2]).executeUpdate();
+                    // Update user's points
+                    manager.createNativeQuery("update users u set u.point = u.point + :point where u.id = :uid")
+                            .setParameter("point", ((Double) (response.getAmount()/10000.0)).intValue())
+                            .setParameter("uid", response.getUId()).executeUpdate();
 
+                    for(int i = 0; i < quantity; i++){
+                        // Generate ticket
+                        UUID id = UUID.randomUUID();
+                        try{
+                            String qrCodeTxt = QRCodeService.generateQRCode(id.toString());
+                            manager.createNativeQuery("insert into ticketrelease (`id`, `qrcode`, `status`, `Cart_id`) " +
+                                            "values (?,?,?,?)")
+                                    .setParameter(1, id.toString())
+                                    .setParameter(2, qrCodeTxt)
+                                    .setParameter(3, 1)
+                                    .setParameter(4, cartId).executeUpdate();
 
-                try{
-                    String qrCodeTxt = QRCodeService.generateQRCode(id.toString());
+                            qrCode.put(id.toString(), qrCodeTxt);
+                        } catch (Exception e) {
+                            throw new AppException(ErrorCode.UNCATEGORIZED_EXCEPTION);
+                        }
+                    }
+                }
 
-                    manager.createNativeQuery("update ticketrelease t set t.qrcode = :qrcode " +
-                                    "where t.Cart_id = :cartId").setParameter("qrcode", qrCodeTxt)
-                            .setParameter("cartId", row[2]).executeUpdate();
-
-
-                    qrcodeService.sendQR(qrCodeTxt, response.getEmail(), eventMail);
+                try {
+                    qrcodeService.sendQR(qrCode, response.getEmail(), row);
                 } catch (Exception e) {
-                    manager.createNativeQuery("update ticketrelease t set t.status = :status " +
-                                    "where t.Cart_id = :cartId").setParameter("status", "Chưa tạo được mã")
-                            .setParameter("cartId", row[2]).executeUpdate();
-                    throw new RuntimeException(e);
+                    throw new AppException(ErrorCode.UNCATEGORIZED_EXCEPTION);
                 }
             }
         }else{

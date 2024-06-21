@@ -300,4 +300,10 @@ public class MerchantServiceImpl implements MerchantService {
             throw new AppException(ErrorCode.USER_NOT_EXISTED);
         }
     }
+
+    @Override
+    @Transactional
+    public void revockTicket(String qrCode) {
+        entityManager.createNativeQuery("update ticketrelease t set t.status = 0").executeUpdate();
+    }
 }
