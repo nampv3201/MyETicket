@@ -78,4 +78,11 @@ public class EventController {
         return ResponseEntity.ok(eventService.getAllCategories());
     }
 
+    @Operation(summary = "Lấy event ngẫu nhiên theo categories")
+    @GetMapping("/events-categories")
+    public ApiResponse<?> getEventsByCategoriesLimit(@RequestParam(value = "categoryId") int categoryId,
+                                                     @RequestParam(value = "limit") int limit){
+        return ApiResponse.<List<EventHome>>builder().result(eventService.getEventByCatIdWithLimit(categoryId, limit)).build();
+    }
+
 }

@@ -144,6 +144,33 @@ public class EventServiceImpl implements EventService {
     }
 
     @Override
+    public List<EventHome> getEventByCatIdWithLimit(int catId, int limit) {
+        List<Object[]> events = new ArrayList<>();
+        Query getEvent;
+        StringBuilder query = new StringBuilder("Select e.id, e.name, e.banner, e.city, e.location, e.start_booking, min(ct.price) " +
+                "from events e " +
+                "join events_has_categories ecat on e.id = ecat.Events_id " +
+                "join categories c on ecat.Categories_id = c.id " +
+                "join createticket ct on ct.Events_id = e.id " +
+                "where e.status = 'available' and c.id = :cartId ");
+
+
+        // Create Query
+        query.append(" group by e.id, e.name " +
+                "ORDER BY RAND() LIMIT :limit");
+        getEvent = manager.createNativeQuery(query.toString())
+                .setParameter("limit", limit)
+                .setParameter("cartId", catId);
+
+        try {
+            events = getEvent.getResultList();
+            return EventHomeMapper.eventHomeDTO(events);
+        }catch (EmptyResultDataAccessException e){
+            throw AppException.from(e, ErrorCode.ITEM_NOT_FOUND);
+        }
+    }
+
+    @Override
     public ApiResponse<?> getEventByCategory(String category) {
         String catName = CategoriesMapper.mapCategory(category);
         Query query = manager.createNativeQuery("Select e.id, e.name, e.banner, e.city, e.location, e.start_booking, min(ct.price) " +

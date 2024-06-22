@@ -1,5 +1,6 @@
 package com.datn.ticket.service;
 
+import com.datn.ticket.dto.EventHome;
 import com.datn.ticket.model.Categories;
 import com.datn.ticket.model.CreateTickets;
 import com.datn.ticket.dto.EventDTO;
@@ -21,4 +22,5 @@ public interface EventService {
     CreateTickets getTicketTypeUpdate(int typeId);
     List<Categories> getCatByEvent(int eventId);
     Categories getSingleCategory(int catId);
+    List<EventHome> getEventByCatIdWithLimit(int catId, int limit);
 }
