@@ -24,7 +24,7 @@ public interface UserService {
     void updateCart(UpdateCartRequest request);
     ApiResponse checkQuantity(int cartId);
     String payment(PaymentResponse response);
-    List<HistoryResponse> myHistory();
-    HistoryResponseDetail getHistoryResponseDetail(String id);
+    UserTicketResponse myHistory();
+    List<HistoryResponseDetail> getHistoryResponseDetail(String pId, String eId);
     ApiResponse<?> signUpMerchant(SignUpMerchantInApp signUpRequest) throws ParseException, JOSEException;
 }

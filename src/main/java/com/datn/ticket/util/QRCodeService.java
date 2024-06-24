@@ -66,7 +66,7 @@ public class QRCodeService {
         return result.getText();
     }
 
-//    @Async
+    @Async
     public void sendQR(Map<String, String> qrMap, String email, Object[] eventMail) throws MessagingException, UnsupportedEncodingException {
         MimeMessage message = emailSender.createMimeMessage();
         MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
@@ -76,12 +76,12 @@ public class QRCodeService {
         helper.setSubject((String) eventMail[1]);
 
         StringBuilder txtMail = new StringBuilder();
-        txtMail.append(String.format("Bạn đã đặt vé cho sự kiện: %s.Trong đó bao gồm:\n", eventMail[1]));
+        txtMail.append(String.format("Bạn đã đặt vé cho sự kiện: %s. Trong đó bao gồm:\n", eventMail[1]));
         String[] type = eventMail[3].toString().split(",");
         for(String txt : type){
             txtMail.append(String.format("%s\n", txt));
         }
-        txtMail.append(String.format("Chi tiết sự kiện: <a href='http://localhost:8080/home/%s'>Click here</a>", eventMail[0]));
+        txtMail.append(String.format("Chi tiết sự kiện: 'http://localhost:8080/home/%s' ", eventMail[0]));
         helper.setText(txtMail.toString());
 
         for(Map.Entry<String, String> qr : qrMap.entrySet()){

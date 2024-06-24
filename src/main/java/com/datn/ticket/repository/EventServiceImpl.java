@@ -1,6 +1,7 @@
 package com.datn.ticket.repository;
 
 import com.datn.ticket.dto.EventHome;
+import com.datn.ticket.dto.response.EventHomeResponse;
 import com.datn.ticket.exception.AppException;
 import com.datn.ticket.exception.ErrorCode;
 import com.datn.ticket.model.Categories;
@@ -84,8 +85,8 @@ public class EventServiceImpl implements EventService {
     }
 
     @Override
-    public ResponseEntity<Object> getEventByFilterWithPage(Integer offset, Integer size, Integer MerchantId, List<Integer> CategoryId, String time,
-                                                           List<String> city, String fromTime, String toTime, Double minPrice, Double maxPrice) {
+    public EventHomeResponse getEventByFilterWithPage(Integer offset, Integer size, Integer MerchantId, List<Integer> CategoryId, String time,
+                                                      List<String> city, String fromTime, String toTime, Double minPrice, Double maxPrice) {
         List<Object[]> events = new ArrayList<>();
         Query getEvent;
         StringBuilder query = new StringBuilder("Select e.id, e.name, e.banner, e.city, e.location, e.start_booking, min(ct.price) " +
@@ -137,7 +138,9 @@ public class EventServiceImpl implements EventService {
         }
         try {
             events = getEvent.getResultList();
-            return ResponseEntity.ok().body(EventHomeMapper.eventHomeDTO(events));
+            return EventHomeResponse.builder().count(events.size())
+                    .events(EventHomeMapper.eventHomeDTO(events))
+                    .build();
         }catch (EmptyResultDataAccessException e){
             throw AppException.from(e, ErrorCode.ITEM_NOT_FOUND);
         }

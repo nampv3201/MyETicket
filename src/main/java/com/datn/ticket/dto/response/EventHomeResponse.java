@@ -1,22 +1,16 @@
 package com.datn.ticket.dto.response;
-
+import com.datn.ticket.dto.EventHome;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
 
-import java.util.Date;
 import java.util.List;
-import java.util.Map;
 
 @Data
+@Builder
 @NoArgsConstructor
 @AllArgsConstructor
-@Builder
-@Getter
-@Setter
 @FieldDefaults(level = AccessLevel.PRIVATE)
-public class HistoryResponseDetail {
-    String ticketId;
-    String qrcode;
-    String typeName;
-    String status;
+public class EventHomeResponse {
+    int count;
+    List<EventHome> events;
 }

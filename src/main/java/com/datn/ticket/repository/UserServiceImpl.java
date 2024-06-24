@@ -1,6 +1,5 @@
 package com.datn.ticket.repository;
 
-import com.datn.ticket.dto.request.LogoutRequest;
 import com.datn.ticket.dto.request.RefreshRequest;
 import com.datn.ticket.dto.request.SignUpMerchantInApp;
 import com.datn.ticket.dto.response.*;
@@ -14,7 +13,6 @@ import com.datn.ticket.service.EventService;
 import com.datn.ticket.service.UserService;
 import com.datn.ticket.util.QRCodeService;
 import com.nimbusds.jose.JOSEException;
-import jakarta.mail.MessagingException;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.Query;
 import jakarta.transaction.Transactional;
@@ -25,12 +23,9 @@ import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Repository;
-import org.springframework.web.bind.annotation.RequestBody;
 
-import java.io.UnsupportedEncodingException;
 import java.text.ParseException;
 import java.util.*;
-import java.util.stream.IntStream;
 
 @Repository
 @Slf4j
@@ -84,6 +79,7 @@ public class UserServiceImpl implements UserService {
         Query query = manager.createNativeQuery("select * from account_has_role ar where ar.Account_id = :account_id " +
                 "and ar.role_id = 2").setParameter("account_id", authentication.getName());
         if (query.getResultList().size() > 0) {
+            log.info(authentication.getName());
             return ApiResponse.<AuthenticationResponse>builder().code(ErrorCode.ROLE_HAS_REGISTERED.getCode())
                     .message(ErrorCode.ROLE_HAS_REGISTERED.getMessage()).build();
         }
@@ -328,7 +324,7 @@ public class UserServiceImpl implements UserService {
                                             "values (?,?,?,?)")
                                     .setParameter(1, id.toString())
                                     .setParameter(2, qrCodeTxt)
-                                    .setParameter(3, 1)
+                                    .setParameter(3, "Chưa sử dụng")
                                     .setParameter(4, cartId).executeUpdate();
 
                             qrCode.put(id.toString(), qrCodeTxt);
@@ -353,12 +349,12 @@ public class UserServiceImpl implements UserService {
 
     @Override
     @PreAuthorize("hasRole('USER') || hasRole('ADMIN')")
-    public List<HistoryResponse> myHistory() {
+    public UserTicketResponse myHistory() {
         Query query = manager.createNativeQuery("select tr.id, e.name, " +
                 "date_format(str_to_date(e.start_time, '%Y-%m-%d %H:%i:%s'), '%Y-%m-%d'), " +
                 "date_format(str_to_date(e.start_time, '%Y-%m-%d %H:%i:%s'), '%H:%i'), " +
                 "date_format(str_to_date(e.end_time, '%Y-%m-%d %H:%i:%s'), '%H:%i'), " +
-                "date_format(str_to_date(p.payment_time, '%Y-%m-%d %H:%i:%s'), '%Y-%m-%d'), " +
+                "date_format(str_to_date(p.payment_time, '%Y-%m-%d %H:%i:%s'), '%Y-%m-%d') as paymentTime, " +
                 "Concat(e.city, ', ', e.location)" +
                 "from ticketrelease tr " +
                 "join cart c on FIND_IN_SET(c.id, tr.Cart_id) > 0 " +
@@ -366,51 +362,60 @@ public class UserServiceImpl implements UserService {
                 "join payment p on i.Payment_id = p.id " +
                 "join createticket ct on c.CreateTicket_id = ct.id " +
                 "join events e on ct.Events_id = e.id " +
-                "where c.Users_id = :uId", HistoryResponse.class)
+                "where c.Users_id = :uId " +
+                "order by paymentTime DESC", HistoryResponse.class)
                 .setParameter("uId", myInfor().getId());
 
-        return query.getResultList();
+        List<HistoryResponse> history = new ArrayList<>();
+
+        Query getPayment = manager.createNativeQuery("select p.id, date_format(str_to_date(p.payment_time, '%Y-%m-%d %H:%i:%s'), '%Y-%m-%d') as paymentTime " +
+                "from payment p " +
+                "where p.Users_id = :uId " +
+                "order by paymentTime DESC").setParameter("uId", myInfor().getId());
+
+        List<Object[]> pResponse = getPayment.getResultList();
+        for(Object[] p : pResponse){
+            HistoryResponse paymentResponse = new HistoryResponse();
+            paymentResponse.setPaymentId(String.valueOf(p[0]));
+            paymentResponse.setPaymentTime(String.valueOf(p[1]));
+
+            Query getEventHis = manager.createNativeQuery("select e.id as eventId, e.name, " +
+                    "date_format(str_to_date(e.start_time, '%Y-%m-%d %H:%i:%s'), '%Y-%m-%d'), " +
+                    "date_format(str_to_date(e.start_time, '%Y-%m-%d %H:%i:%s'), '%H:%i'), " +
+                    "date_format(str_to_date(e.end_time, '%Y-%m-%d %H:%i:%s'), '%H:%i'), " +
+                    "Concat(e.city, ', ', e.location) as location " +
+                    "from events e " +
+                    "join createticket ct on ct.Events_id = e.id " +
+                    "join cart c on c.CreateTicket_id = ct.id " +
+                    "join invoice i on i.Cart_id = c.id " +
+                    "join payment p on i.Payment_id = p.id " +
+                    "where p.id = :pId", HistoryEventResponse.class).setParameter("pId", String.valueOf(p[0]));
+
+            paymentResponse.setEvents(getEventHis.getResultList());
+
+            history.add(paymentResponse);
+        }
+        return UserTicketResponse.builder()
+                .count(history.size())
+                .ticket(history)
+                .build();
     }
 
     @Override
     @PreAuthorize("hasRole('USER') || hasRole('ADMIN')")
-    public HistoryResponseDetail getHistoryResponseDetail(String id) {
-        Query query = manager.createNativeQuery("select tr.id, tr.qrcode, e.name, " +
-                        "date_format(str_to_date(e.start_time, '%Y-%m-%d %H:%i:%s'), '%Y-%m-%d %H:%i'), " +
-                        "date_format(str_to_date(e.start_time, '%Y-%m-%d %H:%i:%s'), '%H:%i'), " +
-                        "date_format(str_to_date(e.end_time, '%Y-%m-%d %H:%i:%s'), '%H:%i'), " +
-                        "Concat(e.city, ', ', e.location), ct.type_name, c.quantity, p.payment_amount/100 " +
-                        "from cart c " +
-                        "JOIN ticketrelease tr ON FIND_IN_SET(c.id, tr.Cart_id) > 0 " +
-                        "join createticket ct on c.CreateTicket_id = ct.id " +
-                        "join invoice i on i.Cart_id = c.id " +
-                        "join payment p on i.Payment_id = p.id " +
-                        "join events e on ct.Events_id = e.id " +
-                        "where tr.id= :id")
-                .setParameter("id", id);
+    public List<HistoryResponseDetail> getHistoryResponseDetail(String pId, String eId) {
+        Query query = manager.createNativeQuery("select tr.id, tr.qrcode, ct.type_name, tr.status " +
+                        "from invoice i " +
+                        "join payment p on p.id = i.Payment_id " +
+                        "join cart c on c.id = i.Cart_id " +
+                        "join createticket ct on ct.id = c.CreateTicket_id " +
+                        "join events e on e.id = ct.Events_id " +
+                        "join ticketrelease tr on tr.Cart_id = c.id " +
+                        "where e.id = :eId and p.id = :pId", HistoryResponseDetail.class)
+                .setParameter("eId", eId)
+                .setParameter("pId", pId);
 
-        List<Object[]> response = query.getResultList();
-        List<Map<String, Object>> map = new ArrayList<>();
-
-        HistoryResponseDetail detail = new HistoryResponseDetail();
-        detail.setTicketId(response.get(0)[0].toString());
-        detail.setQrcode(response.get(0)[1].toString());
-        detail.setEventName(response.get(0)[2].toString());
-        detail.setEventDate(response.get(0)[3].toString());
-        detail.setEventStartTime(response.get(0)[4].toString());
-        detail.setEventEndTime(response.get(0)[5].toString());
-        detail.setLocation(response.get(0)[6].toString());
-        detail.setTotalPrice(Double.parseDouble(response.get(0)[9].toString()));
-
-        for(Object[] row : response){
-            Map<String, Object> myMap = new HashMap<>();
-            myMap.put("typeName", row[7]);
-            myMap.put("quantity", row[8]);
-
-            map.add(myMap);
-        }
-        detail.setTypeTicket(map);
-        return detail;
+        return (List<HistoryResponseDetail>) query.getResultList();
     }
 
     public boolean checkMerchantCondition(String license){

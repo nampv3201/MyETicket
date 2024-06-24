@@ -74,6 +74,7 @@ public class UserController {
             userService.updateUser(u);
             return ApiResponse.<UserInforResponse>builder()
                     .result(UsersMapper.INSTANCE.toUserDto(u))
+                    .message("OK")
                     .build();
         }catch (Exception e){
             throw new AppException(ErrorCode.USER_NOT_EXISTED);
@@ -144,7 +145,7 @@ public class UserController {
     @GetMapping("/history")
     public ApiResponse<?> getHistory(){
         try{
-            return ApiResponse.<List<HistoryResponse>>builder()
+            return ApiResponse.<UserTicketResponse>builder()
                     .result(userService.myHistory())
                     .build();
         }catch (AppException e){
@@ -157,10 +158,11 @@ public class UserController {
     }
 
     @Operation(summary = "Lấy chi tiết lịch sử mua hàng")
-    @GetMapping("/history/{id}")
-    public ApiResponse<?> getHistoryDetail(@PathVariable("id") String id){
+    @GetMapping("/history/{pId}/{eId}")
+    public ApiResponse<?> getHistoryDetail(@PathVariable("pId") String pId,
+                                           @PathVariable("eId") String eId){
         try{
-            return ApiResponse.<HistoryResponseDetail>builder().result(userService.getHistoryResponseDetail(id)).build();
+            return ApiResponse.<List<HistoryResponseDetail>>builder().result(userService.getHistoryResponseDetail(pId, eId)).build();
         }catch (AppException e){
             throw new AppException(e.getErrorCode());
         }catch (EmptyResultDataAccessException e){

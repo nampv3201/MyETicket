@@ -57,7 +57,6 @@ public class AccountController {
         a.setPassword(passwordEncoder.encode(request.getPassword()));
         a.setEmail(request.getEmail());
         a.setCreateAt(java.sql.Date.valueOf(LocalDate.now()));
-//        accountService.newAccount(a, request.getRole());
         try{
             accountService.newAccount(a, request);
         }catch(Exception e){

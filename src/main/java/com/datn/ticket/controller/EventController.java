@@ -3,6 +3,7 @@ package com.datn.ticket.controller;
 import com.datn.ticket.dto.EventDTO;
 import com.datn.ticket.dto.EventHome;
 import com.datn.ticket.dto.response.ApiResponse;
+import com.datn.ticket.dto.response.EventHomeResponse;
 import com.datn.ticket.dto.response.TicketTypeResponse;
 import com.datn.ticket.model.mapper.EventMapperNew;
 import com.datn.ticket.service.EventService;
@@ -46,17 +47,19 @@ public class EventController {
 
     @Operation(summary = "Phân trang")
     @GetMapping("/event")
-    public ResponseEntity<Object> getEventPaging(@RequestParam(value = "offset", defaultValue = "0") int offset,
-                                                 @RequestParam(value = "size", defaultValue = "10") int size,
-                                                 @RequestParam(value = "merchantId", required = false) Integer MerchantId,
-                                                 @RequestParam(value = "categoryId",required = false) List<Integer> CategoryId,
-                                                 @RequestParam(value = "time",required = false) String time,
-                                                 @RequestParam(value = "city", required = false) List<String> city,
-                                                 @RequestParam(value = "fromTime", required = false, defaultValue = "2020-01-01") String fromTime,
-                                                 @RequestParam(value = "toTime", required = false, defaultValue = "2999-01-01") String toTime,
-                                                 @RequestParam(value = "minPrice",required = false, defaultValue = "0.0") Double minPrice,
-                                                 @RequestParam(value = "maxPrice",required = false, defaultValue = "100000000.0") Double maxPrice){
-        return eventService.getEventByFilterWithPage(offset, size, MerchantId, CategoryId, time, city, fromTime, toTime, minPrice, maxPrice);
+    public ApiResponse<EventHomeResponse> getEventPaging(@RequestParam(value = "offset", defaultValue = "0") int offset,
+                                                         @RequestParam(value = "size", defaultValue = "10") int size,
+                                                         @RequestParam(value = "merchantId", required = false) Integer MerchantId,
+                                                         @RequestParam(value = "categoryId",required = false) List<Integer> CategoryId,
+                                                         @RequestParam(value = "time",required = false) String time,
+                                                         @RequestParam(value = "city", required = false) List<String> city,
+                                                         @RequestParam(value = "fromTime", required = false, defaultValue = "2020-01-01") String fromTime,
+                                                         @RequestParam(value = "toTime", required = false, defaultValue = "2999-01-01") String toTime,
+                                                         @RequestParam(value = "minPrice",required = false, defaultValue = "0.0") Double minPrice,
+                                                         @RequestParam(value = "maxPrice",required = false, defaultValue = "100000000.0") Double maxPrice){
+        return ApiResponse.<EventHomeResponse>builder()
+                .result(eventService.getEventByFilterWithPage(offset, size, MerchantId, CategoryId, time, city, fromTime, toTime, minPrice, maxPrice))
+                .build();
     }
     @Operation(summary = "Lấy theo danh mục")
     @GetMapping("search/{categoryName}")
