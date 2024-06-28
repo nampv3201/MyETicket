@@ -39,7 +39,7 @@ public class PaymentController {
     @Autowired
     EventService eventService;
 
-    @GetMapping("/direct_payment")
+    @PostMapping("/direct_payment")
     public ApiResponse<?> directPayment(@RequestBody DirectPaymentRequest requests) throws UnsupportedEncodingException {
         List<Integer> cartIds = new ArrayList<>();
         double totalCost = 0;
@@ -74,7 +74,7 @@ public class PaymentController {
                     .build();
         }
     }
-    @GetMapping("/create_payment")
+    @PostMapping("/create_payment")
     public ApiResponse<?> createPayment(@RequestBody PaymentRequest request) throws UnsupportedEncodingException {
 
         double totalCost = 0;

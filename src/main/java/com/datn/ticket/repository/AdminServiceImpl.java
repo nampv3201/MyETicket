@@ -173,7 +173,7 @@ public class AdminServiceImpl implements AdminService {
     @PreAuthorize("hasRole('ADMIN')")
     public ApiResponse<?> allEvents(Integer offset, Integer size, String merchantName, List<Integer> categoriesId, String time,
                                     List<String> city, String fromTime, String toTime, Double minPrice, Double maxPrice, String status) {
-        log.info(String.valueOf(categoriesId.size()));
+
         List<Object[]> events = new ArrayList<>();
         Query getEvent;
         StringBuilder query = new StringBuilder("select e.id, e.name, concat(e.city, ', ', e.location), GROUP_CONCAT(DISTINCT c.category_name SEPARATOR ', '), " +
