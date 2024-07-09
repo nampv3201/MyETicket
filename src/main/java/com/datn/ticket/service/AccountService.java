@@ -20,6 +20,8 @@ public interface AccountService {
     void newAccount(Accounts account, SignUpRequest request);
     Accounts getUsername(String username);
     Accounts getEmail(String email);
+
+    boolean checkLicense(String license);
     ResponseEntity<AuthenticationResponse> signIn(String username, String password);
     IntrospectResponse introspect(IntrospectRequest request) throws JOSEException, ParseException;
     Roles getRole(Integer id);

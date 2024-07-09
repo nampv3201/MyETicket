@@ -12,8 +12,8 @@ import java.util.Date;
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class PaymentHistoryResponse {
     String paymentId;
-    Date paymentTime;
+    String paymentTime;
     String paymentStatus;
-    double paymentAmount;
+    String paymentAmount;
     int uId;
 }

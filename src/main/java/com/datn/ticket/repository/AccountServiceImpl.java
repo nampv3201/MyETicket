@@ -93,7 +93,6 @@ public class AccountServiceImpl implements AccountService {
             m.setAccounts(account);
             manager.persist(m);
             query.setParameter("roleName", "MERCHANT").executeUpdate();
-            log.info("Merchant");
         }
 
         Users u = new Users();
@@ -140,29 +139,32 @@ public class AccountServiceImpl implements AccountService {
         ArrayList<Integer> roles = new ArrayList<>();
         try{
             List<Object[]> results = customQuery.getResultList();
-            Accounts a = new Accounts();
-            a.setId((Integer) results.get(0)[0]);
-            a.setUsername((String) results.get(0)[1]);
-            a.setPassword((String) results.get(0)[2]);
-            a.setCreateAt((Date) results.get(0)[3]);
-            if(!passwordEncoder.matches(password, a.getPassword())){
-                return ResponseEntity.status(HttpStatus.NOT_FOUND).body(AuthenticationResponse.builder().token(null).authenticated(false).build());
-            }
-            for(Object[] r : results){
-                roles.add((Integer) r[4]);
-            }
-            a.setRoles(roles);
-            if(Byte.toUnsignedInt((Byte) results.get(0)[5]) == 1){
-                var token = generateToken(a);
-                SignedJWT signedJWT = SignedJWT.parse(token);
+            if(results.size() != 0 ){
+                Accounts a = new Accounts();
+                a.setId((Integer) results.get(0)[0]);
+                a.setUsername((String) results.get(0)[1]);
+                a.setPassword((String) results.get(0)[2]);
+                a.setCreateAt((Date) results.get(0)[3]);
+                if(!passwordEncoder.matches(password, a.getPassword())){
+                    return ResponseEntity.status(HttpStatus.NOT_FOUND).body(AuthenticationResponse.builder().token(null).authenticated(false).build());
+                }
+                for(Object[] r : results){
+                    roles.add((Integer) r[4]);
+                }
+                a.setRoles(roles);
+                if(Byte.toUnsignedInt((Byte) results.get(0)[5]) == 1){
+                    var token = generateToken(a);
+                    SignedJWT signedJWT = SignedJWT.parse(token);
 
-                return ResponseEntity.ok(AuthenticationResponse.builder()
-                        .token(token)
-                        .authenticated(true)
-                        .username(results.get(0)[1].toString())
-                        .role(buildScope(a))
-                        .build());
+                    return ResponseEntity.ok(AuthenticationResponse.builder()
+                            .token(token)
+                            .authenticated(true)
+                            .username(results.get(0)[1].toString())
+                            .role(buildScope(a))
+                            .build());
+                }
             }
+
             return ResponseEntity.status(HttpStatus.FORBIDDEN).body(AuthenticationResponse.builder().token(null).authenticated(false).build());
         }catch (NoResultException e) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(AuthenticationResponse.builder().token(null).authenticated(false).build());
@@ -426,5 +428,15 @@ public class AccountServiceImpl implements AccountService {
         }
 
         return otp.toString();
+    }
+
+    @Override
+    public boolean checkLicense(String license){
+        boolean checked = true;
+        if(manager.createNativeQuery("select m.license from Merchants m where m.license = :license")
+                .setParameter("license", license).getResultList() != null){
+            checked = false;
+        }
+        return checked;
     }
 }

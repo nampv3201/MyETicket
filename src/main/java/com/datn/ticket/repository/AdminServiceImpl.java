@@ -359,13 +359,13 @@ public class AdminServiceImpl implements AdminService {
     }
 
     @Override
+    @Transactional
     public ApiResponse<?> getPaymentHistory(String paymentDate, String status, Integer uId) {
-        StringBuilder sql = new StringBuilder("Select p.id, p.payment_time, p.payment_status, c.cost, u.id from payment p " +
-                "join invoice i on i.Payment_id = p.id " +
-                "join cart c on i.Cart_id = c.id " +
-                "join createticket ct on c.CreateTicket_id = ct.id " +
-                "join events e on e.id = ct.Events_id " +
-                "join users u on c.Users_id = u.id " +
+        Query timeQuery = manager.createNativeQuery("SET time_zone = '+7:00'");
+        timeQuery.executeUpdate();
+
+        StringBuilder sql = new StringBuilder("Select p.id, cast(p.payment_time as char), p.payment_status, cast(p.payment_amount as char), u.id from payment p " +
+                "join users u on p.Users_id = u.id " +
                 "where 1=1 ");
 
         if (paymentDate != null) {
@@ -389,18 +389,18 @@ public class AdminServiceImpl implements AdminService {
             query.setParameter("uId", uId);
         }
 
-        try {
+//        try {
             return ApiResponse.<List<PaymentHistoryResponse>>builder()
                     .result(query.getResultList())
                     .build();
-        }catch (NoResultException e){
-            log.error("Not found");
-            return ApiResponse.<List<PaymentHistoryResponse>>builder().message(e.getMessage()).build();
-        }catch(AppException e){
-            throw new AppException(e.getErrorCode());
-        }catch (Exception e){
-            log.error(e.getMessage());
-            return ApiResponse.<List<PaymentHistoryResponse>>builder().message(e.getMessage()).build();
-        }
+//        }catch (NoResultException e){
+//            log.error("Not found");
+//            return ApiResponse.<List<PaymentHistoryResponse>>builder().message(e.getMessage()).build();
+//        }catch(AppException e){
+//            throw new AppException(e.getErrorCode());
+//        }catch (Exception e){
+//            log.error(e.getMessage());
+//            return ApiResponse.<List<PaymentHistoryResponse>>builder().message(e.getMessage()).build();
+//        }
     }
 }

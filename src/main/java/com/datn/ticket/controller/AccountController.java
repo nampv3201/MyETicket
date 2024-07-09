@@ -51,6 +51,11 @@ public class AccountController {
         if(accountService.getEmail(request.getEmail()) != null){
             throw new AppException(ErrorCode.USER_EXISTED);
         }
+        if(request.getMerchantInfor() != null){
+            if(!accountService.checkLicense(request.getMerchantInfor().getLicense())){
+                throw new AppException(ErrorCode.LICENSE_HAS_REGISTERED);
+            }
+        }
 
         Accounts a = new Accounts();
         a.setUsername(request.getUsername());

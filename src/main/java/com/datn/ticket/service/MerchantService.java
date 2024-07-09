@@ -24,5 +24,7 @@ public interface MerchantService {
     String deEvents(int eventId);
     Merchants myInfor();
 
-    void revockTicket(String qrCode);
+    ApiResponse<?> eventBookingHistory(Integer eventId);
+
+    int revockTicket(String id);
 }

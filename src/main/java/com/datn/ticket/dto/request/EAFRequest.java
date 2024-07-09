@@ -2,6 +2,7 @@ package com.datn.ticket.dto.request;
 
 import lombok.*;
 import lombok.experimental.FieldDefaults;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 
@@ -15,7 +16,6 @@ public class EAFRequest {
     String eventDescription;
     String eventCity;
     String eventLocation;
-    String eventBanner;
     List<Integer> categories;
     int eventLimit;
 }

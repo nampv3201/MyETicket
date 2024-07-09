@@ -148,7 +148,7 @@ public class AdminController {
     @PostMapping("/eventMgmt/change-status/{id}")
     public ApiResponse<?> changeEventStatus(@PathVariable("id") int eventId,
                                             @RequestBody(required = false) Map<String, String> requestMap){
-//        try{
+        try{
             if(requestMap == null){
                 adminService.changeEventStatus(eventId, null);
             }
@@ -158,9 +158,9 @@ public class AdminController {
             return ApiResponse.builder()
                     .message("Thành công")
                     .build();
-//        }catch (Exception e){
-//            throw new AppException(ErrorCode.UNCATEGORIZED_EXCEPTION);
-//        }
+        }catch (Exception e){
+            throw new AppException(ErrorCode.ITEM_NOT_FOUND);
+        }
     }
 
     @Operation(summary = "Thống kê sự kiện theo merchant")
@@ -243,11 +243,11 @@ public class AdminController {
     public ApiResponse<?> pHistory(@RequestParam(value = "paymentDate", required = false) String pDate,
                                    @RequestParam(value = "status", required = false) String status,
                                    @RequestParam(value = "uId", required = false) Integer uId){
-        try{
+//        try{
             return adminService.getPaymentHistory(pDate, status, uId);
-        }catch (Exception e){
-            throw new AppException(ErrorCode.UNCATEGORIZED_EXCEPTION);
-        }
+//        }catch (Exception e){
+//            throw new AppException(ErrorCode.UNCATEGORIZED_EXCEPTION);
+//        }
     }
 
     @Operation(summary = "Payment Details")

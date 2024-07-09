@@ -92,7 +92,7 @@ public class EventServiceImpl implements EventService {
         StringBuilder query = new StringBuilder("Select e.id, e.name, e.banner, e.city, e.location, e.start_booking, min(ct.price) " +
                 "from events e " +
                 "join createticket ct on ct.Events_id = e.id " +
-                "where e.status = 'available' ");
+                "where e.status = 'available' and e.deleted = 0 ");
 
 
         // Add query by filtering

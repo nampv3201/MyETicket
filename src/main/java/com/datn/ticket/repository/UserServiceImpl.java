@@ -191,7 +191,8 @@ public class UserServiceImpl implements UserService {
     @Override
     @PreAuthorize("hasRole('USER') || hasRole('ADMIN')")
     public List<CartResponse> myCart() {
-        String query = "select c.id as Cart_id, ct.id as TicketType_id, ct.type_name, c.quantity, ct.available, c.cost, e.id as Event_id, e.name from cart c " +
+        String query = "select c.id as Cart_id, ct.id as TicketType_id, ct.type_name, c.quantity, ct.available, c.cost, e.id as Event_id, e.name " +
+                "from cart c " +
                 "join createticket ct on c.CreateTicket_id = ct.id " +
                 "join events e on ct.Events_id = e.id " +
                 "where c.Users_id = :UID and c.status = 0";
@@ -242,7 +243,7 @@ public class UserServiceImpl implements UserService {
     @SneakyThrows
     @Override
     @Transactional
-//    @PreAuthorize("hasRole('USER') || hasRole('ADMIN')")
+    @PreAuthorize("hasRole('USER') || hasRole('ADMIN')")
     public String payment(PaymentResponse response) {
         String paymentStatus;
 
@@ -256,7 +257,7 @@ public class UserServiceImpl implements UserService {
 
         if(response.getResponseCode().equals("00")){
             paymentStatus = "Thanh toán thành công, vé sẽ sớm được gửi vào email của bạn.";
-            newPayment.setParameter(2, paymentStatus).executeUpdate();
+            newPayment.setParameter(2, "Thanh toán thành công").executeUpdate();
 
             // Thông tin events
             List<Object[]> eventMails = manager.createNativeQuery("select e.id, e.name, " +
@@ -350,22 +351,6 @@ public class UserServiceImpl implements UserService {
     @Override
     @PreAuthorize("hasRole('USER') || hasRole('ADMIN')")
     public UserTicketResponse myHistory() {
-        Query query = manager.createNativeQuery("select tr.id, e.name, " +
-                "date_format(str_to_date(e.start_time, '%Y-%m-%d %H:%i:%s'), '%Y-%m-%d'), " +
-                "date_format(str_to_date(e.start_time, '%Y-%m-%d %H:%i:%s'), '%H:%i'), " +
-                "date_format(str_to_date(e.end_time, '%Y-%m-%d %H:%i:%s'), '%H:%i'), " +
-                "date_format(str_to_date(p.payment_time, '%Y-%m-%d %H:%i:%s'), '%Y-%m-%d') as paymentTime, " +
-                "Concat(e.city, ', ', e.location)" +
-                "from ticketrelease tr " +
-                "join cart c on FIND_IN_SET(c.id, tr.Cart_id) > 0 " +
-                "join invoice i on i.Cart_id = c.id " +
-                "join payment p on i.Payment_id = p.id " +
-                "join createticket ct on c.CreateTicket_id = ct.id " +
-                "join events e on ct.Events_id = e.id " +
-                "where c.Users_id = :uId " +
-                "order by paymentTime DESC", HistoryResponse.class)
-                .setParameter("uId", myInfor().getId());
-
         List<HistoryResponse> history = new ArrayList<>();
 
         Query getPayment = manager.createNativeQuery("select p.id, date_format(str_to_date(p.payment_time, '%Y-%m-%d %H:%i:%s'), '%Y-%m-%d') as paymentTime " +
@@ -379,7 +364,7 @@ public class UserServiceImpl implements UserService {
             paymentResponse.setPaymentId(String.valueOf(p[0]));
             paymentResponse.setPaymentTime(String.valueOf(p[1]));
 
-            Query getEventHis = manager.createNativeQuery("select e.id as eventId, e.name, " +
+            Query getEventHis = manager.createNativeQuery("select distinct e.id as eventId, e.name, " +
                     "date_format(str_to_date(e.start_time, '%Y-%m-%d %H:%i:%s'), '%Y-%m-%d'), " +
                     "date_format(str_to_date(e.start_time, '%Y-%m-%d %H:%i:%s'), '%H:%i'), " +
                     "date_format(str_to_date(e.end_time, '%Y-%m-%d %H:%i:%s'), '%H:%i'), " +

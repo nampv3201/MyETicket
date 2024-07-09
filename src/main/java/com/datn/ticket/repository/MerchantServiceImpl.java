@@ -1,5 +1,6 @@
 package com.datn.ticket.repository;
 
+import com.datn.ticket.dto.response.EventBookingResponse;
 import com.datn.ticket.exception.AppException;
 import com.datn.ticket.exception.ErrorCode;
 import com.datn.ticket.model.*;
@@ -13,6 +14,7 @@ import jakarta.persistence.NoResultException;
 import jakarta.persistence.Query;
 import jakarta.persistence.TypedQuery;
 import jakarta.transaction.Transactional;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -23,6 +25,7 @@ import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.List;
 
+@Slf4j
 @Repository
 public class MerchantServiceImpl implements MerchantService {
     private final EntityManager entityManager;
@@ -129,8 +132,9 @@ public class MerchantServiceImpl implements MerchantService {
     @Override
     @PreAuthorize("hasRole('MERCHANT') || hasRole('ADMIN')")
     public Events getEventUpdate(int eventId) {
-        TypedQuery<Events> eventQuery = entityManager.createQuery("Select e from Events e where e.id = :id", Events.class);
-        eventQuery.setParameter("id", eventId);
+        TypedQuery<Events> eventQuery = entityManager.createQuery("Select e from Events e where e.id = :id and e.merchants.id = :merchantId", Events.class);
+        eventQuery.setParameter("id", eventId)
+                .setParameter("merchantId", myInfor().getId());
 
         return eventQuery.getSingleResult();
     }
@@ -151,11 +155,13 @@ public class MerchantServiceImpl implements MerchantService {
         if(CategoryId != null) {
             query.append("and e.id in (select ecat.Events_id from events_has_categories ecat where ecat.Categories_id in :CategoryId) ");
         }
-        if(time.equals("before")){
-            query.append("and e.end_time < now() ");
-        }
-        if(time.equals("after")){
-            query.append("and e.end_time > now() ");
+        if(time != null){
+            if(time.equals("before")){
+                query.append("and e.end_time < now() ");
+            }
+            if(time.equals("after")){
+                query.append("and e.end_time > now() ");
+            }
         }
         if(city != null){
             query.append("and e.city = :city ");
@@ -247,11 +253,12 @@ public class MerchantServiceImpl implements MerchantService {
                 "join categories cat on ecat.Categories_id = cat.id " +
                 "left join cart c on c.CreateTicket_id = ct.id " +
                 "left join invoice i on i.Cart_id = c.id " +
-                "where e.id = :eventId " +
+                "where e.id = :eventId and e.Merchants_id = :merchantId " +
                 "group by ct.type_name, ct.id, ct.count";
 
         List<Object[]> resultListNav = entityManager.createNativeQuery(query, Object[].class)
                 .setParameter("eventId", eventId)
+                .setParameter("merchantId", myInfor().getId())
                 .getResultList();
 
         List<StatisticsDetail> dtos = new ArrayList<>();
@@ -278,8 +285,9 @@ public class MerchantServiceImpl implements MerchantService {
     @Transactional
     public String deEvents(int id) {
         try{
-            entityManager.createNativeQuery("update events set deleted = not deleted where id = :id")
+            entityManager.createNativeQuery("update events set deleted = not deleted where id = :id and Merchants_id = :merchantId")
                     .setParameter("id", id)
+                    .setParameter("merchantId", myInfor().getId())
                     .executeUpdate();
             return "Thành công";
         }catch (Exception e){
@@ -302,8 +310,39 @@ public class MerchantServiceImpl implements MerchantService {
     }
 
     @Override
+    public ApiResponse<?> eventBookingHistory(Integer eventId) {
+        Query query = entityManager.createNativeQuery("Select distinct u.id, u.name, cast(p.payment_time as char) " +
+                "from payment p " +
+                "join invoice i on i.Payment_id = p.id " +
+                "join cart c on c.id = i.Cart_id " +
+                "join createticket ct on ct.id = c.CreateTicket_id " +
+                "join users u on u.id = p.Users_id " +
+                "join events e on e.id = ct.Events_id " +
+                "where e.id = :eventId and e.Merchants_id = :merchantId", EventBookingResponse.class)
+                .setParameter("eventId", eventId)
+                .setParameter("merchantId", myInfor().getId());
+
+        try {
+            List<EventBookingResponse> result = query.getResultList();
+            return ApiResponse.<List<EventBookingResponse>>builder()
+                    .result(result)
+                    .build();
+        }catch (Exception ex){
+            throw new AppException(ErrorCode.UNCATEGORIZED_EXCEPTION);
+        }
+    }
+
+    @Override
     @Transactional
-    public void revockTicket(String qrCode) {
-        entityManager.createNativeQuery("update ticketrelease t set t.status = 0").executeUpdate();
+    public int revockTicket(String id) {
+        return entityManager.createNativeQuery("update ticketrelease tr " +
+                "join cart c on c.id = tr.Cart_id " +
+                "join createticket ct on c.Createticket_id = ct.id " +
+                "join events e on e.id = ct.Events_id " +
+                "join merchants m on e.Merchants_id = m.id " +
+                "set tr.status = 'Đã sử dụng' " +
+                "where tr.id = :id and m.id = :mId")
+                .setParameter("id", id)
+                .setParameter("mId", myInfor().getId()).executeUpdate();
     }
 }

@@ -2,6 +2,7 @@ package com.datn.ticket.dto.request;
 
 import lombok.*;
 import lombok.experimental.FieldDefaults;
+import org.springframework.web.multipart.MultipartFile;
 
 @Data
 @NoArgsConstructor
@@ -13,6 +14,6 @@ public class EUFRequest {
     String eventDescription;
     String eventCity;
     String eventLocation;
-    String eventBanner;
+    MultipartFile eventBanner;
     int eventLimit;
 }

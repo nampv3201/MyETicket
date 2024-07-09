@@ -5,6 +5,7 @@ import com.datn.ticket.model.Events;
 import com.datn.ticket.dto.response.CreateTicketsResponse;
 import com.datn.ticket.dto.EventDTO;
 
+import java.util.Base64;
 import java.util.List;
 
 public class EventMapper {

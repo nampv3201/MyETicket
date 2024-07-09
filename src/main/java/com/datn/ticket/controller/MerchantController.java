@@ -27,10 +27,13 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.io.IOException;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Base64;
 import java.util.List;
 
 @RestController
@@ -51,7 +54,7 @@ public class MerchantController {
 
     @Operation(summary = "Lấy thông tin của merchant đang đăng nhập")
     @GetMapping("/profile")
-    public ApiResponse<MerchantsResponse> getMyInfor(){
+    public ApiResponse<MerchantsResponse> getMyInfor() {
         return ApiResponse.<MerchantsResponse>builder()
                 .result(MerchantMapper.INSTANCE.merchantsDTO(merchantService.myInfor()))
                 .build();
@@ -59,7 +62,7 @@ public class MerchantController {
 
     @Operation(summary = "Cập nhật thông tin cá nhân của merchant")
     @PostMapping("/profile/update")
-    public ApiResponse<?> updateMerchantInfor(@RequestBody MURequest muRequest){
+    public ApiResponse<?> updateMerchantInfor(@RequestBody MURequest muRequest) {
         Merchants m = merchantService.myInfor();
         m.setName(muRequest.getName());
         m.setAddress(muRequest.getAddress());
@@ -73,33 +76,48 @@ public class MerchantController {
 
     @Operation(summary = "Tạo mới event - Bước 1")
     @PostMapping("/add-event")
-    public ApiResponse addEvent(@RequestBody EAFRequest eafRequest) throws ParseException{
+    public ApiResponse addEvent(@RequestBody EAFRequest eafRequest) throws ParseException, IOException {
         HttpSession session = request.getSession(true);
         session.setMaxInactiveInterval(30 * 60);
         Events newEvent = new Events();
 
-        try{
-            newEvent.setName(eafRequest.getEventName());
-            newEvent.setDescription(eafRequest.getEventDescription());
-            newEvent.setCity(eafRequest.getEventCity());
-            newEvent.setLocation(eafRequest.getEventLocation());
-            newEvent.setBanner(eafRequest.getEventBanner());
-            newEvent.setMax_limit(eafRequest.getEventLimit());
-            newEvent.setStatus("pending");
-            newEvent.setDeleted(0);
+//        try{
+        newEvent.setName(eafRequest.getEventName());
+        newEvent.setDescription(eafRequest.getEventDescription());
+        newEvent.setCity(eafRequest.getEventCity());
+        newEvent.setLocation(eafRequest.getEventLocation());
+        newEvent.setMax_limit(eafRequest.getEventLimit());
+        newEvent.setStatus("pending");
+        newEvent.setDeleted(0);
 
-            session.setAttribute("tempEvent", newEvent);
-            session.setAttribute("tempCategories", eafRequest.getCategories());
-            return ApiResponse.builder().message("Tiếp tục").build();
-        }catch(Exception e){
+        session.setAttribute("tempEvent", newEvent);
+        session.setAttribute("tempCategories", eafRequest.getCategories());
+        return ApiResponse.builder().message("Tiếp tục").build();
+//        }catch(Exception e){
+//            throw new AppException(ErrorCode.UNCATEGORIZED_EXCEPTION);
+//        }
+
+    }
+
+    @Operation(summary = "Upload Image")
+    @PostMapping("/eventImg")
+    public ApiResponse uploadImage(@RequestParam("eventBanner") MultipartFile file) {
+        HttpSession session = request.getSession(false);
+        if (session == null) {
+            throw new AppException(ErrorCode.SESSION_EXPIRED);
+        }
+        try {
+            Events tEvent = (Events) session.getAttribute("tempEvent");
+            tEvent.setBanner(Base64.getEncoder().encodeToString(file.getBytes()));
+            return ApiResponse.builder().message("Upload thành công").result("Upload thành công").build();
+        } catch (Exception e) {
             throw new AppException(ErrorCode.UNCATEGORIZED_EXCEPTION);
         }
-
     }
 
     @Operation(summary = "Tạo mới event - Bước 2")
     @PostMapping("/add-event-ticket")
-    public ApiResponse addEventTicket(@RequestBody EAUSRequest eausRequest) throws ParseException{
+    public ApiResponse addEventTicket(@RequestBody EAUSRequest eausRequest) throws ParseException {
         HttpSession session = request.getSession(false);
         if (session == null) {
             throw new AppException(ErrorCode.SESSION_EXPIRED);
@@ -134,23 +152,23 @@ public class MerchantController {
             createTickets.add(tickets);
         }
 
-        try{
-            merchantService.addEvent(tEvent, createTickets, eventService.getCategories(tempC));
-            session.removeAttribute("tempEvent");
-            session.removeAttribute("tempCategories");
-            session.invalidate();
-            return ApiResponse.builder().message("Sự kiện đã được thêm, vui lòng chờ phê duyệt").build();
-        }catch (Exception e){
-            session.invalidate();
-            throw new AppException(ErrorCode.UNCATEGORIZED_EXCEPTION);
-        }
+//        try{
+        merchantService.addEvent(tEvent, createTickets, eventService.getCategories(tempC));
+        session.removeAttribute("tempEvent");
+        session.removeAttribute("tempCategories");
+        session.invalidate();
+        return ApiResponse.builder().message("Sự kiện đã được thêm, vui lòng chờ phê duyệt").build();
+//        }catch (Exception e){
+//            session.invalidate();
+//            throw new AppException(ErrorCode.UNCATEGORIZED_EXCEPTION);
+//        }
 
     }
 
 
     @Operation(summary = "Lấy thông tin tổng quan của event - Cập nhật")
     @GetMapping("/update/first-step/{id}")
-    public ApiResponse<EventFirstUpdate> getEventUpdate(@PathVariable("id") int eventId){
+    public ApiResponse<EventFirstUpdate> getEventUpdate(@PathVariable("id") int eventId) {
         HttpSession session = request.getSession(true);
         session.setMaxInactiveInterval(30 * 60);
         session.setAttribute("tempTicketUpdate", new ArrayList<CreateTickets>());
@@ -166,17 +184,17 @@ public class MerchantController {
 
     @Operation(summary = "Xóa category cho event")
     @PostMapping("/delete/category/{id}")
-    public ApiResponse deleteCategory(@PathVariable("id") int id){
+    public ApiResponse deleteCategory(@PathVariable("id") int id) {
         HttpSession session = request.getSession(false);
         if (session == null) {
             throw new AppException(ErrorCode.SESSION_EXPIRED);
         }
 
-        try{
+        try {
             ArrayList<Categories> createCategories = (ArrayList<Categories>) session.getAttribute("tempCategoriesRemove");
             Categories c = eventService.getSingleCategory(id);
-            for(Categories cat : createCategories){
-                if(cat.getId() == c.getId()){
+            for (Categories cat : createCategories) {
+                if (cat.getId() == c.getId()) {
                     createCategories.remove(cat);
                     break;
                 }
@@ -185,38 +203,38 @@ public class MerchantController {
 
 
             return ApiResponse.builder().message("Deleted").build();
-        }catch (Exception e){
+        } catch (Exception e) {
             throw new AppException(ErrorCode.UNCATEGORIZED_EXCEPTION);
         }
     }
 
     @Operation(summary = "Thêm category cho event")
     @PostMapping("/add/category/{id}")
-    public ApiResponse addCategory(@PathVariable("id") int id){
+    public ApiResponse addCategory(@PathVariable("id") int id) {
         HttpSession session = request.getSession(false);
         if (session == null) {
             throw new AppException(ErrorCode.SESSION_EXPIRED);
         }
 
-        try{
+        try {
             ArrayList<Categories> createCategories = (ArrayList<Categories>) session.getAttribute("tempCategoriesAdd");
             Categories c = eventService.getSingleCategory(id);
-            for(Categories cat : createCategories){
-                if(cat.getId() == c.getId()){
+            for (Categories cat : createCategories) {
+                if (cat.getId() == c.getId()) {
                     createCategories.remove(cat);
                     break;
                 }
             }
             createCategories.add(c);
             return ApiResponse.builder().message("Added").build();
-        }catch(Exception e){
+        } catch (Exception e) {
             throw new AppException(ErrorCode.UNCATEGORIZED_EXCEPTION);
         }
     }
 
     @Operation(summary = "Cập nhật event - Bước 1")
     @PostMapping("/update/first-step/{id}")
-    public ApiResponse update(@PathVariable("id") int eventId, @RequestBody EUFRequest eufRequest){
+    public ApiResponse update(@PathVariable("id") int eventId, @RequestBody EUFRequest eufRequest) {
         HttpSession session = request.getSession(false);
         if (session == null) {
             throw new AppException(ErrorCode.SESSION_EXPIRED);
@@ -229,22 +247,22 @@ public class MerchantController {
             event.setDescription(eufRequest.getEventDescription());
             event.setCity(eufRequest.getEventCity());
             event.setLocation(eufRequest.getEventLocation());
-            event.setBanner(eufRequest.getEventBanner());
+            event.setBanner(Base64.getEncoder().encodeToString(eufRequest.getEventBanner().getBytes()));
             event.setMax_limit(eufRequest.getEventLimit());
 
             session.setAttribute("tempEvent", event);
             return ApiResponse.builder().message("true").build();
-        }catch(Exception ex){
+        } catch (Exception ex) {
             throw new AppException(ErrorCode.UNCATEGORIZED_EXCEPTION);
         }
     }
 
     @Operation(summary = "Lấy thông tin về thơi gian và vé - Cập nhật")
     @GetMapping("/update/second-step/{id}")
-    public ApiResponse<EventSecondUpdate> getUpdateTicket(@PathVariable("id") int eventId){
+    public ApiResponse<EventSecondUpdate> getUpdateTicket(@PathVariable("id") int eventId) {
         Events event = merchantService.getEventUpdate(eventId);
         List<CreateTicketsResponse> tickets = new ArrayList<>();
-        for(CreateTickets c : eventService.getTicketTypeByEvent(eventId)){
+        for (CreateTickets c : eventService.getTicketTypeByEvent(eventId)) {
             tickets.add(CreateTicketMapper.createTicketsDTO(c));
         }
         return ApiResponse.<EventSecondUpdate>builder()
@@ -253,13 +271,13 @@ public class MerchantController {
 
     @Operation(summary = "Cập nhật thông tin loại vé")
     @PostMapping("/update/ticket/{id}")
-    public ApiResponse updateTicketTemp(@PathVariable("id") int id, @RequestBody TicketTypeRequest tRequest){
+    public ApiResponse updateTicketTemp(@PathVariable("id") int id, @RequestBody TicketTypeRequest tRequest) {
         HttpSession session = request.getSession(false);
         if (session == null) {
             throw new AppException(ErrorCode.SESSION_EXPIRED);
         }
 
-        try{
+        try {
             ArrayList<CreateTickets> createTickets = (ArrayList<CreateTickets>) session.getAttribute("tempTicketUpdate");
             CreateTickets c = eventService.getTicketTypeUpdate(id);
             int oldQuantity = c.getCount();
@@ -268,8 +286,8 @@ public class MerchantController {
             c.setType_name(tRequest.getTypeName());
             c.setPrice(tRequest.getPrice());
 
-            for(CreateTickets tickets : createTickets){
-                if(tickets.getId() == c.getId()){
+            for (CreateTickets tickets : createTickets) {
+                if (tickets.getId() == c.getId()) {
                     createTickets.remove(tickets);
                     break;
                 }
@@ -278,13 +296,13 @@ public class MerchantController {
             createTickets.add(c);
 
             return ApiResponse.builder().message("true").build();
-        }catch (Exception e){
+        } catch (Exception e) {
             throw new AppException(ErrorCode.UNCATEGORIZED_EXCEPTION);
         }
     }
 
     @Operation(summary = "Cập nhật event - Bước 2")
-        @PostMapping("/update/second-step/{id}")
+    @PostMapping("/update/second-step/{id}")
     public ApiResponse updateTicket(@PathVariable("id") int eventId, @RequestBody EAUSRequest eausRequest) throws ParseException {
         HttpSession session = request.getSession(false);
         if (session == null) {
@@ -300,8 +318,8 @@ public class MerchantController {
         e.setEnd_time(format.parse(eausRequest.getEnd_time()));
         e.setStart_booking(format.parse(eausRequest.getStart_booking()));
         e.setEnd_booking(format.parse(eausRequest.getEnd_booking()));
-        if(eausRequest.getTicketTypeRequests() != null){
-            for(TicketTypeRequest typeRequest : eausRequest.getTicketTypeRequests()) {
+        if (eausRequest.getTicketTypeRequests() != null) {
+            for (TicketTypeRequest typeRequest : eausRequest.getTicketTypeRequests()) {
                 CreateTickets tickets = new CreateTickets();
                 tickets.setType_name(typeRequest.getTypeName());
                 tickets.setPrice(typeRequest.getPrice());
@@ -315,11 +333,11 @@ public class MerchantController {
         List<Categories> addCat = (List<Categories>) session.getAttribute("tempCategoriesAdd");
         List<Categories> removeCat = (List<Categories>) session.getAttribute("tempCategoriesRemove");
 
-        try{
+        try {
             String status = merchantService.UpdateEvent(e, updateTicket, addTickets, addCat, removeCat).getMessage();
             session.invalidate();
             return ApiResponse.builder().result(status).build();
-        }catch(Exception ex){
+        } catch (Exception ex) {
             return ApiResponse.builder().message(ex.getMessage()).build();
         }
 
@@ -327,13 +345,11 @@ public class MerchantController {
 
     @Operation(summary = "Danh sách event của merchant")
     @GetMapping("/myEvent")
-    public ApiResponse<?> getMyEvent(@RequestParam(value = "status",required = false) Integer status,
-                                     @RequestParam(value = "CategoryId",required = false) List<Integer> CategoryId,
-                                     @RequestParam(value = "time",required = false) String time,
+    public ApiResponse<?> getMyEvent(@RequestParam(value = "status", required = false) Integer status,
+                                     @RequestParam(value = "categoryId", required = false) List<Integer> CategoryId,
+                                     @RequestParam(value = "time", required = false) String time,
                                      @RequestParam(value = "city", required = false) String city) throws ParseException {
-        return ApiResponse.builder()
-                .result(merchantService.myEvents(status, CategoryId, time, city))
-                .build();
+        return merchantService.myEvents(status, CategoryId, time, city);
     }
 
     @Operation(summary = "Thống kê sự kiện theo merchant")
@@ -352,7 +368,22 @@ public class MerchantController {
     @PostMapping("/event-status/{id}")
     public ApiResponse<?> updateStatus(@PathVariable("id") int eventId) {
         return ApiResponse.builder()
-               .result(merchantService.deEvents(eventId))
-               .build();
+                .result(merchantService.deEvents(eventId))
+                .build();
+    }
+
+    @Operation(summary = "Xem lịch sử khách hàng đặt mua vé")
+    @GetMapping("/event/history/{id}")
+    public ApiResponse<?> getEventHistory(@PathVariable("id") int eventId) {
+        return merchantService.eventBookingHistory(eventId);
+    }
+
+    @Operation(summary = "Thu hồi vé")
+    @PostMapping("/ticket/revoke")
+    public ApiResponse<?> revokeTicket(@RequestParam("qrCode") String qrCode) {
+        if(merchantService.revockTicket(qrCode) != 0) {
+            return ApiResponse.builder().message("true").build();
+        }
+        return ApiResponse.builder().message("false").build();
     }
 }
