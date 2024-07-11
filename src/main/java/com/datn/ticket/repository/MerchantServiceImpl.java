@@ -17,6 +17,7 @@ import jakarta.transaction.Transactional;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Repository;
 
@@ -164,7 +165,7 @@ public class MerchantServiceImpl implements MerchantService {
             }
         }
         if(city != null){
-            query.append("and e.city = :city ");
+            query.append("and e.city like :city ");
         }
 
         // Create Query
@@ -179,7 +180,7 @@ public class MerchantServiceImpl implements MerchantService {
             getEvent.setParameter("CategoryId", CategoryId);
         }
         if(city != null){
-            getEvent.setParameter("city", city);
+            getEvent.setParameter("city", "%" + city + "%");
         }
 
         events = getEvent.getResultList();
@@ -244,6 +245,10 @@ public class MerchantServiceImpl implements MerchantService {
     @Override
     @PreAuthorize("hasRole('MERCHANT') || hasRole('ADMIN')")
     public List<StatisticsDetail> getStatisticsByEvent(int eventId) throws ParseException {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        boolean isAdmin = authentication.getAuthorities().stream()
+                .anyMatch(role -> role.getAuthority().equals("ROLE_ADMIN"));
+
         String query = "select e.id, e.name, GROUP_CONCAT(DISTINCT cat.category_name SEPARATOR ', ') AS categories, " +
                 "CASE WHEN e.start_time > NOW() THEN 'Chưa diễn ra' ELSE 'Đã diễn ra' END AS Status, " +
                 "ct.id, ct.type_name, ct.count, COALESCE(SUM(c.quantity), 0) as soldTicket, " +
@@ -253,13 +258,22 @@ public class MerchantServiceImpl implements MerchantService {
                 "join categories cat on ecat.Categories_id = cat.id " +
                 "left join cart c on c.CreateTicket_id = ct.id " +
                 "left join invoice i on i.Cart_id = c.id " +
-                "where e.id = :eventId and e.Merchants_id = :merchantId " +
-                "group by ct.type_name, ct.id, ct.count";
+                "where e.id = :eventId ";
 
-        List<Object[]> resultListNav = entityManager.createNativeQuery(query, Object[].class)
-                .setParameter("eventId", eventId)
-                .setParameter("merchantId", myInfor().getId())
-                .getResultList();
+        if(!isAdmin){
+            query += "and e.Merchants_id = :merchantId ";
+        }
+        query+= "group by ct.type_name, ct.id, ct.count";
+
+        List<Object[]> resultListNav = new ArrayList<>();
+        Query getQuery = entityManager.createNativeQuery(query, Object[].class)
+                .setParameter("eventId", eventId);
+
+        if(!isAdmin){
+            getQuery.setParameter("merchantId", myInfor().getId());
+        }
+
+        resultListNav = getQuery.getResultList();
 
         List<StatisticsDetail> dtos = new ArrayList<>();
         for (Object[] row : resultListNav) {

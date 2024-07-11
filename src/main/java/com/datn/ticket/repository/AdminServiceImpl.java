@@ -165,7 +165,8 @@ public class AdminServiceImpl implements AdminService {
                 "set ar.status = not ar.status " +
                 "where a.username = :username and r.role_name = :roleName");
         query.setParameter("username", username)
-                .setParameter("roleName", roleName).executeUpdate();
+                .setParameter("roleName", roleName)
+                .executeUpdate();
     }
 
 
@@ -193,7 +194,7 @@ public class AdminServiceImpl implements AdminService {
 
         // Add query by filtering
         if(merchantName != null) {
-            query.append("and m.name = :merchantName ");
+            query.append("and m.name like :merchantName ");
         }
         if(status != null) {
             query.append("and e.status = :status ");
@@ -228,7 +229,7 @@ public class AdminServiceImpl implements AdminService {
 
         // Add Query Params
         if(merchantName != null) {
-            getEvent.setParameter("merchantName", merchantName);
+            getEvent.setParameter("merchantName", "%" + merchantName + "%");
         }
         if(categoriesId != null && !categoriesId.isEmpty()) {
             getEvent.setParameter("categoriesId", categoriesId);
@@ -310,7 +311,8 @@ public class AdminServiceImpl implements AdminService {
         List<Object> cart = new ArrayList<Object>();
         PaymentHistoryResponseDetail response = new PaymentHistoryResponseDetail();
         List<Object[]> historyResponseDetail =
-                manager.createNativeQuery("select p.id, p.payment_time, p.payment_status, c.id as cart_id, c.cost, u.id, u.name from payment p " +
+                manager.createNativeQuery("select p.id, p.payment_time, p.payment_status, c.id as cart_id, " +
+                        "ct.type_name, c.quantity, e.name, c.cost, u.id, u.name from payment p " +
                         "join invoice i on i.Payment_id = p.id " +
                         "join cart c on i.Cart_id = c.id " +
                         "join createticket ct on c.CreateTicket_id = ct.id " +
@@ -323,12 +325,15 @@ public class AdminServiceImpl implements AdminService {
             response.setPaymentId(historyResponseDetail.get(0)[0].toString());
             response.setPaymentTime(historyResponseDetail.get(0)[1].toString());
             response.setPaymentStatus(historyResponseDetail.get(0)[2].toString());
-            response.setUId((Integer) historyResponseDetail.get(0)[5]);
-            response.setUName(historyResponseDetail.get(0)[6].toString());
+            response.setUId((Integer) historyResponseDetail.get(0)[8]);
+            response.setUName(historyResponseDetail.get(0)[9].toString());
             for(Object[] o : historyResponseDetail){
                 Map<String, Object> myMap = new HashMap<>();
                 myMap.put("cardId", (Integer) o[3]);
-                myMap.put("price", (Double) o[4]);
+                myMap.put("ticketName", (String) o[4]);
+                myMap.put("quantity", (Integer) o[5]);
+                myMap.put("event", (String) o[6]);
+                myMap.put("price", (Double) o[7]);
                 cart.add(myMap);
             }
             response.setCart(cart);
@@ -389,18 +394,18 @@ public class AdminServiceImpl implements AdminService {
             query.setParameter("uId", uId);
         }
 
-//        try {
+        try {
             return ApiResponse.<List<PaymentHistoryResponse>>builder()
                     .result(query.getResultList())
                     .build();
-//        }catch (NoResultException e){
-//            log.error("Not found");
-//            return ApiResponse.<List<PaymentHistoryResponse>>builder().message(e.getMessage()).build();
-//        }catch(AppException e){
-//            throw new AppException(e.getErrorCode());
-//        }catch (Exception e){
-//            log.error(e.getMessage());
-//            return ApiResponse.<List<PaymentHistoryResponse>>builder().message(e.getMessage()).build();
-//        }
+        }catch (NoResultException e){
+            log.error("Not found");
+            return ApiResponse.<List<PaymentHistoryResponse>>builder().message(e.getMessage()).build();
+        }catch(AppException e){
+            throw new AppException(e.getErrorCode());
+        }catch (Exception e){
+            log.error(e.getMessage());
+            return ApiResponse.<List<PaymentHistoryResponse>>builder().message(e.getMessage()).build();
+        }
     }
 }

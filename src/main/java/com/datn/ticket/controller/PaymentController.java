@@ -96,7 +96,7 @@ public class PaymentController {
     }
 
     @GetMapping("/infor")
-    public ApiResponse<?> getInforPayment(@RequestParam("cartId") String cartId,
+    public String getInforPayment(@RequestParam("cartId") String cartId,
                                           @RequestParam("vnp_Amount") double amount,
                                           @RequestParam("vnp_PayDate") String paymentDate,
                                           @RequestParam("vnp_ResponseCode") String responseCode,
@@ -123,13 +123,13 @@ public class PaymentController {
             response.setUId(uId);
             response.setEmail(email);
             try{
-
-                return ApiResponse.<PaymentResponse>builder().message(userService.payment(response)).build();
+                String pResponse = userService.payment(response);
+                return "redirect:http://localhost:5173/api/payment/infor?status=" + pResponse ;
             }catch (Exception e){
-                return ApiResponse.builder().message(e.getMessage()).build();
+                return "redirect:http://localhost:5173/api/payment/infor?status=" + "Vui lòng thử lại sau" ;
             }
         } catch (JsonSyntaxException e) {
-            return ApiResponse.builder().message("Outer" + e.getMessage()).build();
+            return "redirect:http://localhost:5173/api/payment/infor?status=" + "Vui lòng thử lại sau" ;
         }
 
     }

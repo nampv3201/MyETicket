@@ -243,7 +243,7 @@ public class UserServiceImpl implements UserService {
     @SneakyThrows
     @Override
     @Transactional
-    @PreAuthorize("hasRole('USER') || hasRole('ADMIN')")
+//    @PreAuthorize("hasRole('USER') || hasRole('ADMIN')")
     public String payment(PaymentResponse response) {
         String paymentStatus;
 
@@ -251,7 +251,7 @@ public class UserServiceImpl implements UserService {
                 "values (?,?,?,now(),?,?,?)")
                 .setParameter(1, response.getBankTranNo())
                 .setParameter(3, response.getPaymentDate())
-                .setParameter(4, response.getAmount())
+                .setParameter(4, response.getAmount()/100)
                 .setParameter(5, 1)
                 .setParameter(6, response.getUId());
 
@@ -313,7 +313,7 @@ public class UserServiceImpl implements UserService {
 
                     // Update user's points
                     manager.createNativeQuery("update users u set u.point = u.point + :point where u.id = :uid")
-                            .setParameter("point", ((Double) (response.getAmount()/10000.0)).intValue())
+                            .setParameter("point", ((Double) (response.getAmount()/1000.0)).intValue())
                             .setParameter("uid", response.getUId()).executeUpdate();
 
                     for(int i = 0; i < quantity; i++){

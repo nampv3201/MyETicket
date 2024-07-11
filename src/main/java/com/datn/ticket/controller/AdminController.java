@@ -114,7 +114,7 @@ public class AdminController {
         }
     }
 
-    @Operation(summary = "Danh sách sự kiần phê duyệt")
+    @Operation(summary = "Danh sách sự kiện phê duyệt")
     @GetMapping("/event/pending")
     public ApiResponse<?> getPendingEvent(){
         return ApiResponse.<List<AdminEventResponse>>builder()
@@ -230,6 +230,7 @@ public class AdminController {
     public ApiResponse<?> changeAccountStatus(@RequestBody DEAccountRequest request){
         try{
             adminService.changeAccountStatus(request.getUsername(), request.getRoleName());
+            log.info(request.getUsername() + " " + request.getRoleName());
             return ApiResponse.builder()
                     .message("Thành công")
                     .build();
@@ -243,11 +244,11 @@ public class AdminController {
     public ApiResponse<?> pHistory(@RequestParam(value = "paymentDate", required = false) String pDate,
                                    @RequestParam(value = "status", required = false) String status,
                                    @RequestParam(value = "uId", required = false) Integer uId){
-//        try{
+        try{
             return adminService.getPaymentHistory(pDate, status, uId);
-//        }catch (Exception e){
-//            throw new AppException(ErrorCode.UNCATEGORIZED_EXCEPTION);
-//        }
+        }catch (Exception e){
+            throw new AppException(ErrorCode.UNCATEGORIZED_EXCEPTION);
+        }
     }
 
     @Operation(summary = "Payment Details")
