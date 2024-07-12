@@ -1,5 +1,6 @@
 package com.datn.ticket.repository;
 
+import com.datn.ticket.dto.request.CreatePaymentRequest;
 import com.datn.ticket.dto.request.RefreshRequest;
 import com.datn.ticket.dto.request.SignUpMerchantInApp;
 import com.datn.ticket.dto.response.*;
@@ -240,6 +241,24 @@ public class UserServiceImpl implements UserService {
         return ApiResponse.builder().message((String) query.getSingleResult()).build();
     }
 
+    @Override
+    @Transactional
+    public void createPayment(CreatePaymentRequest request) {
+        Query query = manager.createNativeQuery("insert into payment " +
+                "(`id`, `payment_status`, `create_time`, `payment_amount`, `PaymentMethod_id`, `Users_id`) " +
+                "values (?,?,now(),?,?,?) ")
+                .setParameter(1, request.getPaymentId())
+                .setParameter(2, "Pending")
+                .setParameter(3, request.getAmount())
+                .setParameter(4, 1)
+                .setParameter(5, myInfor().getId());
+//        try{
+            query.executeUpdate();
+//        }catch(Exception e){
+//            throw new AppException(ErrorCode.UNCATEGORIZED_EXCEPTION);
+//        }
+    }
+
     @SneakyThrows
     @Override
     @Transactional
@@ -247,17 +266,14 @@ public class UserServiceImpl implements UserService {
     public String payment(PaymentResponse response) {
         String paymentStatus;
 
-        Query newPayment = manager.createNativeQuery("insert into payment (`id`, `payment_status`, `create_time`, `payment_time`, `payment_amount`, `PaymentMethod_id`, `Users_id`) " +
-                "values (?,?,?,now(),?,?,?)")
-                .setParameter(1, response.getBankTranNo())
-                .setParameter(3, response.getPaymentDate())
-                .setParameter(4, response.getAmount()/100)
-                .setParameter(5, 1)
-                .setParameter(6, response.getUId());
+        Query updatePayment = manager.createNativeQuery("update payment set " +
+                "`payment_status` = :status, `payment_time` = :time")
+                .setParameter("time", response.getPaymentDate());
 
-        if(response.getResponseCode().equals("00")){
+        if(response.getResponseCode().equals("Thanh toán thành công")){
             paymentStatus = "Thanh toán thành công, vé sẽ sớm được gửi vào email của bạn.";
-            newPayment.setParameter(2, "Thanh toán thành công").executeUpdate();
+//            newPayment.setParameter(2, "Thanh toán thành công").executeUpdate();
+            updatePayment.setParameter("status", "Thanh toán thành công").executeUpdate();
 
             // Thông tin events
             List<Object[]> eventMails = manager.createNativeQuery("select e.id, e.name, " +
@@ -290,7 +306,7 @@ public class UserServiceImpl implements UserService {
                     // Insert invoice
                     manager.createNativeQuery("insert into invoice (`Cart_id`, `Payment_id`) " +
                                     "values (:cartId, :paymentId)").setParameter("cartId",cartId)
-                            .setParameter("paymentId", response.getBankTranNo()).executeUpdate();
+                            .setParameter("paymentId", response.getVnp_TxnRef()).executeUpdate();
 
                     // Update cart status
                     manager.createNativeQuery("update cart c set c.status = 1 where c.id = :cartId")
@@ -314,7 +330,7 @@ public class UserServiceImpl implements UserService {
                     // Update user's points
                     manager.createNativeQuery("update users u set u.point = u.point + :point where u.id = :uid")
                             .setParameter("point", ((Double) (response.getAmount()/1000.0)).intValue())
-                            .setParameter("uid", response.getUId()).executeUpdate();
+                            .setParameter("uid", myInfor().getId()).executeUpdate();
 
                     for(int i = 0; i < quantity; i++){
                         // Generate ticket
@@ -343,7 +359,8 @@ public class UserServiceImpl implements UserService {
             }
         }else{
             paymentStatus = "Thanh toán thất bại";
-            newPayment.setParameter(2, paymentStatus).executeUpdate();
+//            newPayment.setParameter(2, paymentStatus).executeUpdate();
+            updatePayment.setParameter("status", paymentStatus).executeUpdate();
         }
         return paymentStatus;
     }

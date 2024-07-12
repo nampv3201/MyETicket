@@ -14,6 +14,6 @@ public class EUFRequest {
     String eventDescription;
     String eventCity;
     String eventLocation;
-    MultipartFile eventBanner;
+    String eventBanner;
     int eventLimit;
 }

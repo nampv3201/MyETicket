@@ -247,7 +247,7 @@ public class MerchantController {
             event.setDescription(eufRequest.getEventDescription());
             event.setCity(eufRequest.getEventCity());
             event.setLocation(eufRequest.getEventLocation());
-            event.setBanner(Base64.getEncoder().encodeToString(eufRequest.getEventBanner().getBytes()));
+            event.setBanner(eufRequest.getEventBanner());
             event.setMax_limit(eufRequest.getEventLimit());
 
             session.setAttribute("tempEvent", event);
@@ -333,13 +333,13 @@ public class MerchantController {
         List<Categories> addCat = (List<Categories>) session.getAttribute("tempCategoriesAdd");
         List<Categories> removeCat = (List<Categories>) session.getAttribute("tempCategoriesRemove");
 
-        try {
+//        try {
             String status = merchantService.UpdateEvent(e, updateTicket, addTickets, addCat, removeCat).getMessage();
             session.invalidate();
             return ApiResponse.builder().result(status).build();
-        } catch (Exception ex) {
-            return ApiResponse.builder().message(ex.getMessage()).build();
-        }
+//        } catch (Exception ex) {
+//            return ApiResponse.builder().message(ex.getMessage()).build();
+//        }
 
     }
 

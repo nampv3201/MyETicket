@@ -14,7 +14,7 @@ import java.util.*;
 @Configuration
 public class VNPayConfig {
     public static String vnp_PayUrl = "https://sandbox.vnpayment.vn/paymentv2/vpcpay.html";
-    public static String vnp_ReturnUrl = "http://localhost:8080/api/payment/infor";
+    public static String vnp_ReturnUrl = "http://localhost:8080/api/payment/vnpay_response";
     public static String vnp_TmnCode = "A8S4PS9W";
     public static String vnp_Version = "2.1.0";
     public static String vnp_Command = "pay";
@@ -122,5 +122,9 @@ public class VNPayConfig {
             sb.append(chars.charAt(rnd.nextInt(chars.length())));
         }
         return sb.toString();
+    }
+
+    public static UUID getId(){
+        return UUID.randomUUID();
     }
 }

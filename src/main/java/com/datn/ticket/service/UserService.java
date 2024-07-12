@@ -1,5 +1,6 @@
 package com.datn.ticket.service;
 
+import com.datn.ticket.dto.request.CreatePaymentRequest;
 import com.datn.ticket.dto.request.MerchantSignUpRequest;
 import com.datn.ticket.dto.request.SignUpMerchantInApp;
 import com.datn.ticket.dto.response.*;
@@ -24,6 +25,9 @@ public interface UserService {
     void updateCart(UpdateCartRequest request);
     ApiResponse checkQuantity(int cartId);
     String payment(PaymentResponse response);
+
+    void createPayment(CreatePaymentRequest request);
+
     UserTicketResponse myHistory();
     List<HistoryResponseDetail> getHistoryResponseDetail(String pId, String eId);
     ApiResponse<?> signUpMerchant(SignUpMerchantInApp signUpRequest) throws ParseException, JOSEException;

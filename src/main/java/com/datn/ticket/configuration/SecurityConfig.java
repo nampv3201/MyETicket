@@ -38,7 +38,8 @@ public class SecurityConfig{
     @Autowired
     private JwtAuthenticationEntryPoint jwtAuthenticationEntryPoint;
     private final String[] PUBLIC_ENDPOINTS = {
-            "/swagger-ui/**", "/v3/api-docs/**", "/proxy/**", "/account/**", "/home/**", "/api/payment/infor", "/home/event",
+            "/swagger-ui/**", "/v3/api-docs/**", "/proxy/**", "/account/**", "/home/**"
+            , "/api/payment/vnpay_response", "/home/event",
     };
 
     @Bean

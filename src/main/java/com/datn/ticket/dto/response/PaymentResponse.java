@@ -13,12 +13,10 @@ import java.util.List;
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class PaymentResponse {
     List<Integer> cartIds;
-    String bankTranNo;
+    String vnp_TxnRef;
     String responseCode;
-    Date paymentDate;
+    String paymentDate;
     double amount;
     int uId;
-    int methodId;
-
     String email;
 }
