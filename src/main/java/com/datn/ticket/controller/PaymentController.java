@@ -1,12 +1,9 @@
 package com.datn.ticket.controller;
 
-import com.datn.ticket.dto.request.CreatePaymentRequest;
+import com.datn.ticket.dto.request.*;
 import com.datn.ticket.exception.AppException;
 import com.datn.ticket.exception.ErrorCode;
 import com.datn.ticket.model.Cart;
-import com.datn.ticket.dto.request.AddToCartRequest;
-import com.datn.ticket.dto.request.DirectPaymentRequest;
-import com.datn.ticket.dto.request.PaymentRequest;
 import com.datn.ticket.dto.response.ApiResponse;
 import com.datn.ticket.configuration.VNPayConfig;
 import com.datn.ticket.dto.response.PaymentResponse;
@@ -101,57 +98,62 @@ public class PaymentController {
 
     }
 
-    @GetMapping("/infor-update")
-    public ApiResponse getInforPayment(@RequestBody PaymentResponse response) throws UnsupportedEncodingException {
+    @PostMapping("/infor-update")
+    public ApiResponse getInforPayment(@RequestParam PaymentResponse response) throws UnsupportedEncodingException {
 
         try {
-            String pResponse = userService.payment(response);
-            return ApiResponse.builder().message(pResponse).build();
+            return ApiResponse.builder().result(userService.payment(response)).build();
         }catch (Exception e) {
             throw new AppException(ErrorCode.UNCATEGORIZED_EXCEPTION);
         }
     }
 
-    @GetMapping("/vnpay_response")
-    public ResponseEntity<Map<String, Object>> handleVnpayIpn(@RequestParam Map<String, String> allParams) {
+    @PostMapping("/vnpay_response")
+    public ApiResponse handleVnpay(@RequestParam Map<String, String> allParams) throws UnsupportedEncodingException {
+
+        Map<String, String> params = new HashMap<String, String>();
         String secureHash = allParams.get("vnp_SecureHash");
         String orderId = allParams.get("vnp_TxnRef");
         String rspCode = allParams.get("vnp_ResponseCode");
-        log.info(secureHash);
-
         Gson gson = new Gson();
         Integer[] array = gson.fromJson(URLDecoder.decode(allParams.get("cartId"), StandardCharsets.UTF_8), Integer[].class);
         List<Integer> cartIds = Arrays.asList(array);
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyyMMddHHmmss");
         LocalDateTime dateTime = LocalDateTime.parse(allParams.get("vnp_PayDate"), formatter);
-        String amount = allParams.get("vnp_Amount");
+        double amount = Double.parseDouble(allParams.get("vnp_Amount"));
 
         DateTimeFormatter outputFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
         String paymentTime = dateTime.format(outputFormatter);
         String email = allParams.get("email");
 
-        Map<String, String> sortedParams = new TreeMap<>(allParams);
-        String signData = sortedParams.entrySet().stream()
-                .map(e -> e.getKey() + "=" + e.getValue())
-                .collect(Collectors.joining("&"));
+        allParams.remove("vnp_SecureHash");
+        allParams.remove("email");
+        allParams.remove("cartId");
 
-
-        String signed = VNPayConfig.hmacSHA512(VNPayConfig.secretKey, signData);
-
-        Map<String, Object> response = new HashMap<>();
-        response.put("orderId", orderId);
-        response.put("amount", amount);
-        response.put("paymentTime", dateTime);
-        response.put("cartId", cartIds.toString());
-        response.put("email", email);
-
-        if ("00".equals(rspCode)) {
-            response.put("status", "Thanh toán thành công");
-        } else {
-            response.put("status", "Thanh toán thất bại");
+        for (Map.Entry<String, String> entry : allParams.entrySet()) {
+            String fieldName = URLEncoder.encode((String) entry.getKey(), StandardCharsets.US_ASCII.toString());
+            String fieldValue = URLEncoder.encode(entry.getValue(), StandardCharsets.US_ASCII.toString());
+            if ((fieldValue != null) && (fieldValue.length() > 0)) {
+                params.put(fieldName, fieldValue);
+            }
         }
 
-        return ResponseEntity.ok(response);
+        String signed = VNPayConfig.hashAllFields(params);
+
+        if(signed.equals(secureHash)){
+            PaymentResponse pResponse = PaymentResponse.builder()
+            .cartIds(cartIds)
+            .vnp_TxnRef(orderId)
+            .responseCode(rspCode)
+            .paymentDate(String.valueOf(dateTime))
+            .amount(amount)
+            .email(email)
+            .build();
+
+            return (userService.payment(pResponse));
+        }
+
+        throw new AppException(ErrorCode.INVALID_INFOR);
     }
     public String configPayment(double totalCost, List<Integer> cartId, int paymentMethod, String email) throws UnsupportedEncodingException {
             String orderType = "Other";

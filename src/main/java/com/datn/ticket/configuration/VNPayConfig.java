@@ -1,6 +1,7 @@
 package com.datn.ticket.configuration;
 
 import jakarta.servlet.http.HttpServletRequest;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.annotation.Configuration;
 
 import javax.crypto.Mac;
@@ -12,6 +13,7 @@ import java.security.NoSuchAlgorithmException;
 import java.util.*;
 
 @Configuration
+@Slf4j
 public class VNPayConfig {
     public static String vnp_PayUrl = "https://sandbox.vnpayment.vn/paymentv2/vpcpay.html";
     public static String vnp_ReturnUrl = "http://localhost:8080/api/payment/vnpay_response";

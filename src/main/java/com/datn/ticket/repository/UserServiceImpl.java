@@ -245,13 +245,14 @@ public class UserServiceImpl implements UserService {
     @Transactional
     public void createPayment(CreatePaymentRequest request) {
         Query query = manager.createNativeQuery("insert into payment " +
-                "(`id`, `payment_status`, `create_time`, `payment_amount`, `PaymentMethod_id`, `Users_id`) " +
-                "values (?,?,now(),?,?,?) ")
+                "(`id`, `payment_status`, `create_time`, `payment_amount`, `PaymentMethod_id`, `Users_id`, `access`) " +
+                "values (?,?,now(),?,?,?,?) ")
                 .setParameter(1, request.getPaymentId())
                 .setParameter(2, "Pending")
                 .setParameter(3, request.getAmount())
                 .setParameter(4, 1)
-                .setParameter(5, myInfor().getId());
+                .setParameter(5, myInfor().getId())
+                .setParameter(6, 0);
 //        try{
             query.executeUpdate();
 //        }catch(Exception e){
@@ -263,106 +264,116 @@ public class UserServiceImpl implements UserService {
     @Override
     @Transactional
 //    @PreAuthorize("hasRole('USER') || hasRole('ADMIN')")
-    public String payment(PaymentResponse response) {
+    public ApiResponse<?> payment(PaymentResponse response) {
         String paymentStatus;
 
-        Query updatePayment = manager.createNativeQuery("update payment set " +
-                "`payment_status` = :status, `payment_time` = :time")
-                .setParameter("time", response.getPaymentDate());
+        if(checkPayment(response.getVnp_TxnRef()) == 1){
+            throw new AppException(ErrorCode.ALREADY_PAID);
+        }else {
+            Query updatePayment = manager.createNativeQuery("update payment set " +
+                            "`payment_status` = :status, `payment_time` = :time, access = 1 where `id` = :id")
+                    .setParameter("id", response.getVnp_TxnRef())
+                    .setParameter("time", response.getPaymentDate());
 
-        if(response.getResponseCode().equals("Thanh toán thành công")){
-            paymentStatus = "Thanh toán thành công, vé sẽ sớm được gửi vào email của bạn.";
-//            newPayment.setParameter(2, "Thanh toán thành công").executeUpdate();
-            updatePayment.setParameter("status", "Thanh toán thành công").executeUpdate();
+            if (response.getResponseCode().equals("00")) {
+                paymentStatus = "Thanh toán thành công";
+                updatePayment.setParameter("status", "Thanh toán thành công").executeUpdate();
 
-            // Thông tin events
-            List<Object[]> eventMails = manager.createNativeQuery("select e.id, e.name, " +
-                            "group_concat(c.id SEPARATOR ', ') as tType, " +
-                            "group_concat(concat(c.quantity, ' vé loại ', ct.type_name) SEPARATOR ', ') as ticket " +
-                            "from Cart c " +
-                            "join createticket ct on c.CreateTicket_id = ct.id " +
-                            "join events e on ct.Events_id = e.id " +
-                            "where c.id in :cartId " +
-                            "group by e.id, e.name")
-                    .setParameter("cartId", response.getCartIds()).getResultList();
+                // Thông tin events
+                List<Object[]> eventMails = manager.createNativeQuery("select e.id, e.name, " +
+                                "group_concat(c.id SEPARATOR ', ') as tType, " +
+                                "group_concat(concat(c.quantity, ' vé loại ', ct.type_name) SEPARATOR ', ') as ticket " +
+                                "from Cart c " +
+                                "join createticket ct on c.CreateTicket_id = ct.id " +
+                                "join events e on ct.Events_id = e.id " +
+                                "where c.id in :cartId " +
+                                "group by e.id, e.name")
+                        .setParameter("cartId", response.getCartIds()).getResultList();
 
-            for(Object[] row : eventMails){
-                Map<String, String> qrCode = new HashMap<>();
-                int[] cartIds = Arrays.stream(row[2].toString().split(", ")).mapToInt(Integer::parseInt).toArray();
+                for (Object[] row : eventMails) {
+                    Map<String, String> qrCode = new HashMap<>();
+                    int[] cartIds = Arrays.stream(row[2].toString().split(", ")).mapToInt(Integer::parseInt).toArray();
 
-                // Cập nhật
-                for(int cartId : cartIds){
-                    Object[] obj = (Object[]) manager.createNativeQuery("select c.CreateTicket_id, c.cost, ct.type_name, c.quantity " +
-                                    "from Cart c " +
-                                    "join createTicket ct on c.CreateTicket_id = ct.id " +
-                                    "where c.id = :cartId")
-                            .setParameter("cartId", cartId).getSingleResult();
+                    // Cập nhật
+                    for (int cartId : cartIds) {
+                        Object[] obj = (Object[]) manager.createNativeQuery("select c.CreateTicket_id, c.cost, ct.type_name, c.quantity " +
+                                        "from Cart c " +
+                                        "join createTicket ct on c.CreateTicket_id = ct.id " +
+                                        "where c.id = :cartId")
+                                .setParameter("cartId", cartId).getSingleResult();
 
-                    int ctId = Integer.parseInt(String.valueOf(obj[0]));
-                    double price = Double.parseDouble(String.valueOf(obj[1]));
-                    String ctName = (String)obj[2];
-                    int quantity = Integer.parseInt(String.valueOf(obj[3]));
+                        int ctId = Integer.parseInt(String.valueOf(obj[0]));
+                        double price = Double.parseDouble(String.valueOf(obj[1]));
+                        String ctName = (String) obj[2];
+                        int quantity = Integer.parseInt(String.valueOf(obj[3]));
 
-                    // Insert invoice
-                    manager.createNativeQuery("insert into invoice (`Cart_id`, `Payment_id`) " +
-                                    "values (:cartId, :paymentId)").setParameter("cartId",cartId)
-                            .setParameter("paymentId", response.getVnp_TxnRef()).executeUpdate();
+                        // Insert invoice
+                        manager.createNativeQuery("insert into invoice (`Cart_id`, `Payment_id`) " +
+                                        "values (:cartId, :paymentId)").setParameter("cartId", cartId)
+                                .setParameter("paymentId", response.getVnp_TxnRef()).executeUpdate();
 
-                    // Update cart status
-                    manager.createNativeQuery("update cart c set c.status = 1 where c.id = :cartId")
-                            .setParameter("cartId", cartId).executeUpdate();
+                        // Update cart status
+                        manager.createNativeQuery("update cart c set c.status = 1 where c.id = :cartId")
+                                .setParameter("cartId", cartId).executeUpdate();
 
-                    // Update event revenue
-                    manager.createNativeQuery("update revenue r set r.totalRevenue = r.totalRevenue + :price where r.Events_id in " +
-                                    "(SELECT ct.Events_id " +
-                                    "FROM createticket ct " +
-                                    "JOIN events e ON ct.Events_id = e.id " +
-                                    "WHERE ct.id = :ctId);")
-                            .setParameter("price", price)
-                            .setParameter("ctId", ctId).executeUpdate();
+                        // Update event revenue
+                        manager.createNativeQuery("update revenue r set r.totalRevenue = r.totalRevenue + :price where r.Events_id in " +
+                                        "(SELECT ct.Events_id " +
+                                        "FROM createticket ct " +
+                                        "JOIN events e ON ct.Events_id = e.id " +
+                                        "WHERE ct.id = :ctId);")
+                                .setParameter("price", price)
+                                .setParameter("ctId", ctId).executeUpdate();
 
-                    // Update ticket quantity
-                    manager.createNativeQuery("update createticket ct set ct.available = ct.available - " +
-                                    "(select quantity from cart where id = :cartId) where ct.id = :ctId")
-                            .setParameter("cartId", cartId)
-                            .setParameter("ctId", ctId).executeUpdate();
+                        // Update ticket quantity
+                        manager.createNativeQuery("update createticket ct set ct.available = ct.available - " +
+                                        "(select quantity from cart where id = :cartId) where ct.id = :ctId")
+                                .setParameter("cartId", cartId)
+                                .setParameter("ctId", ctId).executeUpdate();
 
-                    // Update user's points
-                    manager.createNativeQuery("update users u set u.point = u.point + :point where u.id = :uid")
-                            .setParameter("point", ((Double) (response.getAmount()/1000.0)).intValue())
-                            .setParameter("uid", myInfor().getId()).executeUpdate();
+                        // Update user's points
+                        manager.createNativeQuery("update users u set u.point = u.point + :point where u.id = :uid")
+                                .setParameter("point", ((Double) (response.getAmount() / 1000.0)).intValue())
+                                .setParameter("uid", myInfor().getId()).executeUpdate();
 
-                    for(int i = 0; i < quantity; i++){
-                        // Generate ticket
-                        UUID id = UUID.randomUUID();
-                        try{
-                            String qrCodeTxt = QRCodeService.generateQRCode(id.toString());
-                            manager.createNativeQuery("insert into ticketrelease (`id`, `qrcode`, `status`, `Cart_id`) " +
-                                            "values (?,?,?,?)")
-                                    .setParameter(1, id.toString())
-                                    .setParameter(2, qrCodeTxt)
-                                    .setParameter(3, "Chưa sử dụng")
-                                    .setParameter(4, cartId).executeUpdate();
+                        for (int i = 0; i < quantity; i++) {
+                            // Generate ticket
+                            UUID id = UUID.randomUUID();
+                            try {
+                                String qrCodeTxt = QRCodeService.generateQRCode(id.toString());
+                                manager.createNativeQuery("insert into ticketrelease (`id`, `qrcode`, `status`, `Cart_id`) " +
+                                                "values (?,?,?,?)")
+                                        .setParameter(1, id.toString())
+                                        .setParameter(2, qrCodeTxt)
+                                        .setParameter(3, "Chưa sử dụng")
+                                        .setParameter(4, cartId).executeUpdate();
 
-                            qrCode.put(id.toString(), qrCodeTxt);
-                        } catch (Exception e) {
-                            throw new AppException(ErrorCode.UNCATEGORIZED_EXCEPTION);
+                                qrCode.put(id.toString(), qrCodeTxt);
+                            } catch (Exception e) {
+                                throw new AppException(ErrorCode.UNCATEGORIZED_EXCEPTION);
+                            }
                         }
                     }
-                }
 
-                try {
-                    qrcodeService.sendQR(qrCode, response.getEmail(), row);
-                } catch (Exception e) {
-                    throw new AppException(ErrorCode.UNCATEGORIZED_EXCEPTION);
+                    try {
+                        qrcodeService.sendQR(qrCode, response.getEmail(), row);
+                    } catch (Exception e) {
+                        throw new AppException(ErrorCode.UNCATEGORIZED_EXCEPTION);
+                    }
                 }
+            } else {
+                paymentStatus = "Thanh toán thất bại";
+                updatePayment.setParameter("status", paymentStatus).executeUpdate();
             }
-        }else{
-            paymentStatus = "Thanh toán thất bại";
-//            newPayment.setParameter(2, paymentStatus).executeUpdate();
-            updatePayment.setParameter("status", paymentStatus).executeUpdate();
         }
-        return paymentStatus;
+        return ApiResponse.<PaymentUpdateResponse>builder()
+                .result(PaymentUpdateResponse.builder()
+                        .pId(response.getVnp_TxnRef())
+                        .amount(String.valueOf(response.getAmount()))
+                        .pTime(response.getPaymentDate())
+                        .status(paymentStatus)
+                        .build())
+                .build();
     }
 
     @Override
@@ -418,6 +429,13 @@ public class UserServiceImpl implements UserService {
                 .setParameter("pId", pId);
 
         return (List<HistoryResponseDetail>) query.getResultList();
+    }
+
+    @Override
+    public int checkPayment(String id) {
+        int flag = (int) manager.createNativeQuery("select p.access from payment p where p.id = :id")
+                .setParameter("id", id).getSingleResult();
+        return flag;
     }
 
     public boolean checkMerchantCondition(String license){

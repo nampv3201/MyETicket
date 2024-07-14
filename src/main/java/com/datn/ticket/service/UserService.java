@@ -1,7 +1,6 @@
 package com.datn.ticket.service;
 
 import com.datn.ticket.dto.request.CreatePaymentRequest;
-import com.datn.ticket.dto.request.MerchantSignUpRequest;
 import com.datn.ticket.dto.request.SignUpMerchantInApp;
 import com.datn.ticket.dto.response.*;
 import com.datn.ticket.model.Cart;
@@ -24,9 +23,11 @@ public interface UserService {
     void removeFromCart(List<Integer> cartId);
     void updateCart(UpdateCartRequest request);
     ApiResponse checkQuantity(int cartId);
-    String payment(PaymentResponse response);
+    ApiResponse payment(PaymentResponse response);
 
     void createPayment(CreatePaymentRequest request);
+
+    int checkPayment(String id);
 
     UserTicketResponse myHistory();
     List<HistoryResponseDetail> getHistoryResponseDetail(String pId, String eId);

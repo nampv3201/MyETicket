@@ -21,7 +21,10 @@ public enum ErrorCode {
     ITEM_NOT_EXIST(1012, "Thông tin về chưa được đăng ký", HttpStatus.BAD_REQUEST),
     ROLE_HAS_REGISTERED(1013, "Bạn đã đăng ký làm merchant", HttpStatus.BAD_REQUEST),
     LICENSE_HAS_REGISTERED(1015, "Giấy phép kinh doanh đã được đăng ký", HttpStatus.BAD_REQUEST),
+    ALREADY_PAID(1014, "Giao dịch đã được thực hiện", HttpStatus.BAD_REQUEST),
+    INVALID_INFOR(1016, "Thông tin đã bị thay đổi", HttpStatus.BAD_REQUEST),
     ;
+
 
     ErrorCode(int code, String message, HttpStatusCode statusCode) {
         this.code = code;
