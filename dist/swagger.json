@@ -20,66 +20,6 @@
         }
     ],
     "paths": {
-        "/account/enable/{id}": {
-            "put": {
-                "tags": [
-                    "Account Controller"
-                ],
-                "summary": "Enable tài khoản",
-                "operationId": "enableAccount",
-                "parameters": [
-                    {
-                        "name": "id",
-                        "in": "path",
-                        "required": true,
-                        "schema": {
-                            "type": "integer",
-                            "format": "int32"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK"
-                    }
-                },
-                "security": [
-                    {
-                        "bearerAuth": []
-                    }
-                ]
-            }
-        },
-        "/account/disable/{id}": {
-            "put": {
-                "tags": [
-                    "Account Controller"
-                ],
-                "summary": "Disable tài khoản",
-                "operationId": "disableAccount",
-                "parameters": [
-                    {
-                        "name": "id",
-                        "in": "path",
-                        "required": true,
-                        "schema": {
-                            "type": "integer",
-                            "format": "int32"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK"
-                    }
-                },
-                "security": [
-                    {
-                        "bearerAuth": []
-                    }
-                ]
-            }
-        },
         "/user/update": {
             "post": {
                 "tags": [
@@ -104,6 +44,37 @@
                             "*/*": {
                                 "schema": {
                                     "$ref": "#/components/schemas/ApiResponseUserInforResponse"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/user/sign-up-merchant": {
+            "post": {
+                "tags": [
+                    "User Controller"
+                ],
+                "summary": "Đăng ký trở thành merchant",
+                "operationId": "signUpMerchant",
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/SignUpMerchantInApp"
+                            }
+                        }
+                    },
+                    "required": true
+                },
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "*/*": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ApiResponseObject"
                                 }
                             }
                         }
@@ -297,6 +268,37 @@
                 }
             }
         },
+        "/merchant/ticket/revoke": {
+            "post": {
+                "tags": [
+                    "Merchant Controller"
+                ],
+                "summary": "Thu hồi vé",
+                "operationId": "revokeTicket",
+                "parameters": [
+                    {
+                        "name": "qrCode",
+                        "in": "query",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "*/*": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ApiResponseObject"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
         "/merchant/profile/update": {
             "post": {
                 "tags": [
@@ -314,6 +316,77 @@
                     },
                     "required": true
                 },
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "*/*": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ApiResponseObject"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/merchant/eventImg": {
+            "post": {
+                "tags": [
+                    "Merchant Controller"
+                ],
+                "summary": "Upload Image",
+                "operationId": "uploadImage",
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "eventBanner"
+                                ],
+                                "type": "object",
+                                "properties": {
+                                    "eventBanner": {
+                                        "type": "string",
+                                        "format": "binary"
+                                    }
+                                }
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "*/*": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ApiResponse"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/merchant/event-status/{id}": {
+            "post": {
+                "tags": [
+                    "Merchant Controller"
+                ],
+                "summary": "Chỉnh sửa trạng thái sự kiện",
+                "operationId": "updateStatus",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "format": "int32"
+                        }
+                    }
+                ],
                 "responses": {
                     "200": {
                         "description": "OK",
@@ -519,13 +592,171 @@
                 }
             }
         },
-        "/admin/eventMgmt/enable/{id}": {
+        "/api/payment/vnpay-response": {
+            "post": {
+                "tags": [
+                    "Payment Controller"
+                ],
+                "summary": "Cập nhật thông tin thanh toán - VNPAY call back-end",
+                "operationId": "handleVnpay",
+                "parameters": [
+                    {
+                        "name": "arg0",
+                        "in": "query",
+                        "required": true,
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "*/*": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ApiResponse"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/payment/infor-update": {
+            "post": {
+                "tags": [
+                    "Payment Controller"
+                ],
+                "summary": "Cập nhật trạng thái thanh toán",
+                "operationId": "getInforPayment",
+                "parameters": [
+                    {
+                        "name": "arg0",
+                        "in": "query",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/components/schemas/PaymentResponse"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "*/*": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ApiResponseObject"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/payment/direct_payment": {
+            "post": {
+                "tags": [
+                    "Payment Controller"
+                ],
+                "summary": "Thanh toán trực tiếp cho sự kiện đang xem",
+                "operationId": "directPayment",
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/DirectPaymentRequest"
+                            }
+                        }
+                    },
+                    "required": true
+                },
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "*/*": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ApiResponseObject"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/payment/create_payment": {
+            "post": {
+                "tags": [
+                    "Payment Controller"
+                ],
+                "summary": "Thanh toán trong giỏ hàng",
+                "operationId": "createPayment",
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/PaymentRequest"
+                            }
+                        }
+                    },
+                    "required": true
+                },
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "*/*": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ApiResponseObject"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/admin/gateway/add": {
             "post": {
                 "tags": [
                     "Admin Controller"
                 ],
-                "summary": "Kích hoạt event",
-                "operationId": "enableEvent",
+                "summary": "Thêm mới payment gateway",
+                "operationId": "addGateway",
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/NewGWRequest"
+                            }
+                        }
+                    },
+                    "required": true
+                },
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "*/*": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ApiResponseObject"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/admin/eventMgmt/change-status/{id}": {
+            "post": {
+                "tags": [
+                    "Admin Controller"
+                ],
+                "summary": "Đổi trạng thái event",
+                "operationId": "changeEventStatus",
                 "parameters": [
                     {
                         "name": "id",
@@ -551,44 +782,13 @@
                 }
             }
         },
-        "/admin/eventMgmt/disable": {
+        "/admin/categories/delete/{id}": {
             "post": {
                 "tags": [
                     "Admin Controller"
                 ],
-                "summary": "Vô hiệu hóa tài khoản",
-                "operationId": "disableAccount_1",
-                "requestBody": {
-                    "content": {
-                        "application/json": {
-                            "schema": {
-                                "$ref": "#/components/schemas/DEAccountRequest"
-                            }
-                        }
-                    },
-                    "required": true
-                },
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "content": {
-                            "*/*": {
-                                "schema": {
-                                    "$ref": "#/components/schemas/ApiResponseObject"
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-        },
-        "/admin/eventMgmt/disable/{id}": {
-            "post": {
-                "tags": [
-                    "Admin Controller"
-                ],
-                "summary": "Vô hiệu hóa event",
-                "operationId": "disableEvent",
+                "summary": "Xóa 1 category",
+                "operationId": "deleteCategories",
                 "parameters": [
                     {
                         "name": "id",
@@ -626,6 +826,68 @@
                         "application/json": {
                             "schema": {
                                 "$ref": "#/components/schemas/AddCatRequest"
+                            }
+                        }
+                    },
+                    "required": true
+                },
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "*/*": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ApiResponseObject"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/admin/account/change-status": {
+            "post": {
+                "tags": [
+                    "Admin Controller"
+                ],
+                "summary": "Đổi trạng thái tài khoản",
+                "operationId": "changeAccountStatus",
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/DEAccountRequest"
+                            }
+                        }
+                    },
+                    "required": true
+                },
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "*/*": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ApiResponseObject"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/account/verifyOTP": {
+            "post": {
+                "tags": [
+                    "Account Controller"
+                ],
+                "summary": "Verify OTP",
+                "operationId": "verifyOTP",
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/VerifyOTPRequest"
                             }
                         }
                     },
@@ -700,6 +962,37 @@
                             "*/*": {
                                 "schema": {
                                     "$ref": "#/components/schemas/AuthenticationResponse"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/account/resetPassword": {
+            "post": {
+                "tags": [
+                    "Account Controller"
+                ],
+                "summary": "resetPassword",
+                "operationId": "resetPassword",
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/ResetPasswordRequest"
+                            }
+                        }
+                    },
+                    "required": true
+                },
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "*/*": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ApiResponseObject"
                                 }
                             }
                         }
@@ -785,6 +1078,71 @@
                             "*/*": {
                                 "schema": {
                                     "$ref": "#/components/schemas/ApiResponseIntrospectResponse"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/account/forgot_password": {
+            "post": {
+                "tags": [
+                    "Account Controller"
+                ],
+                "summary": "Quên mật khẩu",
+                "operationId": "forgotPassword",
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "additionalProperties": {
+                                    "type": "string"
+                                }
+                            }
+                        }
+                    },
+                    "required": true
+                },
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "*/*": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ApiResponseObject"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/account/change-pasword": {
+            "post": {
+                "tags": [
+                    "Account Controller"
+                ],
+                "summary": "Thay đổi mật khẩu",
+                "operationId": "changePassword",
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/ChangePasswordRequest"
+                            }
+                        }
+                    },
+                    "required": true
+                },
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "*/*": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ApiResponseObject"
                                 }
                             }
                         }
@@ -926,7 +1284,7 @@
                         }
                     },
                     {
-                        "name": "CategoryId",
+                        "name": "categoryId",
                         "in": "query",
                         "required": false,
                         "schema": {
@@ -968,13 +1326,13 @@
                 }
             }
         },
-        "/merchant/get/{id}": {
+        "/merchant/event/history/{id}": {
             "get": {
                 "tags": [
                     "Merchant Controller"
                 ],
-                "summary": "Lấy thông tin chi tiết của event",
-                "operationId": "getEvent",
+                "summary": "Xem lịch sử khách hàng đặt mua vé",
+                "operationId": "getEventHistory",
                 "parameters": [
                     {
                         "name": "id",
@@ -992,7 +1350,7 @@
                         "content": {
                             "*/*": {
                                 "schema": {
-                                    "$ref": "#/components/schemas/ApiResponseEventDTO"
+                                    "$ref": "#/components/schemas/ApiResponseObject"
                                 }
                             }
                         }
@@ -1006,7 +1364,7 @@
                     "Event Controller"
                 ],
                 "summary": "Lấy thông tin chi tiết của event",
-                "operationId": "getEvent_1",
+                "operationId": "getEvent",
                 "parameters": [
                     {
                         "name": "id",
@@ -1063,16 +1421,108 @@
                 }
             }
         },
+        "/home/search/{categoryName}": {
+            "get": {
+                "tags": [
+                    "Event Controller"
+                ],
+                "summary": "Lấy theo danh mục",
+                "operationId": "getEventByCategory",
+                "parameters": [
+                    {
+                        "name": "categoryName",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "*/*": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ApiResponseObject"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/home/events-categories": {
+            "get": {
+                "tags": [
+                    "Event Controller"
+                ],
+                "summary": "Lấy event ngẫu nhiên theo categories",
+                "operationId": "getEventsByCategoriesLimit",
+                "parameters": [
+                    {
+                        "name": "categoryId",
+                        "in": "query",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "format": "int32"
+                        }
+                    },
+                    {
+                        "name": "limit",
+                        "in": "query",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "format": "int32"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "*/*": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ApiResponseObject"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
         "/home/event": {
             "get": {
                 "tags": [
                     "Event Controller"
                 ],
-                "summary": "Lọc Event",
-                "operationId": "getByFilter",
+                "summary": "Phân trang",
+                "operationId": "getEventPaging",
                 "parameters": [
                     {
-                        "name": "MerchantId",
+                        "name": "offset",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "format": "int32",
+                            "default": 0
+                        }
+                    },
+                    {
+                        "name": "size",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "format": "int32",
+                            "default": 10
+                        }
+                    },
+                    {
+                        "name": "merchantId",
                         "in": "query",
                         "required": false,
                         "schema": {
@@ -1081,7 +1531,7 @@
                         }
                     },
                     {
-                        "name": "CategoryId",
+                        "name": "categoryId",
                         "in": "query",
                         "required": false,
                         "schema": {
@@ -1105,7 +1555,48 @@
                         "in": "query",
                         "required": false,
                         "schema": {
-                            "type": "string"
+                            "type": "array",
+                            "items": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    {
+                        "name": "fromTime",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "default": "2020-01-01"
+                        }
+                    },
+                    {
+                        "name": "toTime",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "default": "2999-01-01"
+                        }
+                    },
+                    {
+                        "name": "minPrice",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "number",
+                            "format": "double",
+                            "default": 0
+                        }
+                    },
+                    {
+                        "name": "maxPrice",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "number",
+                            "format": "double",
+                            "default": 100000000
                         }
                     }
                 ],
@@ -1115,7 +1606,7 @@
                         "content": {
                             "*/*": {
                                 "schema": {
-                                    "type": "object"
+                                    "$ref": "#/components/schemas/ApiResponseEventHomeResponse"
                                 }
                             }
                         }
@@ -1189,7 +1680,7 @@
                         "content": {
                             "*/*": {
                                 "schema": {
-                                    "$ref": "#/components/schemas/ApiResponseListHistoryResponse"
+                                    "$ref": "#/components/schemas/ApiResponseObject"
                                 }
                             }
                         }
@@ -1197,7 +1688,7 @@
                 }
             }
         },
-        "/history/{id}": {
+        "/history/{pId}/{eId}": {
             "get": {
                 "tags": [
                     "User Controller"
@@ -1206,7 +1697,15 @@
                 "operationId": "getHistoryDetail",
                 "parameters": [
                     {
-                        "name": "id",
+                        "name": "pId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "eId",
                         "in": "path",
                         "required": true,
                         "schema": {
@@ -1228,73 +1727,13 @@
                 }
             }
         },
-        "/api/payment/infor": {
+        "/admin/userInfor": {
             "get": {
                 "tags": [
-                    "payment-controller"
+                    "Admin Controller"
                 ],
-                "operationId": "getInforPayment",
-                "parameters": [
-                    {
-                        "name": "cartId",
-                        "in": "query",
-                        "required": true,
-                        "schema": {
-                            "type": "string"
-                        }
-                    },
-                    {
-                        "name": "vnp_Amount",
-                        "in": "query",
-                        "required": true,
-                        "schema": {
-                            "type": "number",
-                            "format": "double"
-                        }
-                    },
-                    {
-                        "name": "vnp_BankTranNo",
-                        "in": "query",
-                        "required": true,
-                        "schema": {
-                            "type": "string"
-                        }
-                    },
-                    {
-                        "name": "vnp_PayDate",
-                        "in": "query",
-                        "required": true,
-                        "schema": {
-                            "type": "string"
-                        }
-                    },
-                    {
-                        "name": "vnp_ResponseCode",
-                        "in": "query",
-                        "required": true,
-                        "schema": {
-                            "type": "string"
-                        }
-                    },
-                    {
-                        "name": "userId",
-                        "in": "query",
-                        "required": true,
-                        "schema": {
-                            "type": "integer",
-                            "format": "int32"
-                        }
-                    },
-                    {
-                        "name": "vnp_OrderInfo",
-                        "in": "query",
-                        "required": true,
-                        "schema": {
-                            "type": "integer",
-                            "format": "int32"
-                        }
-                    }
-                ],
+                "summary": "Lấy danh sách tất cả user trong hệ thống",
+                "operationId": "getUsers",
                 "responses": {
                     "200": {
                         "description": "OK",
@@ -1309,49 +1748,21 @@
                 }
             }
         },
-        "/api/payment/direct_payment": {
+        "/admin/userInfor/{id}": {
             "get": {
                 "tags": [
-                    "payment-controller"
+                    "Admin Controller"
                 ],
-                "operationId": "directPayment",
+                "summary": "Lấy thông tin của 1 user",
+                "operationId": "getUserInfor_1",
                 "parameters": [
                     {
-                        "name": "arg0",
-                        "in": "query",
+                        "name": "id",
+                        "in": "path",
                         "required": true,
                         "schema": {
-                            "$ref": "#/components/schemas/DirectPaymentRequest"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "content": {
-                            "*/*": {
-                                "schema": {
-                                    "$ref": "#/components/schemas/ApiResponseObject"
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-        },
-        "/api/payment/create_payment": {
-            "get": {
-                "tags": [
-                    "payment-controller"
-                ],
-                "operationId": "createPayment",
-                "parameters": [
-                    {
-                        "name": "arg0",
-                        "in": "query",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/components/schemas/PaymentRequest"
+                            "type": "integer",
+                            "format": "int32"
                         }
                     }
                 ],
@@ -1525,7 +1936,7 @@
                         "content": {
                             "*/*": {
                                 "schema": {
-                                    "type": "object"
+                                    "$ref": "#/components/schemas/ApiResponseObject"
                                 }
                             }
                         }
@@ -1557,7 +1968,7 @@
                         "content": {
                             "*/*": {
                                 "schema": {
-                                    "type": "object"
+                                    "$ref": "#/components/schemas/ApiResponseObject"
                                 }
                             }
                         }
@@ -1591,56 +2002,44 @@
                 ]
             }
         },
-        "/admin/gateway/add": {
-            "get": {
-                "tags": [
-                    "Admin Controller"
-                ],
-                "summary": "Thêm mới payment gateway",
-                "operationId": "addGateway",
-                "parameters": [
-                    {
-                        "name": "arg0",
-                        "in": "query",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/components/schemas/NewGWRequest"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "content": {
-                            "*/*": {
-                                "schema": {
-                                    "$ref": "#/components/schemas/ApiResponseObject"
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-        },
         "/admin/event": {
             "get": {
                 "tags": [
                     "Admin Controller"
                 ],
                 "summary": "Lấy danh sách sự kiện",
-                "operationId": "getByFilter_1",
+                "operationId": "getByFilter",
                 "parameters": [
                     {
-                        "name": "MerchantId",
+                        "name": "offset",
                         "in": "query",
                         "required": false,
                         "schema": {
                             "type": "integer",
-                            "format": "int32"
+                            "format": "int32",
+                            "default": 0
                         }
                     },
                     {
-                        "name": "CategoryId",
+                        "name": "size",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "format": "int32",
+                            "default": 10
+                        }
+                    },
+                    {
+                        "name": "merchantName",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "categoriesId",
                         "in": "query",
                         "required": false,
                         "schema": {
@@ -1652,16 +2051,64 @@
                         }
                     },
                     {
-                        "name": "allTime",
+                        "name": "time",
                         "in": "query",
                         "required": false,
                         "schema": {
-                            "type": "integer",
-                            "format": "int32"
+                            "type": "string"
                         }
                     },
                     {
                         "name": "city",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    {
+                        "name": "fromTime",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "default": "2020-01-01"
+                        }
+                    },
+                    {
+                        "name": "toTime",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "default": "2999-01-01"
+                        }
+                    },
+                    {
+                        "name": "minPrice",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "number",
+                            "format": "double",
+                            "default": 0
+                        }
+                    },
+                    {
+                        "name": "maxPrice",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "number",
+                            "format": "double",
+                            "default": 100000000
+                        }
+                    },
+                    {
+                        "name": "status",
                         "in": "query",
                         "required": false,
                         "schema": {
@@ -1683,13 +2130,13 @@
                 }
             }
         },
-        "/admin/categories/delete/{id}": {
+        "/admin/event/{id}": {
             "get": {
                 "tags": [
                     "Admin Controller"
                 ],
-                "summary": "Xóa 1 category",
-                "operationId": "deleteCategories",
+                "summary": "Lấy sự kiện cụ thể",
+                "operationId": "getEvent_1",
                 "parameters": [
                     {
                         "name": "id",
@@ -1701,6 +2148,27 @@
                         }
                     }
                 ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "*/*": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ApiResponseObject"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/admin/event/pending": {
+            "get": {
+                "tags": [
+                    "Admin Controller"
+                ],
+                "summary": "Danh sách sự kiện phê duyệt",
+                "operationId": "getPendingEvent",
                 "responses": {
                     "200": {
                         "description": "OK",
@@ -1862,6 +2330,49 @@
                     }
                 }
             },
+            "MerchantSignUpRequest": {
+                "type": "object",
+                "properties": {
+                    "name": {
+                        "type": "string"
+                    },
+                    "address": {
+                        "type": "string"
+                    },
+                    "phone": {
+                        "type": "string"
+                    },
+                    "license": {
+                        "type": "string"
+                    }
+                }
+            },
+            "SignUpMerchantInApp": {
+                "type": "object",
+                "properties": {
+                    "token": {
+                        "type": "string"
+                    },
+                    "signUpRequest": {
+                        "$ref": "#/components/schemas/MerchantSignUpRequest"
+                    }
+                }
+            },
+            "ApiResponseObject": {
+                "type": "object",
+                "properties": {
+                    "code": {
+                        "type": "integer",
+                        "format": "int32"
+                    },
+                    "message": {
+                        "type": "string"
+                    },
+                    "result": {
+                        "type": "object"
+                    }
+                }
+            },
             "TicketTypeRequest": {
                 "type": "object",
                 "properties": {
@@ -1957,21 +2468,6 @@
                     }
                 }
             },
-            "ApiResponseObject": {
-                "type": "object",
-                "properties": {
-                    "code": {
-                        "type": "integer",
-                        "format": "int32"
-                    },
-                    "message": {
-                        "type": "string"
-                    },
-                    "result": {
-                        "type": "object"
-                    }
-                }
-            },
             "EAFRequest": {
                 "type": "object",
                 "properties": {
@@ -1985,9 +2481,6 @@
                         "type": "string"
                     },
                     "eventLocation": {
-                        "type": "string"
-                    },
-                    "eventBanner": {
                         "type": "string"
                     },
                     "categories": {
@@ -2029,16 +2522,80 @@
                     }
                 }
             },
-            "DEAccountRequest": {
+            "PaymentResponse": {
                 "type": "object",
                 "properties": {
-                    "accountId": {
+                    "cartIds": {
+                        "type": "array",
+                        "items": {
+                            "type": "integer",
+                            "format": "int32"
+                        }
+                    },
+                    "vnp_TxnRef": {
+                        "type": "string"
+                    },
+                    "responseCode": {
+                        "type": "string"
+                    },
+                    "paymentDate": {
+                        "type": "string"
+                    },
+                    "amount": {
+                        "type": "number",
+                        "format": "double"
+                    },
+                    "email": {
+                        "type": "string"
+                    },
+                    "uid": {
+                        "type": "integer",
+                        "format": "int32"
+                    }
+                }
+            },
+            "DirectPaymentRequest": {
+                "type": "object",
+                "properties": {
+                    "email": {
+                        "type": "string"
+                    },
+                    "methodId": {
                         "type": "integer",
                         "format": "int32"
                     },
-                    "roleId": {
+                    "cartId": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/AddToCartRequest"
+                        }
+                    }
+                }
+            },
+            "PaymentRequest": {
+                "type": "object",
+                "properties": {
+                    "email": {
+                        "type": "string"
+                    },
+                    "cartId": {
+                        "type": "array",
+                        "items": {
+                            "type": "integer",
+                            "format": "int32"
+                        }
+                    },
+                    "method": {
                         "type": "integer",
                         "format": "int32"
+                    }
+                }
+            },
+            "NewGWRequest": {
+                "type": "object",
+                "properties": {
+                    "gatewayName": {
+                        "type": "string"
                     }
                 }
             },
@@ -2046,6 +2603,28 @@
                 "type": "object",
                 "properties": {
                     "catName": {
+                        "type": "string"
+                    }
+                }
+            },
+            "DEAccountRequest": {
+                "type": "object",
+                "properties": {
+                    "username": {
+                        "type": "string"
+                    },
+                    "roleName": {
+                        "type": "string"
+                    }
+                }
+            },
+            "VerifyOTPRequest": {
+                "type": "object",
+                "properties": {
+                    "email": {
+                        "type": "string"
+                    },
+                    "otp": {
                         "type": "string"
                     }
                 }
@@ -2063,12 +2642,11 @@
                         "minLength": 8,
                         "type": "string"
                     },
-                    "role": {
-                        "type": "array",
-                        "items": {
-                            "type": "integer",
-                            "format": "int32"
-                        }
+                    "email": {
+                        "type": "string"
+                    },
+                    "merchantInfor": {
+                        "$ref": "#/components/schemas/MerchantSignUpRequest"
                     }
                 }
             },
@@ -2080,10 +2658,6 @@
                     },
                     "password": {
                         "type": "string"
-                    },
-                    "role": {
-                        "type": "integer",
-                        "format": "int32"
                     }
                 }
             },
@@ -2095,6 +2669,20 @@
                     },
                     "authenticated": {
                         "type": "boolean"
+                    },
+                    "role": {
+                        "type": "string"
+                    },
+                    "username": {
+                        "type": "string"
+                    }
+                }
+            },
+            "ResetPasswordRequest": {
+                "type": "object",
+                "properties": {
+                    "password": {
+                        "type": "string"
                     }
                 }
             },
@@ -2142,6 +2730,17 @@
                 "properties": {
                     "validated": {
                         "type": "boolean"
+                    }
+                }
+            },
+            "ChangePasswordRequest": {
+                "type": "object",
+                "properties": {
+                    "oldPassword": {
+                        "type": "string"
+                    },
+                    "newPassword": {
+                        "type": "string"
                     }
                 }
             },
@@ -2426,10 +3025,78 @@
                             "type": "string"
                         }
                     },
+                    "status": {
+                        "type": "string"
+                    },
                     "createTicketsResponseList": {
                         "type": "array",
                         "items": {
                             "$ref": "#/components/schemas/CreateTicketsResponse"
+                        }
+                    },
+                    "suggestEvents": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/EventHome"
+                        }
+                    }
+                }
+            },
+            "EventHome": {
+                "type": "object",
+                "properties": {
+                    "id": {
+                        "type": "integer",
+                        "format": "int32"
+                    },
+                    "name": {
+                        "type": "string"
+                    },
+                    "banner": {
+                        "type": "string"
+                    },
+                    "city": {
+                        "type": "string"
+                    },
+                    "location": {
+                        "type": "string"
+                    },
+                    "startDate": {
+                        "type": "string",
+                        "format": "date"
+                    },
+                    "minPrice": {
+                        "type": "number",
+                        "format": "double"
+                    }
+                }
+            },
+            "ApiResponseEventHomeResponse": {
+                "type": "object",
+                "properties": {
+                    "code": {
+                        "type": "integer",
+                        "format": "int32"
+                    },
+                    "message": {
+                        "type": "string"
+                    },
+                    "result": {
+                        "$ref": "#/components/schemas/EventHomeResponse"
+                    }
+                }
+            },
+            "EventHomeResponse": {
+                "type": "object",
+                "properties": {
+                    "count": {
+                        "type": "integer",
+                        "format": "int32"
+                    },
+                    "events": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/EventHome"
                         }
                     }
                 }
@@ -2472,81 +3139,6 @@
                     }
                 }
             },
-            "ApiResponseListHistoryResponse": {
-                "type": "object",
-                "properties": {
-                    "code": {
-                        "type": "integer",
-                        "format": "int32"
-                    },
-                    "message": {
-                        "type": "string"
-                    },
-                    "result": {
-                        "type": "array",
-                        "items": {
-                            "$ref": "#/components/schemas/HistoryResponse"
-                        }
-                    }
-                }
-            },
-            "HistoryResponse": {
-                "type": "object",
-                "properties": {
-                    "ticketId": {
-                        "type": "string"
-                    },
-                    "eventName": {
-                        "type": "string"
-                    },
-                    "eventDate": {
-                        "type": "string"
-                    },
-                    "eventStartTime": {
-                        "type": "string"
-                    },
-                    "eventEndTime": {
-                        "type": "string"
-                    },
-                    "ticketName": {
-                        "type": "string"
-                    },
-                    "location": {
-                        "type": "string"
-                    }
-                }
-            },
-            "DirectPaymentRequest": {
-                "type": "object",
-                "properties": {
-                    "methodId": {
-                        "type": "integer",
-                        "format": "int32"
-                    },
-                    "cartId": {
-                        "type": "array",
-                        "items": {
-                            "$ref": "#/components/schemas/AddToCartRequest"
-                        }
-                    }
-                }
-            },
-            "PaymentRequest": {
-                "type": "object",
-                "properties": {
-                    "cartId": {
-                        "type": "array",
-                        "items": {
-                            "type": "integer",
-                            "format": "int32"
-                        }
-                    },
-                    "method": {
-                        "type": "integer",
-                        "format": "int32"
-                    }
-                }
-            },
             "AccountResponse": {
                 "type": "object",
                 "properties": {
@@ -2556,10 +3148,6 @@
                     },
                     "username": {
                         "type": "string"
-                    },
-                    "status": {
-                        "type": "integer",
-                        "format": "int32"
                     },
                     "roles": {
                         "type": "string"
@@ -2581,14 +3169,6 @@
                         "items": {
                             "$ref": "#/components/schemas/AccountResponse"
                         }
-                    }
-                }
-            },
-            "NewGWRequest": {
-                "type": "object",
-                "properties": {
-                    "gatewayName": {
-                        "type": "string"
                     }
                 }
             },
